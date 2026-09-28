@@ -44,13 +44,17 @@ lowest robot id heard; a membership change triggers a re-plan at most every ``me
 pilots' rate limit). ``ProtocolRunner(shadow=...)`` logs, at each plan call, whether other arms would author
 different versions from the same replica and seed (T4 decision-difference log).
 
-Open design issue (flagged 2026-09-28, dev only, toy-world harness): spec 4.5 says robots outside the station
-component "keep their believed routes, and their traits count toward those coalitions". Fed literally to agent B's
-kernel (``frozen_model="anchor"``), an outsider's whole future route becomes residual anchors, which G1 key
-monotonicity puts ahead of every repaired task, so in-scope robots added to them idle until the outsider arrives.
-The pilots' list scheduler interleaved such tasks by start time instead. ``frozen_model="head"`` keeps only the
-outsider's committed head (its later tasks are re-plannable, its traits do not count). A faithful version needs
-kernel support for pinned members with ready times outside the committed prefix (agent B).
+Station outsiders (resolved 2026-09-28 on the real stack): spec 4.5 says robots outside the station component "keep
+their believed routes, and their traits count toward those coalitions" (``frozen_model="anchor"``, the default). The
+day-1 toy world suggested anchoring was badly hurt by G1 key monotonicity; the C3 design pilot in the real world
+(``cbba_sota.dyn.c3world``, dev seed 2, docs/results/trackD-week1/c3.md) did not reproduce that (anchor vs head within
+0-15%, not consistent in sign), so the spec-literal anchoring and monotone keys are used. ``frozen_model="head"``
+(only the committed head is kept) remains available as a sensitivity.
+
+C3 liveness conventions (rule 4.6(c), ``replica.overdue_absents`` / ``replica.effective_kind``): overdue work of a
+silent crew counts as aborted, and an overdue arrival or finish promised by a silent robot counts as an absent record
+and as failure evidence; absent records are superseded by newer knowledge of the member; the lease names declared-
+failed planned members absent too. Each closes a livelock or deadlock found on dev episodes (c3.md lists them).
 """
 from __future__ import annotations
 
@@ -64,6 +68,7 @@ from cbba_sota.dyn.comm import Transport, components
 from cbba_sota.dyn.replica import (
     ABORT,
     FINISH,
+    HOMING,
     IDLE,
     RALLY,
     RELEASE,
@@ -75,7 +80,9 @@ from cbba_sota.dyn.replica import (
     Belief,
     KnowledgeBase,
     RouteVersion,
+    effective_kind,
     failed_set,
+    overdue_absents,
 )
 
 EPS = 1e-9
@@ -254,7 +261,8 @@ def _route_keys(belief: Belief, b: int) -> dict[int, float]:
     return {int(j): float(k) for j, k in zip(ver.tasks, ver.keys, strict=True)}
 
 
-def plan_state(scope: PlanScope, belief: Belief, inst, kappa: float = 1.0, frozen_model: str = "anchor"):
+def plan_state(scope: PlanScope, belief: Belief, inst, kappa: float = 1.0, frozen_model: str = "anchor",
+               h_f: float = 10.0):
     """(scope, belief) -> (``planner.PlanState``, scope mask, incumbent ``DynPlan``) for agent B's ``RHPlanner``.
 
     Mapping (spec 4.1, 4.5, 4.6):
@@ -269,19 +277,24 @@ def plan_state(scope: PlanScope, belief: Belief, inst, kappa: float = 1.0, froze
     - incumbent: the believed coalitions of open tasks (warm start).
     ``frozen_model``: "anchor" (spec 4.5 literally: a frozen outsider's whole believed route is anchored; B's kernel
     then puts those residual anchors ahead of every repaired task, G1) or "head" (only its committed head is kept;
-    its later tasks are open and it takes no new work). See the module notes on the choice."""
+    its later tasks are open and it takes no new work). See the module notes on the choice.
+    Under the suspicion rule (C3) rule 4.6(c) applies: overdue work of a silent crew counts as aborted
+    (``replica.effective_kind``, nominal durations ``inst.dur``) and an overdue arrival of a silent robot counts as an
+    absent record (``replica.overdue_absents``)."""
     from cbba_sota.dyn.planner import AT_DEPOT, AT_POINT, DynPlan, PlanState
+
+    dur = np.asarray(inst.dur, float)
 
     L = belief.layout
     A, T = L.A, L.T
     now = belief.now
-    kind = belief.task_kind()
+    suspicion = scope.failure_rule == "suspicion"
+    kind = effective_kind(belief, dur, h_f) if suspicion else belief.task_kind()
     open_ = (kind == RELEASE) | (kind == ABORT)
-    absents = belief.absents()
+    absents = belief.absents() | (overdue_absents(belief, h_f) if suspicion else frozenset())
     recs = [belief.record(b) for b in range(A)]
     routes = [belief.remaining_route(b) for b in range(A)]
     keys_of = [_route_keys(belief, b) for b in range(A)]
-    suspicion = scope.failure_rule == "suspicion"
     alive = np.array([recs[b] is not None and (b not in scope.failed or suspicion) for b in range(A)])
     ready = np.zeros(A)
     pos = np.asarray(inst.depot, float).copy()
@@ -303,7 +316,8 @@ def plan_state(scope: PlanScope, belief: Belief, inst, kappa: float = 1.0, froze
             pos[b] = r.pos
             if np.allclose(r.pos, inst.depot[b]):
                 pos_task[b] = AT_DEPOT
-            t = now
+            # legs are atomic: a robot heading home, or travelling released from its task, is free at its ETA
+            t = r.t_ref if r.mode in (HOMING, TRAVEL) else now
         ready[b] = t if (b in scope.stale or r.mode == WAIT) else max(t, now)
     committed = np.array([open_[j] and bool(departed[j]) for j in range(T)])
     mem_sets: list[set[int]] = [set() for _ in range(T)]
@@ -390,7 +404,8 @@ def plan_state(scope: PlanScope, belief: Belief, inst, kappa: float = 1.0, froze
     return state, scope_mask, DynPlan(members=inc_mem, keys=inc_key, makespan=float("nan"))
 
 
-def rh_planner(inst, iters: int = 300, kappa: float = 1.0, config=None, frozen_model: str = "anchor") -> Planner:
+def rh_planner(inst, iters: int = 300, kappa: float = 1.0, config=None, frozen_model: str = "anchor",
+               h_f: float = 10.0) -> Planner:
     """Planner callback running agent B's ``RHPlanner`` (the SPARC kernel) on a replica, with the scope's seed.
     Returns full key-ordered routes (with keys) for the writable robots."""
     from cbba_sota.dyn.planner import RHPlanner
@@ -398,7 +413,7 @@ def rh_planner(inst, iters: int = 300, kappa: float = 1.0, config=None, frozen_m
     rh = RHPlanner(config)
 
     def plan(scope: PlanScope, belief: Belief) -> PlanOutput:
-        state, mask, incumbent = plan_state(scope, belief, inst, kappa, frozen_model)
+        state, mask, incumbent = plan_state(scope, belief, inst, kappa, frozen_model, h_f)
         dp = rh.plan(state, incumbent=incumbent, scope=mask, seed=scope.seed, iters=iters)
         A = belief.layout.A
         by_robot = dp.routes_for(A)
@@ -492,6 +507,7 @@ class ProtocolRunner:
     comm_R: float = math.inf  # only for membership="oracle"
     shadow: tuple = ()  # T4: arms evaluated counterfactually (same replica, same seed) at each of our plan calls;
     # the planner must be a pure function of (scope, belief) for this to be meaningful
+    dur: np.ndarray | None = None  # nominal task durations: enables rule 4.6(c) in the trigger state (C3)
 
     def __post_init__(self):
         L = self.kb.layout
@@ -529,7 +545,8 @@ class ProtocolRunner:
 
     # ---- trigger evaluation (4.2 structural; V1; V3)
     def _state(self, belief: Belief, members: frozenset, failed: frozenset, t: float) -> _TrigState:
-        kind = belief.task_kind()
+        kind = effective_kind(belief, self.dur, self.cfg.h_f) if self.cfg.failure_rule == "suspicion" \
+            else belief.task_kind()
         open_any = bool(((kind == RELEASE) | (kind == ABORT)).any())
         idle = frozenset()
         if open_any:
@@ -761,7 +778,8 @@ class ProtocolRunner:
 
 def make_stack(n_robots: int, n_tasks: int, n_traits: int, arm_spec: ArmSpec, planner: Planner, *,
                rho: float = math.inf, loss: str = "ge", p: float = 0.2, key=None, budget: float = 1500.0,
-               beacon_period: float | None = None, cfg: ProtocolConfig | None = None, shadow: tuple = ()):
+               beacon_period: float | None = None, cfg: ProtocolConfig | None = None, shadow: tuple = (),
+               dur=None):
     """Build (kb, transport, runner) for one episode: ideal comms for ``arm_spec.ideal``, else tier T2 at range
     rho * r_c(n) with the named loss model. Heartbeat period: one tick with ideal comms (failure detector), 1.0
     otherwise."""
@@ -775,4 +793,5 @@ def make_stack(n_robots: int, n_tasks: int, n_traits: int, arm_spec: ArmSpec, pl
     tr = make_transport(kb, ideal, R=R, loss=loss, p=p, key=key or DEFAULT_KEY, budget=budget,
                         oracle=arm_spec.oracle, beacon_period=beacon_period, relay=arm_spec.relay)
     cfg = cfg or (ProtocolConfig.good_comms() if ideal else ProtocolConfig())
-    return kb, tr, ProtocolRunner(kb, tr, arm_spec, planner, cfg, comm_R=R, shadow=tuple(shadow))
+    return kb, tr, ProtocolRunner(kb, tr, arm_spec, planner, cfg, comm_R=R, shadow=tuple(shadow),
+                                  dur=None if dur is None else np.asarray(dur, float))

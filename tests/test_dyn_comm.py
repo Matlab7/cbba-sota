@@ -349,13 +349,42 @@ def test_detector_lease_waits_while_partners_heartbeat():
 
 
 def test_failure_needs_silence_and_on_site_evidence():
-    kb = _kb_with({0: (5.0, WAIT, 1, ()), 1: (5.0, IDLE, -1, ()), 2: (1.0, TRAVEL, 1, ())})
+    kb = _kb_with({0: (5.0, WAIT, 1, ()), 1: (5.0, IDLE, -1, ())})
+    kb.heartbeat(2, 1.0, TRAVEL, target=1, t_ref=15.0, force=True)  # long trip: ETA 15
+    kb.sync()
     assert suspected(kb.belief(0, 1.6), 2, 0.5)
-    assert not declared_failed(kb.belief(0, 20.0), 2, 10.0)  # silent but no absent record: only unreachable
+    assert not declared_failed(kb.belief(0, 20.0), 2, 10.0)  # silent, no absent record, ETA not overdue: unreachable
     kb.append_log(0, ABSENT, 2, 1, 12.0)
     kb.sync()
     assert not declared_failed(kb.belief(0, 10.5), 2, 10.0)  # evidence, not yet silent for h_f
     assert declared_failed(kb.belief(0, 11.0), 2, 10.0)
+
+
+def test_overdue_commitment_of_a_silent_robot_is_failure_evidence():
+    """C3 rule 4.6(c): an arrival (or finish) promised in the last record and overdue by h_f counts as an absent
+    record for that task and as failure evidence, even with no witness."""
+    from cbba_sota.dyn.replica import overdue_absents
+
+    kb = _kb_with({0: (5.0, WAIT, 1, ())})
+    kb.heartbeat(2, 1.0, TRAVEL, target=1, t_ref=3.0, force=True)  # ETA 3, then silent
+    kb.heartbeat(3, 1.0, WORK, target=2, t_ref=4.0, force=True)  # predicted finish 4, then silent
+    kb.sync()
+    assert not declared_failed(kb.belief(0, 12.9), 2, 10.0) and declared_failed(kb.belief(0, 13.0), 2, 10.0)
+    assert not declared_failed(kb.belief(0, 13.9), 3, 10.0) and declared_failed(kb.belief(0, 14.0), 3, 10.0)
+    assert overdue_absents(kb.belief(0, 14.0), 10.0) == {(2, 1), (3, 2)}
+    assert (2, 1) not in kb.belief(0, 14.0).absents()  # derived, not a published record
+
+
+def test_absent_record_is_superseded_by_newer_knowledge_of_the_member():
+    kb = _kb_with({0: (5.0, WAIT, 1, ())})
+    kb.heartbeat(2, 1.0, TRAVEL, target=1, t_ref=3.0, force=True)
+    kb.append_log(0, ABSENT, 2, 1, 6.0)
+    kb.sync()
+    assert (2, 1) in kb.belief(0, 7.0).absents()
+    kb.heartbeat(2, 8.0, TRAVEL, target=1, t_ref=9.0, force=True)  # heading there again
+    kb.sync()
+    assert (2, 1) not in kb.belief(0, 9.0).absents()
+    assert declared_failed(kb.belief(0, 30.0), 2, 10.0)  # historical absents still count as failure evidence
 
 
 # ------------------------------------------------------------------------------------------------ arm scopes

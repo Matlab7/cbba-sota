@@ -1,0 +1,27 @@
+{"setting": "MA-AT-25-5-50", "i": 0, "seed": 0, "cell": "F1-R2", "full": 37.95205772377351, "full_ok": true, "pc": 37.30738760482928, "pc_ok": true, "full_wasted": 0, "pc_wasted": 0, "full_plans": 36, "pc_plans": 35}
+{"setting": "MA-AT-25-5-50", "i": 0, "seed": 0, "cell": "F3-pf0.2", "full": 42.96486212892029, "full_ok": true, "pc": 38.75570882757439, "pc_ok": true, "full_wasted": 0, "pc_wasted": 0, "full_plans": 14, "pc_plans": 5}
+{"setting": "MA-AT-25-5-50", "i": 1, "seed": 0, "cell": "F1-R2", "full": 58.90034536446737, "full_ok": true, "pc": 51.54359130237146, "pc_ok": true, "full_wasted": 0, "pc_wasted": 0, "full_plans": 45, "pc_plans": 40}
+{"setting": "MA-AT-25-5-50", "i": 1, "seed": 0, "cell": "F3-pf0.2", "full": 69.40657945298446, "full_ok": true, "pc": 82.81207305857944, "pc_ok": true, "full_wasted": 0, "pc_wasted": 0, "full_plans": 19, "pc_plans": 7}
+{"setting": "MA-AT-25-5-50", "i": 2, "seed": 0, "cell": "F1-R2", "full": 48.869994938496234, "full_ok": true, "pc": 46.40209659358776, "pc_ok": true, "full_wasted": 0, "pc_wasted": 0, "full_plans": 43, "pc_plans": 39}
+{"setting": "MA-AT-25-5-50", "i": 2, "seed": 0, "cell": "F3-pf0.2", "full": 50.64665267877621, "full_ok": true, "pc": 52.747706922822104, "pc_ok": true, "full_wasted": 0, "pc_wasted": 0, "full_plans": 18, "pc_plans": 11}
+{"setting": "MA-AT-25-5-50", "i": 3, "seed": 0, "cell": "F1-R2", "full": 33.693261485081045, "full_ok": true, "pc": 33.23456542796858, "pc_ok": true, "full_wasted": 0, "pc_wasted": 0, "full_plans": 39, "pc_plans": 37}
+{"setting": "MA-AT-25-5-50", "i": 3, "seed": 0, "cell": "F3-pf0.2", "full": 29.082000288369347, "full_ok": true, "pc": 27.06037326791955, "pc_ok": true, "full_wasted": 0, "pc_wasted": 0, "full_plans": 9, "pc_plans": 1}
+{"setting": "MA-AT-25-5-50", "i": 4, "seed": 0, "cell": "F1-R2", "full": 54.958906499971135, "full_ok": true, "pc": 57.02941575559653, "pc_ok": true, "full_wasted": 0, "pc_wasted": 0, "full_plans": 39, "pc_plans": 40}
+{"setting": "MA-AT-25-5-50", "i": 4, "seed": 0, "cell": "F3-pf0.2", "full": 65.19313051475079, "full_ok": true, "pc": 57.96818988827752, "pc_ok": true, "full_wasted": 0, "pc_wasted": 0, "full_plans": 19, "pc_plans": 5}
+{"setting": "MA-AT-25-5-50", "i": 5, "seed": 0, "cell": "F1-R2", "full": 38.06155061587154, "full_ok": true, "pc": 37.26474763803531, "pc_ok": true, "full_wasted": 0, "pc_wasted": 0, "full_plans": 39, "pc_plans": 30}
+{"setting": "MA-AT-25-5-50", "i": 5, "seed": 0, "cell": "F3-pf0.2", "full": 42.283273147057656, "full_ok": true, "pc": 40.63944301633119, "pc_ok": true, "full_wasted": 0, "pc_wasted": 0, "full_plans": 8, "pc_plans": 3}
+{"setting": "SA-BT-50-5-50", "i": 0, "seed": 0, "cell": "F1-R2", "full": 27.498937372380766, "full_ok": true, "pc": 27.67937870126334, "pc_ok": true, "full_wasted": 0, "pc_wasted": 0, "full_plans": 43, "pc_plans": 31}
+{"setting": "SA-BT-50-5-50", "i": 0, "seed": 0, "cell": "F3-pf0.2", "full": 32.06197775262915, "full_ok": true, "pc": 27.67109223681843, "pc_ok": true, "full_wasted": 0, "pc_wasted": 0, "full_plans": 21, "pc_plans": 13}
+{"setting": "SA-BT-50-5-50", "i": 1, "seed": 0, "cell": "F1-R2", "full": 23.84750305594193, "full_ok": true, "pc": 23.302213018311235, "pc_ok": true, "full_wasted": 0, "pc_wasted": 0, "full_plans": 45, "pc_plans": 40}
+{"setting": "SA-BT-50-5-50", "i": 1, "seed": 0, "cell": "F3-pf0.2", "full": 25.126295901970472, "full_ok": true, "pc": 22.88603776804253, "pc_ok": true, "full_wasted": 0, "pc_wasted": 0, "full_plans": 17, "pc_plans": 6}
+{"setting": "SA-BT-50-5-50", "i": 2, "seed": 0, "cell": "F1-R2", "full": 24.567128993479617, "full_ok": true, "pc": 24.25818598214464, "pc_ok": true, "full_wasted": 0, "pc_wasted": 0, "full_plans": 41, "pc_plans": 40}
+{"setting": "SA-BT-50-5-50", "i": 2, "seed": 0, "cell": "F3-pf0.2", "full": 29.350449026855518, "full_ok": true, "pc": 26.052476789747338, "pc_ok": true, "full_wasted": 0, "pc_wasted": 0, "full_plans": 27, "pc_plans": 10}
+{"setting": "SA-BT-50-5-50", "i": 3, "seed": 0, "cell": "F1-R2", "full": 25.135603399770346, "full_ok": true, "pc": 25.431958843147317, "pc_ok": true, "full_wasted": 0, "pc_wasted": 0, "full_plans": 41, "pc_plans": 32}
+{"setting": "SA-BT-50-5-50", "i": 3, "seed": 0, "cell": "F3-pf0.2", "full": 31.57060099058568, "full_ok": true, "pc": 31.04927019575685, "pc_ok": true, "full_wasted": 0, "pc_wasted": 0, "full_plans": 30, "pc_plans": 14}
+{"setting": "SA-BT-50-5-50", "i": 4, "seed": 0, "cell": "F1-R2", "full": 23.85522270258314, "full_ok": true, "pc": 27.24623811999594, "pc_ok": true, "full_wasted": 0, "pc_wasted": 0, "full_plans": 44, "pc_plans": 31}
+{"setting": "SA-BT-50-5-50", "i": 4, "seed": 0, "cell": "F3-pf0.2", "full": 29.39289736848206, "full_ok": true, "pc": 27.52275275879829, "pc_ok": true, "full_wasted": 0, "pc_wasted": 0, "full_plans": 23, "pc_plans": 12}
+{"setting": "SA-BT-50-5-50", "i": 5, "seed": 0, "cell": "F1-R2", "full": 25.418045929206926, "full_ok": true, "pc": 29.25458937299321, "pc_ok": true, "full_wasted": 0, "pc_wasted": 0, "full_plans": 38, "pc_plans": 38}
+{"setting": "SA-BT-50-5-50", "i": 5, "seed": 0, "cell": "F3-pf0.2", "full": 32.80919407722369, "full_ok": true, "pc": 29.59944601833162, "pc_ok": true, "full_wasted": 0, "pc_wasted": 0, "full_plans": 23, "pc_plans": 9}
+GM FULL/PC 1.0255084385713356 n 24 min 0.8381215067987462 max 1.1586813226681496
+F1-R2 0.9953681415162309
+F3-pf0.2 1.0565614004673964

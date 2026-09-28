@@ -1,0 +1,19 @@
+== tuned leases (evaluation rows)
+  variant selected: V1 (HYB); DS rho* = inf
+  max regret: CEN-F 1.285, HYB 1.177, REP-clamp 1.120, INF-r 1.066, SPARC 1.214, SPARC-V3 1.190, DS 1.120
+  best fixed INF-r 1.066; SPARC margin -11.1 points; K6 fires: True
+  E3a: {'diff': 0.1106823967295234, 'diff_hi95': 0.1792114162596705, 'diff_log': 0.09874274654011872, 'diff_log_hi95': 0.15715320011256018, 'comparator': 'INF-r', 'n_clusters': 40, 'holds': False}
+  K5 (rho=0.5): pooled best fixed INF-r ratio to FULL 1.738; fires: False
+     F1-R2: best fixed INF-r / FULL = 1.739 [1.688, 1.791]
+     F3-pf0.2: best fixed INF-r / FULL = 1.737 [1.679, 1.798]
+  regret by cell:
+     CEN-F      F1-R2@2=1.008 F1-R2@1=1.139 F1-R2@0.5=1.240 F3-pf0.2@2=1.129 F3-pf0.2@1=1.285 F3-pf0.2@0.5=1.232
+     HYB        F1-R2@2=1.028 F1-R2@1=1.127 F1-R2@0.5=1.033 F3-pf0.2@2=1.177 F3-pf0.2@1=1.169 F3-pf0.2@0.5=1.171
+     REP-clamp  F1-R2@2=1.011 F1-R2@1=1.000 F1-R2@0.5=1.022 F3-pf0.2@2=1.099 F3-pf0.2@1=1.067 F3-pf0.2@0.5=1.120
+     INF-r      F1-R2@2=1.000 F1-R2@1=1.066 F1-R2@0.5=1.000 F3-pf0.2@2=1.000 F3-pf0.2@1=1.000 F3-pf0.2@0.5=1.000
+     SPARC      F1-R2@2=1.019 F1-R2@1=1.127 F1-R2@0.5=1.017 F3-pf0.2@2=1.214 F3-pf0.2@1=1.137 F3-pf0.2@0.5=1.116
+     SPARC-V3   F1-R2@2=1.014 F1-R2@1=1.103 F1-R2@0.5=0.969 F3-pf0.2@2=1.190 F3-pf0.2@1=1.138 F3-pf0.2@0.5=1.028
+     DS         F1-R2@2=1.011 F1-R2@1=1.000 F1-R2@0.5=1.022 F3-pf0.2@2=1.099 F3-pf0.2@1=1.067 F3-pf0.2@0.5=1.120
+  SPARC(sel)/CEN-F: F1-R2@2 1.019 [1.008, 1.032]; F1-R2@1 0.990 [0.953, 1.029]; F1-R2@0.5 0.833 [0.784, 0.882]; F3-pf0.2@2 1.043 [1.000, 1.085]; F3-pf0.2@1 0.910 [0.865, 0.957]; F3-pf0.2@0.5 0.951 [0.889, 1.018]
+  success < 100%: CEN-F|F1-R2|0.5 0.925 (n=80); CEN-F|F3-pf0.2|2 0.938 (n=80); CEN-F|F3-pf0.2|1 0.900 (n=80); CEN-F|F3-pf0.2|0.5 0.863 (n=80); HYB|F3-pf0.2|2 0.950 (n=80); HYB|F3-pf0.2|1 0.975 (n=80); HYB|F3-pf0.2|0.5 0.963 (n=80); INF-r|F3-pf0.2|2 0.988 (n=80); INF-r|F3-pf0.2|1 0.988 (n=80); REP-clamp|F3-pf0.2|2 0.963 (n=80); REP-clamp|F3-pf0.2|0.5 0.975 (n=80); SPARC|F3-pf0.2|2 0.988 (n=80); SPARC|F3-pf0.2|0.5 0.988 (n=80); SPARC-V3|F1-R2|0.5 0.988 (n=80); SPARC-V3|F3-pf0.2|2 0.975 (n=80); SPARC-V3|F3-pf0.2|1 0.975 (n=80); SPARC-V3|F3-pf0.2|0.5 0.975 (n=80)
+wrote docs/results/trackD-week1/c3_gates_first2.json

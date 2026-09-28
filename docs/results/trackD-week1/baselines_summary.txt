@@ -1,0 +1,368 @@
+# scripts/trackD_baselines.py report runs/trackD/c1dyn runs/trackD/baselines_d (CRN seeds 0 1; the B2 x3 rows are seed 0 only)
+29107 completed rows (families ['F1', 'F2', 'F3'], primary settings, CRN seeds [0, 1]) from ['runs/trackD/c1dyn', 'runs/trackD/baselines_d']; worlds: ['DynTaskEnvX[arrival,causal,L=200,det]@6fabb0570f', 'DynTaskEnvX[decision,causal,L=200,det]@6fabb0570f']
+
+== rows per method: success; mean makespan (successful episodes); per-event CPU ms (median over episodes of the episode p50 / p95; process time, loaded host); CPU per episode s (method calls); re-plans, wasted trips per episode
+  B2?scale=3[heavy]                        n=   24 success 24/24 ms  43.13 cpu p50  25090.4 p95  30713.1 cpu/ep  592.84 replans  23.0 wasted 0.00 settings 4 instances 12
+  B2[heavy]                                n=  171 success 171/171 ms  43.85 cpu p50  10150.9 p95  13201.9 cpu/ep  287.96 replans  26.8 wasted 0.00 settings 4 instances 25
+  B3[heavy]                                n=   72 success 72/72 ms  43.88 cpu p50   8620.9 p95  14413.5 cpu/ep  228.38 replans  28.3 wasted 0.06 settings 4 instances 24
+  B3[light]                                n= 1120 success 1120/1120 ms  46.89 cpu p50    111.7 p95    160.9 cpu/ep    2.76 replans  29.3 wasted 0.03 settings 4 instances 80
+  B5[light]                                n= 1120 success 1120/1120 ms  40.79 cpu p50     10.9 p95     23.8 cpu/ep    0.43 replans  28.0 wasted 0.08 settings 4 instances 80
+  B6?rule=cbta&objective=makespan          n= 1120 success 1120/1120 ms  42.52 cpu p50      3.8 p95     12.0 cpu/ep    0.24 replans  27.9 wasted 0.03 settings 4 instances 80
+  B6?rule=cbta&objective=start             n= 1120 success 1120/1120 ms  40.98 cpu p50      4.0 p95     12.9 cpu/ep    0.25 replans  27.8 wasted 0.03 settings 4 instances 80
+  B6?rule=seq                              n= 1120 success 1120/1120 ms  42.70 cpu p50      2.8 p95      5.4 cpu/ep    0.15 replans  27.8 wasted 0.04 settings 4 instances 80
+  RL(g.)                                   n= 1120 success 1117/1120 ms  44.01 cpu p50      7.3 p95      9.2 cpu/ep    3.12 replans   0.0 wasted 0.00 settings 4 instances 80
+  RL(g.)[arrival]                          n= 1120 success 1119/1120 ms  43.76 cpu p50      7.6 p95      9.7 cpu/ep    3.32 replans   0.0 wasted 3.45 settings 4 instances 80
+  RL(s.1)                                  n= 1120 success 1118/1120 ms  44.30 cpu p50      7.4 p95      9.3 cpu/ep    3.16 replans   0.0 wasted 0.00 settings 4 instances 80
+  RL(s.1)[arrival]                         n= 1120 success 1119/1120 ms  44.00 cpu p50      7.7 p95      9.7 cpu/ep    3.36 replans   0.0 wasted 3.38 settings 4 instances 80
+  SPARC[heavy]                             n= 1120 success 1120/1120 ms  39.45 cpu p50    114.3 p95    223.7 cpu/ep    3.69 replans  28.2 wasted 0.07 settings 4 instances 80
+  SPARC[light]                             n= 1120 success 1120/1120 ms  40.41 cpu p50     13.0 p95     25.7 cpu/ep    0.46 replans  28.1 wasted 0.08 settings 4 instances 80
+
+== SPARC[light] / B2?scale=3[heavy]
+  SPARC[light]/B2?scale=3[heavy] [ALL] 0.9174 [0.9014, 0.9344] p_less 0.00029 clusters 12 obs 24 wins 22/24 success ref 24/24 method 24/24 dropped 0
+  SPARC[light]/B2?scale=3[heavy] [F1] 0.8819 [0.8597, 0.9032] p_less 0.00045 clusters 12 obs 12 wins 12/12 success ref 12/12 method 12/12 dropped 0
+  SPARC[light]/B2?scale=3[heavy] [F3] 0.9542 [0.9251, 0.9833] p_less 0.016 clusters 12 obs 12 wins 10/12 success ref 12/12 method 12/12 dropped 0
+  SPARC[light]/B2?scale=3[heavy] [MA-AT-25-5-50] 0.8417 [0.8116, 0.8725] p_less 0.0072 clusters 3 obs 6 wins 6/6 success ref 6/6 method 6/6 dropped 0
+  SPARC[light]/B2?scale=3[heavy] [MA-AT-50-5-50] 0.9455 [0.9331, 0.9601] p_less 0.011 clusters 3 obs 6 wins 5/6 success ref 6/6 method 6/6 dropped 0
+  SPARC[light]/B2?scale=3[heavy] [SA-AT-50-5-50] 0.9552 [0.9189, 0.9968] p_less 0.096 clusters 3 obs 6 wins 5/6 success ref 6/6 method 6/6 dropped 0
+  SPARC[light]/B2?scale=3[heavy] [SA-BT-50-5-50] 0.9316 [0.8840, 0.9883] p_less 0.08 clusters 3 obs 6 wins 6/6 success ref 6/6 method 6/6 dropped 0
+  SPARC[light]/B2?scale=3[heavy] [F1-R2] 0.8819 [0.8597, 0.9032] p_less 0.00045 clusters 12 obs 12 wins 12/12 success ref 12/12 method 12/12 dropped 0
+  SPARC[light]/B2?scale=3[heavy] [F3-pf0.2] 0.9542 [0.9251, 0.9833] p_less 0.016 clusters 12 obs 12 wins 10/12 success ref 12/12 method 12/12 dropped 0
+
+== SPARC[light] / B2[heavy]
+  SPARC[light]/B2[heavy] [ALL] 0.9061 [0.8934, 0.9191] p_less 2.5e-11 clusters 25 obs 171 wins 150/171 success ref 171/171 method 171/171 dropped 0
+  SPARC[light]/B2[heavy] [F1] 0.9049 [0.8923, 0.9176] p_less 3.4e-10 clusters 25 obs 73 wins 69/73 success ref 73/73 method 73/73 dropped 0
+  SPARC[light]/B2[heavy] [F2] 0.9138 [0.8927, 0.9346] p_less 5.7e-07 clusters 24 obs 24 wins 22/24 success ref 24/24 method 24/24 dropped 0
+  SPARC[light]/B2[heavy] [F3] 0.9029 [0.8800, 0.9280] p_less 2.4e-07 clusters 25 obs 74 wins 59/74 success ref 74/74 method 74/74 dropped 0
+  SPARC[light]/B2[heavy] [MA-AT-25-5-50] 0.8798 [0.8527, 0.9067] p_less 0.00016 clusters 7 obs 45 wins 42/45 success ref 45/45 method 45/45 dropped 0
+  SPARC[light]/B2[heavy] [MA-AT-50-5-50] 0.8967 [0.8697, 0.9272] p_less 0.00098 clusters 6 obs 42 wins 37/42 success ref 42/42 method 42/42 dropped 0
+  SPARC[light]/B2[heavy] [SA-AT-50-5-50] 0.9186 [0.8981, 0.9397] p_less 0.00072 clusters 6 obs 42 wins 37/42 success ref 42/42 method 42/42 dropped 0
+  SPARC[light]/B2[heavy] [SA-BT-50-5-50] 0.9344 [0.9155, 0.9563] p_less 0.0014 clusters 6 obs 42 wins 34/42 success ref 42/42 method 42/42 dropped 0
+  SPARC[light]/B2[heavy] [F1-R1] 0.9087 [0.8944, 0.9239] p_less 4.3e-09 clusters 25 obs 25 wins 24/25 success ref 25/25 method 25/25 dropped 0
+  SPARC[light]/B2[heavy] [F1-R2] 0.9158 [0.8892, 0.9416] p_less 8.9e-06 clusters 24 obs 24 wins 22/24 success ref 24/24 method 24/24 dropped 0
+  SPARC[light]/B2[heavy] [F1-R3] 0.9006 [0.8848, 0.9172] p_less 1.3e-09 clusters 24 obs 24 wins 23/24 success ref 24/24 method 24/24 dropped 0
+  SPARC[light]/B2[heavy] [F2-R2N3] 0.9138 [0.8927, 0.9346] p_less 5.7e-07 clusters 24 obs 24 wins 22/24 success ref 24/24 method 24/24 dropped 0
+  SPARC[light]/B2[heavy] [F3-pf0.1] 0.9222 [0.8906, 0.9560] p_less 0.0003 clusters 25 obs 25 wins 20/25 success ref 25/25 method 25/25 dropped 0
+  SPARC[light]/B2[heavy] [F3-pf0.2] 0.9027 [0.8654, 0.9426] p_less 0.00013 clusters 25 obs 25 wins 19/25 success ref 25/25 method 25/25 dropped 0
+  SPARC[light]/B2[heavy] [F3-pf0.2-R2] 0.8821 [0.8485, 0.9166] p_less 9.3e-06 clusters 24 obs 24 wins 20/24 success ref 24/24 method 24/24 dropped 0
+
+== SPARC[light] / B3[heavy]
+  SPARC[light]/B3[heavy] [ALL] 0.9192 [0.8980, 0.9376] p_less 2.2e-06 clusters 24 obs 72 wins 58/72 success ref 72/72 method 72/72 dropped 0
+  SPARC[light]/B3[heavy] [F1] 0.9579 [0.9226, 0.9925] p_less 0.026 clusters 24 obs 24 wins 18/24 success ref 24/24 method 24/24 dropped 0
+  SPARC[light]/B3[heavy] [F2] 0.9329 [0.9018, 0.9652] p_less 0.00083 clusters 24 obs 24 wins 19/24 success ref 24/24 method 24/24 dropped 0
+  SPARC[light]/B3[heavy] [F3] 0.8692 [0.8349, 0.9058] p_less 2.7e-06 clusters 24 obs 24 wins 21/24 success ref 24/24 method 24/24 dropped 0
+  SPARC[light]/B3[heavy] [MA-AT-25-5-50] 0.8877 [0.8204, 0.9431] p_less 0.016 clusters 6 obs 18 wins 15/18 success ref 18/18 method 18/18 dropped 0
+  SPARC[light]/B3[heavy] [MA-AT-50-5-50] 0.9261 [0.9014, 0.9503] p_less 0.0017 clusters 6 obs 18 wins 15/18 success ref 18/18 method 18/18 dropped 0
+  SPARC[light]/B3[heavy] [SA-AT-50-5-50] 0.8872 [0.8579, 0.9121] p_less 0.00047 clusters 6 obs 18 wins 17/18 success ref 18/18 method 18/18 dropped 0
+  SPARC[light]/B3[heavy] [SA-BT-50-5-50] 0.9789 [0.9492, 1.0055] p_less 0.12 clusters 6 obs 18 wins 11/18 success ref 18/18 method 18/18 dropped 0
+  SPARC[light]/B3[heavy] [F1-R2] 0.9579 [0.9226, 0.9925] p_less 0.026 clusters 24 obs 24 wins 18/24 success ref 24/24 method 24/24 dropped 0
+  SPARC[light]/B3[heavy] [F2-R2N3] 0.9329 [0.9018, 0.9652] p_less 0.00083 clusters 24 obs 24 wins 19/24 success ref 24/24 method 24/24 dropped 0
+  SPARC[light]/B3[heavy] [F3-pf0.2] 0.8692 [0.8349, 0.9058] p_less 2.7e-06 clusters 24 obs 24 wins 21/24 success ref 24/24 method 24/24 dropped 0
+
+== SPARC[light] / B3[light]
+  SPARC[light]/B3[light] [ALL] 0.8849 [0.8770, 0.8929] p_less 6e-27 clusters 80 obs 1120 wins 959/1120 success ref 1120/1120 method 1120/1120 dropped 0
+  SPARC[light]/B3[light] [F1] 0.9149 [0.9050, 0.9248] p_less 5.6e-17 clusters 80 obs 480 wins 399/480 success ref 480/480 method 480/480 dropped 0
+  SPARC[light]/B3[light] [F2] 0.8879 [0.8738, 0.9017] p_less 7.3e-16 clusters 80 obs 160 wins 135/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/B3[light] [F3] 0.8549 [0.8441, 0.8659] p_less 2.1e-31 clusters 80 obs 480 wins 425/480 success ref 480/480 method 480/480 dropped 0
+  SPARC[light]/B3[light] [MA-AT-25-5-50] 0.8290 [0.8088, 0.8497] p_less 4.8e-12 clusters 20 obs 280 wins 267/280 success ref 280/280 method 280/280 dropped 0
+  SPARC[light]/B3[light] [MA-AT-50-5-50] 0.9085 [0.8903, 0.9266] p_less 1e-08 clusters 20 obs 280 wins 233/280 success ref 280/280 method 280/280 dropped 0
+  SPARC[light]/B3[light] [SA-AT-50-5-50] 0.8550 [0.8432, 0.8655] p_less 1.1e-15 clusters 20 obs 280 wins 266/280 success ref 280/280 method 280/280 dropped 0
+  SPARC[light]/B3[light] [SA-BT-50-5-50] 0.9523 [0.9419, 0.9625] p_less 2.8e-08 clusters 20 obs 280 wins 193/280 success ref 280/280 method 280/280 dropped 0
+  SPARC[light]/B3[light] [F1-R1] 0.9292 [0.9180, 0.9404] p_less 8e-13 clusters 80 obs 160 wins 134/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/B3[light] [F1-R2] 0.8974 [0.8838, 0.9113] p_less 6.7e-16 clusters 80 obs 160 wins 137/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/B3[light] [F1-R3] 0.9184 [0.9050, 0.9315] p_less 1.1e-13 clusters 80 obs 160 wins 128/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/B3[light] [F2-R2N3] 0.8879 [0.8738, 0.9017] p_less 7.3e-16 clusters 80 obs 160 wins 135/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/B3[light] [F3-pf0.1] 0.8792 [0.8638, 0.8949] p_less 1.1e-21 clusters 80 obs 160 wins 135/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/B3[light] [F3-pf0.2] 0.8289 [0.8131, 0.8449] p_less 1.6e-26 clusters 80 obs 160 wins 148/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/B3[light] [F3-pf0.2-R2] 0.8574 [0.8408, 0.8736] p_less 1.3e-21 clusters 80 obs 160 wins 142/160 success ref 160/160 method 160/160 dropped 0
+
+== SPARC[light] / B5[light]
+  SPARC[light]/B5[light] [ALL] 0.9914 [0.9877, 0.9950] p_less 1.9e-05 clusters 80 obs 1120 wins 459/1120 success ref 1120/1120 method 1120/1120 dropped 0
+  SPARC[light]/B5[light] [F1] 0.9953 [0.9923, 0.9984] p_less 0.0069 clusters 80 obs 480 wins 133/480 success ref 480/480 method 480/480 dropped 0
+  SPARC[light]/B5[light] [F2] 0.9828 [0.9737, 0.9914] p_less 0.0004 clusters 80 obs 160 wins 91/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/B5[light] [F3] 0.9904 [0.9825, 0.9979] p_less 0.0099 clusters 80 obs 480 wins 235/480 success ref 480/480 method 480/480 dropped 0
+  SPARC[light]/B5[light] [MA-AT-25-5-50] 0.9913 [0.9855, 0.9969] p_less 0.0044 clusters 20 obs 280 wins 120/280 success ref 280/280 method 280/280 dropped 0
+  SPARC[light]/B5[light] [MA-AT-50-5-50] 0.9991 [0.9911, 1.0071] p_less 0.42 clusters 20 obs 280 wins 88/280 success ref 280/280 method 280/280 dropped 0
+  SPARC[light]/B5[light] [SA-AT-50-5-50] 0.9837 [0.9743, 0.9927] p_less 0.0016 clusters 20 obs 280 wins 152/280 success ref 280/280 method 280/280 dropped 0
+  SPARC[light]/B5[light] [SA-BT-50-5-50] 0.9915 [0.9858, 0.9971] p_less 0.005 clusters 20 obs 280 wins 99/280 success ref 280/280 method 280/280 dropped 0
+  SPARC[light]/B5[light] [F1-R1] 0.9981 [0.9961, 0.9998] p_less 0.026 clusters 80 obs 160 wins 12/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/B5[light] [F1-R2] 0.9951 [0.9883, 1.0018] p_less 0.1 clusters 80 obs 160 wins 70/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/B5[light] [F1-R3] 0.9928 [0.9871, 0.9984] p_less 0.014 clusters 80 obs 160 wins 51/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/B5[light] [F2-R2N3] 0.9828 [0.9737, 0.9914] p_less 0.0004 clusters 80 obs 160 wins 91/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/B5[light] [F3-pf0.1] 0.9845 [0.9750, 0.9944] p_less 0.0022 clusters 80 obs 160 wins 80/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/B5[light] [F3-pf0.2] 0.9893 [0.9763, 1.0027] p_less 0.06 clusters 80 obs 160 wins 80/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/B5[light] [F3-pf0.2-R2] 0.9975 [0.9857, 1.0091] p_less 0.34 clusters 80 obs 160 wins 75/160 success ref 160/160 method 160/160 dropped 0
+
+== SPARC[light] / B6?rule=cbta&objective=makespan
+  SPARC[light]/B6?rule=cbta&objective=makespan [ALL] 0.9569 [0.9498, 0.9636] p_less 4.9e-16 clusters 80 obs 1120 wins 814/1120 success ref 1120/1120 method 1120/1120 dropped 0
+  SPARC[light]/B6?rule=cbta&objective=makespan [F1] 0.9497 [0.9428, 0.9563] p_less 3.6e-19 clusters 80 obs 480 wins 387/480 success ref 480/480 method 480/480 dropped 0
+  SPARC[light]/B6?rule=cbta&objective=makespan [F2] 0.9525 [0.9390, 0.9651] p_less 8e-09 clusters 80 obs 160 wins 121/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/B6?rule=cbta&objective=makespan [F3] 0.9656 [0.9537, 0.9776] p_less 1.1e-06 clusters 80 obs 480 wins 306/480 success ref 480/480 method 480/480 dropped 0
+  SPARC[light]/B6?rule=cbta&objective=makespan [MA-AT-25-5-50] 0.9231 [0.9042, 0.9403] p_less 1.2e-07 clusters 20 obs 280 wins 233/280 success ref 280/280 method 280/280 dropped 0
+  SPARC[light]/B6?rule=cbta&objective=makespan [MA-AT-50-5-50] 0.9600 [0.9466, 0.9739] p_less 1.4e-05 clusters 20 obs 280 wins 198/280 success ref 280/280 method 280/280 dropped 0
+  SPARC[light]/B6?rule=cbta&objective=makespan [SA-AT-50-5-50] 0.9710 [0.9591, 0.9825] p_less 8.9e-05 clusters 20 obs 280 wins 195/280 success ref 280/280 method 280/280 dropped 0
+  SPARC[light]/B6?rule=cbta&objective=makespan [SA-BT-50-5-50] 0.9743 [0.9646, 0.9827] p_less 1.9e-05 clusters 20 obs 280 wins 188/280 success ref 280/280 method 280/280 dropped 0
+  SPARC[light]/B6?rule=cbta&objective=makespan [F1-R1] 0.9499 [0.9435, 0.9563] p_less 4.7e-21 clusters 80 obs 160 wins 142/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/B6?rule=cbta&objective=makespan [F1-R2] 0.9505 [0.9402, 0.9606] p_less 6.1e-13 clusters 80 obs 160 wins 122/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/B6?rule=cbta&objective=makespan [F1-R3] 0.9486 [0.9393, 0.9581] p_less 2.5e-13 clusters 80 obs 160 wins 123/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/B6?rule=cbta&objective=makespan [F2-R2N3] 0.9525 [0.9390, 0.9651] p_less 8e-09 clusters 80 obs 160 wins 121/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/B6?rule=cbta&objective=makespan [F3-pf0.1] 0.9734 [0.9579, 0.9896] p_less 0.0018 clusters 80 obs 160 wins 95/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/B6?rule=cbta&objective=makespan [F3-pf0.2] 0.9747 [0.9566, 0.9938] p_less 0.0071 clusters 80 obs 160 wins 99/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/B6?rule=cbta&objective=makespan [F3-pf0.2-R2] 0.9489 [0.9352, 0.9625] p_less 2.9e-09 clusters 80 obs 160 wins 112/160 success ref 160/160 method 160/160 dropped 0
+
+== SPARC[light] / B6?rule=cbta&objective=start
+  SPARC[light]/B6?rule=cbta&objective=start [ALL] 0.9864 [0.9796, 0.9932] p_less 0.00059 clusters 80 obs 1120 wins 649/1120 success ref 1120/1120 method 1120/1120 dropped 0
+  SPARC[light]/B6?rule=cbta&objective=start [F1] 0.9793 [0.9736, 0.9848] p_less 3.9e-09 clusters 80 obs 480 wins 308/480 success ref 480/480 method 480/480 dropped 0
+  SPARC[light]/B6?rule=cbta&objective=start [F2] 0.9798 [0.9668, 0.9925] p_less 0.0031 clusters 80 obs 160 wins 94/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/B6?rule=cbta&objective=start [F3] 0.9958 [0.9846, 1.0076] p_less 0.27 clusters 80 obs 480 wins 247/480 success ref 480/480 method 480/480 dropped 0
+  SPARC[light]/B6?rule=cbta&objective=start [MA-AT-25-5-50] 0.9703 [0.9547, 0.9846] p_less 0.00073 clusters 20 obs 280 wins 182/280 success ref 280/280 method 280/280 dropped 0
+  SPARC[light]/B6?rule=cbta&objective=start [MA-AT-50-5-50] 0.9799 [0.9677, 0.9924] p_less 0.003 clusters 20 obs 280 wins 176/280 success ref 280/280 method 280/280 dropped 0
+  SPARC[light]/B6?rule=cbta&objective=start [SA-AT-50-5-50] 1.0148 [1.0015, 1.0295] p_less 0.97 clusters 20 obs 280 wins 129/280 success ref 280/280 method 280/280 dropped 0
+  SPARC[light]/B6?rule=cbta&objective=start [SA-BT-50-5-50] 0.9812 [0.9669, 0.9939] p_less 0.0083 clusters 20 obs 280 wins 162/280 success ref 280/280 method 280/280 dropped 0
+  SPARC[light]/B6?rule=cbta&objective=start [F1-R1] 0.9794 [0.9709, 0.9879] p_less 1.3e-05 clusters 80 obs 160 wins 108/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/B6?rule=cbta&objective=start [F1-R2] 0.9876 [0.9756, 0.9993] p_less 0.027 clusters 80 obs 160 wins 93/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/B6?rule=cbta&objective=start [F1-R3] 0.9709 [0.9625, 0.9791] p_less 4.6e-09 clusters 80 obs 160 wins 107/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/B6?rule=cbta&objective=start [F2-R2N3] 0.9798 [0.9668, 0.9925] p_less 0.0031 clusters 80 obs 160 wins 94/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/B6?rule=cbta&objective=start [F3-pf0.1] 0.9988 [0.9834, 1.0150] p_less 0.44 clusters 80 obs 160 wins 84/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/B6?rule=cbta&objective=start [F3-pf0.2] 1.0055 [0.9879, 1.0236] p_less 0.71 clusters 80 obs 160 wins 77/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/B6?rule=cbta&objective=start [F3-pf0.2-R2] 0.9833 [0.9670, 0.9991] p_less 0.04 clusters 80 obs 160 wins 86/160 success ref 160/160 method 160/160 dropped 0
+
+== SPARC[light] / B6?rule=seq
+  SPARC[light]/B6?rule=seq [ALL] 0.9497 [0.9447, 0.9546] p_less 7.9e-26 clusters 80 obs 1120 wins 838/1120 success ref 1120/1120 method 1120/1120 dropped 0
+  SPARC[light]/B6?rule=seq [F1] 0.9497 [0.9441, 0.9552] p_less 1.2e-22 clusters 80 obs 480 wins 382/480 success ref 480/480 method 480/480 dropped 0
+  SPARC[light]/B6?rule=seq [F2] 0.9443 [0.9329, 0.9553] p_less 9.8e-14 clusters 80 obs 160 wins 120/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/B6?rule=seq [F3] 0.9515 [0.9420, 0.9609] p_less 9.2e-14 clusters 80 obs 480 wins 336/480 success ref 480/480 method 480/480 dropped 0
+  SPARC[light]/B6?rule=seq [MA-AT-25-5-50] 0.9271 [0.9193, 0.9351] p_less 2.9e-13 clusters 20 obs 280 wins 235/280 success ref 280/280 method 280/280 dropped 0
+  SPARC[light]/B6?rule=seq [MA-AT-50-5-50] 0.9416 [0.9318, 0.9519] p_less 7.9e-10 clusters 20 obs 280 wins 217/280 success ref 280/280 method 280/280 dropped 0
+  SPARC[light]/B6?rule=seq [SA-AT-50-5-50] 0.9610 [0.9478, 0.9732] p_less 6.9e-06 clusters 20 obs 280 wins 199/280 success ref 280/280 method 280/280 dropped 0
+  SPARC[light]/B6?rule=seq [SA-BT-50-5-50] 0.9696 [0.9599, 0.9782] p_less 2.5e-06 clusters 20 obs 280 wins 187/280 success ref 280/280 method 280/280 dropped 0
+  SPARC[light]/B6?rule=seq [F1-R1] 0.9405 [0.9311, 0.9497] p_less 6.2e-17 clusters 80 obs 160 wins 135/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/B6?rule=seq [F1-R2] 0.9530 [0.9435, 0.9629] p_less 1.7e-13 clusters 80 obs 160 wins 122/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/B6?rule=seq [F1-R3] 0.9556 [0.9481, 0.9633] p_less 8.9e-15 clusters 80 obs 160 wins 125/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/B6?rule=seq [F2-R2N3] 0.9443 [0.9329, 0.9553] p_less 9.8e-14 clusters 80 obs 160 wins 120/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/B6?rule=seq [F3-pf0.1] 0.9540 [0.9383, 0.9699] p_less 5.5e-07 clusters 80 obs 160 wins 111/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/B6?rule=seq [F3-pf0.2] 0.9504 [0.9354, 0.9664] p_less 8e-08 clusters 80 obs 160 wins 115/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/B6?rule=seq [F3-pf0.2-R2] 0.9501 [0.9376, 0.9626] p_less 6.1e-10 clusters 80 obs 160 wins 110/160 success ref 160/160 method 160/160 dropped 0
+
+== SPARC[light] / RL(g.)
+  SPARC[light]/RL(g.) [ALL] 0.9144 [0.9074, 0.9214] p_less 1.8e-28 clusters 80 obs 1117 wins 927/1117 success ref 1120/1120 method 1117/1120 dropped 3
+  SPARC[light]/RL(g.) [F1] 0.8987 [0.8927, 0.9046] p_less 1.5e-39 clusters 80 obs 480 wins 459/480 success ref 480/480 method 480/480 dropped 0
+  SPARC[light]/RL(g.) [F2] 0.8830 [0.8716, 0.8946] p_less 3.5e-29 clusters 80 obs 160 wins 146/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/RL(g.) [F3] 0.9415 [0.9302, 0.9532] p_less 3.7e-10 clusters 80 obs 477 wins 322/477 success ref 480/480 method 477/480 dropped 3
+  SPARC[light]/RL(g.) [MA-AT-25-5-50] 0.8770 [0.8625, 0.8918] p_less 2.3e-12 clusters 20 obs 277 wins 256/277 success ref 280/280 method 277/280 dropped 3
+  SPARC[light]/RL(g.) [MA-AT-50-5-50] 0.9001 [0.8839, 0.9168] p_less 6.8e-10 clusters 20 obs 280 wins 248/280 success ref 280/280 method 280/280 dropped 0
+  SPARC[light]/RL(g.) [SA-AT-50-5-50] 0.9490 [0.9394, 0.9588] p_less 4.3e-09 clusters 20 obs 280 wins 198/280 success ref 280/280 method 280/280 dropped 0
+  SPARC[light]/RL(g.) [SA-BT-50-5-50] 0.9332 [0.9186, 0.9465] p_less 2e-08 clusters 20 obs 280 wins 225/280 success ref 280/280 method 280/280 dropped 0
+  SPARC[light]/RL(g.) [F1-R1] 0.8900 [0.8809, 0.8986] p_less 2.3e-31 clusters 80 obs 160 wins 159/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/RL(g.) [F1-R2] 0.9043 [0.8945, 0.9136] p_less 3.5e-29 clusters 80 obs 160 wins 148/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/RL(g.) [F1-R3] 0.9020 [0.8935, 0.9103] p_less 1.6e-31 clusters 80 obs 160 wins 152/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/RL(g.) [F2-R2N3] 0.8830 [0.8716, 0.8946] p_less 3.5e-29 clusters 80 obs 160 wins 146/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/RL(g.) [F3-pf0.1] 0.9290 [0.9147, 0.9438] p_less 3e-11 clusters 80 obs 160 wins 116/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/RL(g.) [F3-pf0.2] 0.9583 [0.9428, 0.9742] p_less 5.8e-05 clusters 80 obs 158 wins 101/158 success ref 160/160 method 158/160 dropped 2
+  SPARC[light]/RL(g.) [F3-pf0.2-R2] 0.9387 [0.9233, 0.9547] p_less 2.9e-08 clusters 80 obs 159 wins 105/159 success ref 160/160 method 159/160 dropped 1
+
+== SPARC[light] / RL(g.)[arrival]
+  SPARC[light]/RL(g.)[arrival] [ALL] 0.9209 [0.9141, 0.9275] p_less 1.6e-29 clusters 80 obs 1119 wins 925/1119 success ref 1120/1120 method 1119/1120 dropped 1
+  SPARC[light]/RL(g.)[arrival] [F1] 0.9039 [0.8986, 0.9091] p_less 1.2e-42 clusters 80 obs 480 wins 456/480 success ref 480/480 method 480/480 dropped 0
+  SPARC[light]/RL(g.)[arrival] [F2] 0.8922 [0.8807, 0.9034] p_less 3.4e-28 clusters 80 obs 160 wins 146/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/RL(g.)[arrival] [F3] 0.9481 [0.9369, 0.9593] p_less 1.7e-09 clusters 80 obs 479 wins 323/479 success ref 480/480 method 479/480 dropped 1
+  SPARC[light]/RL(g.)[arrival] [MA-AT-25-5-50] 0.8899 [0.8763, 0.9034] p_less 3.4e-12 clusters 20 obs 279 wins 261/279 success ref 280/280 method 279/280 dropped 1
+  SPARC[light]/RL(g.)[arrival] [MA-AT-50-5-50] 0.9124 [0.8964, 0.9285] p_less 2.8e-09 clusters 20 obs 280 wins 241/280 success ref 280/280 method 280/280 dropped 0
+  SPARC[light]/RL(g.)[arrival] [SA-AT-50-5-50] 0.9490 [0.9394, 0.9588] p_less 4.3e-09 clusters 20 obs 280 wins 198/280 success ref 280/280 method 280/280 dropped 0
+  SPARC[light]/RL(g.)[arrival] [SA-BT-50-5-50] 0.9332 [0.9186, 0.9465] p_less 2e-08 clusters 20 obs 280 wins 225/280 success ref 280/280 method 280/280 dropped 0
+  SPARC[light]/RL(g.)[arrival] [F1-R1] 0.8944 [0.8857, 0.9030] p_less 9.2e-32 clusters 80 obs 160 wins 159/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/RL(g.)[arrival] [F1-R2] 0.9089 [0.8993, 0.9182] p_less 6.8e-29 clusters 80 obs 160 wins 147/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/RL(g.)[arrival] [F1-R3] 0.9085 [0.9003, 0.9167] p_less 1.8e-31 clusters 80 obs 160 wins 150/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/RL(g.)[arrival] [F2-R2N3] 0.8922 [0.8807, 0.9034] p_less 3.4e-28 clusters 80 obs 160 wins 146/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/RL(g.)[arrival] [F3-pf0.1] 0.9382 [0.9238, 0.9529] p_less 4.1e-10 clusters 80 obs 160 wins 115/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/RL(g.)[arrival] [F3-pf0.2] 0.9608 [0.9459, 0.9763] p_less 9.3e-05 clusters 80 obs 160 wins 101/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/RL(g.)[arrival] [F3-pf0.2-R2] 0.9456 [0.9315, 0.9602] p_less 5.5e-08 clusters 80 obs 159 wins 107/159 success ref 160/160 method 159/160 dropped 1
+
+== SPARC[light] / RL(s.1)
+  SPARC[light]/RL(s.1) [ALL] 0.9104 [0.9036, 0.9171] p_less 6.9e-30 clusters 80 obs 1118 wins 955/1118 success ref 1120/1120 method 1118/1120 dropped 2
+  SPARC[light]/RL(s.1) [F1] 0.8969 [0.8906, 0.9033] p_less 1.1e-38 clusters 80 obs 480 wins 459/480 success ref 480/480 method 480/480 dropped 0
+  SPARC[light]/RL(s.1) [F2] 0.8871 [0.8756, 0.8983] p_less 1.2e-28 clusters 80 obs 160 wins 148/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/RL(s.1) [F3] 0.9322 [0.9208, 0.9438] p_less 1.4e-12 clusters 80 obs 478 wins 348/478 success ref 480/480 method 478/480 dropped 2
+  SPARC[light]/RL(s.1) [MA-AT-25-5-50] 0.8711 [0.8574, 0.8844] p_less 2.7e-13 clusters 20 obs 278 wins 267/278 success ref 280/280 method 278/280 dropped 2
+  SPARC[light]/RL(s.1) [MA-AT-50-5-50] 0.8969 [0.8804, 0.9137] p_less 3.7e-10 clusters 20 obs 280 wins 250/280 success ref 280/280 method 280/280 dropped 0
+  SPARC[light]/RL(s.1) [SA-AT-50-5-50] 0.9404 [0.9295, 0.9521] p_less 3.7e-09 clusters 20 obs 280 wins 212/280 success ref 280/280 method 280/280 dropped 0
+  SPARC[light]/RL(s.1) [SA-BT-50-5-50] 0.9349 [0.9219, 0.9474] p_less 6.8e-09 clusters 20 obs 280 wins 226/280 success ref 280/280 method 280/280 dropped 0
+  SPARC[light]/RL(s.1) [F1-R1] 0.8899 [0.8811, 0.8986] p_less 1.6e-30 clusters 80 obs 160 wins 156/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/RL(s.1) [F1-R2] 0.9015 [0.8928, 0.9102] p_less 6.8e-32 clusters 80 obs 160 wins 148/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/RL(s.1) [F1-R3] 0.8994 [0.8901, 0.9083] p_less 4.8e-30 clusters 80 obs 160 wins 155/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/RL(s.1) [F2-R2N3] 0.8871 [0.8756, 0.8983] p_less 1.2e-28 clusters 80 obs 160 wins 148/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/RL(s.1) [F3-pf0.1] 0.9244 [0.9104, 0.9383] p_less 2.2e-13 clusters 80 obs 160 wins 123/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/RL(s.1) [F3-pf0.2] 0.9418 [0.9252, 0.9589] p_less 1.6e-06 clusters 80 obs 159 wins 104/159 success ref 160/160 method 159/160 dropped 1
+  SPARC[light]/RL(s.1) [F3-pf0.2-R2] 0.9306 [0.9164, 0.9452] p_less 4e-11 clusters 80 obs 159 wins 121/159 success ref 160/160 method 159/160 dropped 1
+
+== SPARC[light] / RL(s.1)[arrival]
+  SPARC[light]/RL(s.1)[arrival] [ALL] 0.9168 [0.9100, 0.9234] p_less 7.2e-31 clusters 80 obs 1119 wins 938/1119 success ref 1120/1120 method 1119/1120 dropped 1
+  SPARC[light]/RL(s.1)[arrival] [F1] 0.9026 [0.8968, 0.9083] p_less 1.6e-40 clusters 80 obs 480 wins 459/480 success ref 480/480 method 480/480 dropped 0
+  SPARC[light]/RL(s.1)[arrival] [F2] 0.8923 [0.8807, 0.9040] p_less 5.5e-27 clusters 80 obs 160 wins 147/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/RL(s.1)[arrival] [F3] 0.9397 [0.9284, 0.9510] p_less 7.9e-12 clusters 80 obs 479 wins 332/479 success ref 480/480 method 479/480 dropped 1
+  SPARC[light]/RL(s.1)[arrival] [MA-AT-25-5-50] 0.8836 [0.8697, 0.8971] p_less 1.6e-12 clusters 20 obs 279 wins 259/279 success ref 280/280 method 279/280 dropped 1
+  SPARC[light]/RL(s.1)[arrival] [MA-AT-50-5-50] 0.9092 [0.8937, 0.9248] p_less 9.5e-10 clusters 20 obs 280 wins 241/280 success ref 280/280 method 280/280 dropped 0
+  SPARC[light]/RL(s.1)[arrival] [SA-AT-50-5-50] 0.9404 [0.9295, 0.9521] p_less 3.7e-09 clusters 20 obs 280 wins 212/280 success ref 280/280 method 280/280 dropped 0
+  SPARC[light]/RL(s.1)[arrival] [SA-BT-50-5-50] 0.9349 [0.9219, 0.9474] p_less 6.8e-09 clusters 20 obs 280 wins 226/280 success ref 280/280 method 280/280 dropped 0
+  SPARC[light]/RL(s.1)[arrival] [F1-R1] 0.8906 [0.8824, 0.8987] p_less 8.2e-32 clusters 80 obs 160 wins 158/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/RL(s.1)[arrival] [F1-R2] 0.9091 [0.8999, 0.9182] p_less 8.3e-30 clusters 80 obs 160 wins 147/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/RL(s.1)[arrival] [F1-R3] 0.9083 [0.8996, 0.9167] p_less 1.3e-30 clusters 80 obs 160 wins 154/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/RL(s.1)[arrival] [F2-R2N3] 0.8923 [0.8807, 0.9040] p_less 5.5e-27 clusters 80 obs 160 wins 147/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/RL(s.1)[arrival] [F3-pf0.1] 0.9268 [0.9114, 0.9429] p_less 9e-12 clusters 80 obs 160 wins 116/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/RL(s.1)[arrival] [F3-pf0.2] 0.9593 [0.9432, 0.9754] p_less 5.8e-05 clusters 80 obs 159 wins 99/159 success ref 160/160 method 159/160 dropped 1
+  SPARC[light]/RL(s.1)[arrival] [F3-pf0.2-R2] 0.9332 [0.9184, 0.9482] p_less 2.3e-10 clusters 80 obs 160 wins 117/160 success ref 160/160 method 160/160 dropped 0
+
+== SPARC[light] / SPARC[heavy]
+  SPARC[light]/SPARC[heavy] [ALL] 1.0229 [1.0181, 1.0277] p_less 1 clusters 80 obs 1120 wins 423/1120 success ref 1120/1120 method 1120/1120 dropped 0
+  SPARC[light]/SPARC[heavy] [F1] 1.0094 [1.0054, 1.0134] p_less 1 clusters 80 obs 480 wins 184/480 success ref 480/480 method 480/480 dropped 0
+  SPARC[light]/SPARC[heavy] [F2] 1.0167 [1.0058, 1.0271] p_less 1 clusters 80 obs 160 wins 69/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/SPARC[heavy] [F3] 1.0387 [1.0293, 1.0480] p_less 1 clusters 80 obs 480 wins 170/480 success ref 480/480 method 480/480 dropped 0
+  SPARC[light]/SPARC[heavy] [MA-AT-25-5-50] 1.0244 [1.0134, 1.0357] p_less 1 clusters 20 obs 280 wins 110/280 success ref 280/280 method 280/280 dropped 0
+  SPARC[light]/SPARC[heavy] [MA-AT-50-5-50] 1.0237 [1.0140, 1.0315] p_less 1 clusters 20 obs 280 wins 105/280 success ref 280/280 method 280/280 dropped 0
+  SPARC[light]/SPARC[heavy] [SA-AT-50-5-50] 1.0353 [1.0268, 1.0442] p_less 1 clusters 20 obs 280 wins 80/280 success ref 280/280 method 280/280 dropped 0
+  SPARC[light]/SPARC[heavy] [SA-BT-50-5-50] 1.0085 [0.9981, 1.0183] p_less 0.94 clusters 20 obs 280 wins 128/280 success ref 280/280 method 280/280 dropped 0
+  SPARC[light]/SPARC[heavy] [F1-R1] 1.0147 [1.0089, 1.0208] p_less 1 clusters 80 obs 160 wins 58/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/SPARC[heavy] [F1-R2] 1.0123 [1.0046, 1.0202] p_less 1 clusters 80 obs 160 wins 65/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/SPARC[heavy] [F1-R3] 1.0013 [0.9952, 1.0072] p_less 0.66 clusters 80 obs 160 wins 61/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/SPARC[heavy] [F2-R2N3] 1.0167 [1.0058, 1.0271] p_less 1 clusters 80 obs 160 wins 69/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/SPARC[heavy] [F3-pf0.1] 1.0450 [1.0311, 1.0587] p_less 1 clusters 80 obs 160 wins 50/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/SPARC[heavy] [F3-pf0.2] 1.0498 [1.0347, 1.0654] p_less 1 clusters 80 obs 160 wins 51/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/SPARC[heavy] [F3-pf0.2-R2] 1.0214 [1.0066, 1.0363] p_less 0.99 clusters 80 obs 160 wins 69/160 success ref 160/160 method 160/160 dropped 0
+
+== gates (dev pilot; docs/trackD-spec.md Section 8)
+  K3 B2?scale=3[heavy]: SPARC[light]/B2?scale=3[heavy] = 0.9174 [0.9014, 0.9344] -> not triggered (threshold: ratio > 0.95, or > 0.9524 reading 'within 5%' as competitor / SPARC < 1.05; CI upper 0.9344)
+  K3 B2[heavy]: SPARC[light]/B2[heavy] = 0.9061 [0.8934, 0.9191] -> not triggered (threshold: ratio > 0.95, or > 0.9524 reading 'within 5%' as competitor / SPARC < 1.05; CI upper 0.9191)
+  K4 B3[heavy]: SPARC[light]/B3[heavy] = 0.9192 [0.8980, 0.9376] -> not triggered
+  K3 RL(g.): SPARC[light]/RL(g.) = 0.9144 [0.9074, 0.9214] -> not triggered (threshold: ratio > 0.95, or > 0.9524 reading 'within 5%' as competitor / SPARC < 1.05; CI upper 0.9214)
+  K3 RL(g.)[arrival]: SPARC[light]/RL(g.)[arrival] = 0.9209 [0.9141, 0.9275] -> not triggered (threshold: ratio > 0.95, or > 0.9524 reading 'within 5%' as competitor / SPARC < 1.05; CI upper 0.9275)
+  K3 RL(s.1): SPARC[light]/RL(s.1) = 0.9104 [0.9036, 0.9171] -> not triggered (threshold: ratio > 0.95, or > 0.9524 reading 'within 5%' as competitor / SPARC < 1.05; CI upper 0.9171)
+  K3 RL(s.1)[arrival]: SPARC[light]/RL(s.1)[arrival] = 0.9168 [0.9100, 0.9234] -> not triggered (threshold: ratio > 0.95, or > 0.9524 reading 'within 5%' as competitor / SPARC < 1.05; CI upper 0.9234)
+
+# replication: report ... --seeds 2 3
+5590 completed rows (families ['F1', 'F2', 'F3'], primary settings, CRN seeds [2, 3]) from ['runs/trackD/c1dyn', 'runs/trackD/baselines_d']; worlds: ['DynTaskEnvX[arrival,causal,L=200,det]@6fabb0570f']
+
+== rows per method: success; mean makespan (successful episodes); per-event CPU ms (median over episodes of the episode p50 / p95; process time, loaded host); CPU per episode s (method calls); re-plans, wasted trips per episode
+  B6?rule=cbta&objective=start             n= 1118 success 1118/1118 ms  41.32 cpu p50      4.0 p95     12.7 cpu/ep    0.24 replans  27.7 wasted 0.01 settings 4 instances 80
+  B6?rule=seq                              n= 1118 success 1118/1118 ms  43.03 cpu p50      2.6 p95      5.1 cpu/ep    0.14 replans  28.0 wasted 0.03 settings 4 instances 80
+  SPARC[light]                             n= 1118 success 1118/1118 ms  40.62 cpu p50     13.1 p95     24.4 cpu/ep    0.46 replans  28.1 wasted 0.03 settings 4 instances 80
+
+== SPARC[light] / B6?rule=cbta&objective=start
+  SPARC[light]/B6?rule=cbta&objective=start [ALL] 0.9837 [0.9779, 0.9895] p_less 4.7e-06 clusters 80 obs 1118 wins 662/1118 success ref 1118/1118 method 1118/1118 dropped 0
+  SPARC[light]/B6?rule=cbta&objective=start [F1] 0.9789 [0.9736, 0.9842] p_less 1.9e-09 clusters 80 obs 480 wins 305/480 success ref 480/480 method 480/480 dropped 0
+  SPARC[light]/B6?rule=cbta&objective=start [F2] 0.9755 [0.9643, 0.9866] p_less 7.2e-05 clusters 80 obs 160 wins 98/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/B6?rule=cbta&objective=start [F3] 0.9921 [0.9802, 1.0042] p_less 0.11 clusters 80 obs 478 wins 259/478 success ref 478/478 method 478/478 dropped 0
+  SPARC[light]/B6?rule=cbta&objective=start [MA-AT-25-5-50] 0.9679 [0.9537, 0.9818] p_less 0.00019 clusters 20 obs 278 wins 187/278 success ref 278/278 method 278/278 dropped 0
+  SPARC[light]/B6?rule=cbta&objective=start [MA-AT-50-5-50] 0.9743 [0.9647, 0.9843] p_less 4.7e-05 clusters 20 obs 280 wins 186/280 success ref 280/280 method 280/280 dropped 0
+  SPARC[light]/B6?rule=cbta&objective=start [SA-AT-50-5-50] 1.0061 [0.9957, 1.0169] p_less 0.86 clusters 20 obs 280 wins 139/280 success ref 280/280 method 280/280 dropped 0
+  SPARC[light]/B6?rule=cbta&objective=start [SA-BT-50-5-50] 0.9872 [0.9755, 0.9987] p_less 0.025 clusters 20 obs 280 wins 150/280 success ref 280/280 method 280/280 dropped 0
+  SPARC[light]/B6?rule=cbta&objective=start [F1-R1] 0.9844 [0.9781, 0.9906] p_less 1.2e-05 clusters 80 obs 160 wins 101/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/B6?rule=cbta&objective=start [F1-R2] 0.9730 [0.9637, 0.9823] p_less 1.4e-06 clusters 80 obs 160 wins 105/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/B6?rule=cbta&objective=start [F1-R3] 0.9792 [0.9696, 0.9890] p_less 6.3e-05 clusters 80 obs 160 wins 99/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/B6?rule=cbta&objective=start [F2-R2N3] 0.9755 [0.9643, 0.9866] p_less 7.2e-05 clusters 80 obs 160 wins 98/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/B6?rule=cbta&objective=start [F3-pf0.1] 0.9924 [0.9765, 1.0085] p_less 0.19 clusters 80 obs 160 wins 84/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/B6?rule=cbta&objective=start [F3-pf0.2] 0.9999 [0.9807, 1.0197] p_less 0.5 clusters 80 obs 159 wins 81/159 success ref 159/159 method 159/159 dropped 0
+  SPARC[light]/B6?rule=cbta&objective=start [F3-pf0.2-R2] 0.9843 [0.9693, 0.9994] p_less 0.026 clusters 80 obs 159 wins 94/159 success ref 159/159 method 159/159 dropped 0
+
+== SPARC[light] / B6?rule=seq
+  SPARC[light]/B6?rule=seq [ALL] 0.9474 [0.9421, 0.9527] p_less 8.2e-26 clusters 80 obs 1118 wins 851/1118 success ref 1118/1118 method 1118/1118 dropped 0
+  SPARC[light]/B6?rule=seq [F1] 0.9485 [0.9430, 0.9541] p_less 5.7e-23 clusters 80 obs 480 wins 384/480 success ref 480/480 method 480/480 dropped 0
+  SPARC[light]/B6?rule=seq [F2] 0.9426 [0.9324, 0.9532] p_less 1.2e-15 clusters 80 obs 160 wins 121/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/B6?rule=seq [F3] 0.9481 [0.9386, 0.9577] p_less 3.2e-15 clusters 80 obs 478 wins 346/478 success ref 478/478 method 478/478 dropped 0
+  SPARC[light]/B6?rule=seq [MA-AT-25-5-50] 0.9245 [0.9127, 0.9368] p_less 2e-10 clusters 20 obs 278 wins 234/278 success ref 278/278 method 278/278 dropped 0
+  SPARC[light]/B6?rule=seq [MA-AT-50-5-50] 0.9448 [0.9342, 0.9558] p_less 7e-09 clusters 20 obs 280 wins 222/280 success ref 280/280 method 280/280 dropped 0
+  SPARC[light]/B6?rule=seq [SA-AT-50-5-50] 0.9501 [0.9418, 0.9584] p_less 5.2e-10 clusters 20 obs 280 wins 211/280 success ref 280/280 method 280/280 dropped 0
+  SPARC[light]/B6?rule=seq [SA-BT-50-5-50] 0.9707 [0.9595, 0.9826] p_less 6.3e-05 clusters 20 obs 280 wins 184/280 success ref 280/280 method 280/280 dropped 0
+  SPARC[light]/B6?rule=seq [F1-R1] 0.9481 [0.9378, 0.9580] p_less 2.6e-13 clusters 80 obs 160 wins 128/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/B6?rule=seq [F1-R2] 0.9449 [0.9360, 0.9538] p_less 7.8e-17 clusters 80 obs 160 wins 129/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/B6?rule=seq [F1-R3] 0.9526 [0.9441, 0.9611] p_less 4.8e-15 clusters 80 obs 160 wins 127/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/B6?rule=seq [F2-R2N3] 0.9426 [0.9324, 0.9532] p_less 1.2e-15 clusters 80 obs 160 wins 121/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/B6?rule=seq [F3-pf0.1] 0.9392 [0.9240, 0.9543] p_less 1.5e-10 clusters 80 obs 160 wins 116/160 success ref 160/160 method 160/160 dropped 0
+  SPARC[light]/B6?rule=seq [F3-pf0.2] 0.9453 [0.9303, 0.9611] p_less 1.8e-09 clusters 80 obs 159 wins 118/159 success ref 159/159 method 159/159 dropped 0
+  SPARC[light]/B6?rule=seq [F3-pf0.2-R2] 0.9592 [0.9466, 0.9720] p_less 2.4e-07 clusters 80 obs 159 wins 112/159 success ref 159/159 method 159/159 dropped 0
+
+== gates (dev pilot; docs/trackD-spec.md Section 8)
+
+# F0 diagnostic: report runs/trackD/baselines_d/f0diag --families F0 static --seeds 0
+144 completed rows (families ['F0', 'static'], primary settings, CRN seeds [0]) from ['runs/trackD/baselines_d/f0diag']; worlds: ['DynTaskEnvX[arrival,causal,L=200,det]@6fabb0570f', 'DynTaskEnvX[decision,causal,L=200,det]@6fabb0570f']
+
+== rows per method: success; mean makespan (successful episodes); per-event CPU ms (median over episodes of the episode p50 / p95; process time, loaded host); CPU per episode s (method calls); re-plans, wasted trips per episode
+  B2[heavy]                                n=   48 success 48/48 ms  36.00 cpu p50  17676.6 p95  17676.6 cpu/ep   19.00 replans   1.0 wasted 0.00 settings 4 instances 16
+  RL(g.)                                   n=   48 success 48/48 ms  38.37 cpu p50      6.8 p95      8.3 cpu/ep    1.67 replans   0.0 wasted 0.00 settings 4 instances 16
+  SPARC[light]                             n=   48 success 48/48 ms  31.87 cpu p50     63.7 p95     63.7 cpu/ep    0.13 replans   1.0 wasted 0.00 settings 4 instances 16
+
+== SPARC[light] / B2[heavy]
+  SPARC[light]/B2[heavy] [ALL] 0.8785 [0.8578, 0.8979] p_less 2.1e-08 clusters 16 obs 48 wins 47/48 success ref 48/48 method 48/48 dropped 0
+  SPARC[light]/B2[heavy] [F0] 0.8788 [0.8578, 0.9005] p_less 5.8e-08 clusters 16 obs 32 wins 31/32 success ref 32/32 method 32/32 dropped 0
+  SPARC[light]/B2[heavy] [static] 0.8778 [0.8536, 0.9004] p_less 4e-07 clusters 16 obs 16 wins 16/16 success ref 16/16 method 16/16 dropped 0
+  SPARC[light]/B2[heavy] [MA-AT-25-5-50] 0.8773 [0.8566, 0.8985] p_less 0.0014 clusters 4 obs 12 wins 12/12 success ref 12/12 method 12/12 dropped 0
+  SPARC[light]/B2[heavy] [MA-AT-50-5-50] 0.8698 [0.8123, 0.9237] p_less 0.021 clusters 4 obs 12 wins 12/12 success ref 12/12 method 12/12 dropped 0
+  SPARC[light]/B2[heavy] [SA-AT-50-5-50] 0.9026 [0.8825, 0.9233] p_less 0.0026 clusters 4 obs 12 wins 12/12 success ref 12/12 method 12/12 dropped 0
+  SPARC[light]/B2[heavy] [SA-BT-50-5-50] 0.8646 [0.8250, 0.9049] p_less 0.008 clusters 4 obs 12 wins 11/12 success ref 12/12 method 12/12 dropped 0
+  SPARC[light]/B2[heavy] [F0-N1] 0.8643 [0.8390, 0.8897] p_less 3.3e-07 clusters 16 obs 16 wins 16/16 success ref 16/16 method 16/16 dropped 0
+  SPARC[light]/B2[heavy] [F0-N3] 0.8936 [0.8695, 0.9189] p_less 7.4e-06 clusters 16 obs 16 wins 15/16 success ref 16/16 method 16/16 dropped 0
+  SPARC[light]/B2[heavy] [static] 0.8778 [0.8536, 0.9004] p_less 4e-07 clusters 16 obs 16 wins 16/16 success ref 16/16 method 16/16 dropped 0
+
+== SPARC[light] / RL(g.)
+  SPARC[light]/RL(g.) [ALL] 0.8236 [0.8037, 0.8418] p_less 5.7e-10 clusters 16 obs 48 wins 47/48 success ref 48/48 method 48/48 dropped 0
+  SPARC[light]/RL(g.) [F0] 0.8330 [0.8094, 0.8582] p_less 2.6e-08 clusters 16 obs 32 wins 31/32 success ref 32/32 method 32/32 dropped 0
+  SPARC[light]/RL(g.) [static] 0.8050 [0.7795, 0.8295] p_less 8.7e-09 clusters 16 obs 16 wins 16/16 success ref 16/16 method 16/16 dropped 0
+  SPARC[light]/RL(g.) [MA-AT-25-5-50] 0.8213 [0.8042, 0.8388] p_less 0.00029 clusters 4 obs 12 wins 12/12 success ref 12/12 method 12/12 dropped 0
+  SPARC[light]/RL(g.) [MA-AT-50-5-50] 0.7866 [0.7243, 0.8419] p_less 0.0062 clusters 4 obs 12 wins 12/12 success ref 12/12 method 12/12 dropped 0
+  SPARC[light]/RL(g.) [SA-AT-50-5-50] 0.8601 [0.8495, 0.8773] p_less 0.00032 clusters 4 obs 12 wins 12/12 success ref 12/12 method 12/12 dropped 0
+  SPARC[light]/RL(g.) [SA-BT-50-5-50] 0.8279 [0.7919, 0.8655] p_less 0.0031 clusters 4 obs 12 wins 11/12 success ref 12/12 method 12/12 dropped 0
+  SPARC[light]/RL(g.) [F0-N1] 0.8142 [0.7873, 0.8392] p_less 2.9e-08 clusters 16 obs 16 wins 16/16 success ref 16/16 method 16/16 dropped 0
+  SPARC[light]/RL(g.) [F0-N3] 0.8522 [0.8227, 0.8845] p_less 5.8e-06 clusters 16 obs 16 wins 15/16 success ref 16/16 method 16/16 dropped 0
+  SPARC[light]/RL(g.) [static] 0.8050 [0.7795, 0.8295] p_less 8.7e-09 clusters 16 obs 16 wins 16/16 success ref 16/16 method 16/16 dropped 0
+144 completed rows (families ['F0', 'static'], primary settings, CRN seeds [0]) from ['runs/trackD/baselines_d/f0diag']; worlds: ['DynTaskEnvX[arrival,causal,L=200,det]@6fabb0570f', 'DynTaskEnvX[decision,causal,L=200,det]@6fabb0570f']
+
+== rows per method: success; mean makespan (successful episodes); per-event CPU ms (median over episodes of the episode p50 / p95; process time, loaded host); CPU per episode s (method calls); re-plans, wasted trips per episode
+  B2[heavy]                                n=   48 success 48/48 ms  36.00 cpu p50  17676.6 p95  17676.6 cpu/ep   19.00 replans   1.0 wasted 0.00 settings 4 instances 16
+  RL(g.)                                   n=   48 success 48/48 ms  38.37 cpu p50      6.8 p95      8.3 cpu/ep    1.67 replans   0.0 wasted 0.00 settings 4 instances 16
+
+== B2[heavy] / RL(g.)
+  B2[heavy]/RL(g.) [ALL] 0.9375 [0.9266, 0.9474] p_less 5.5e-07 clusters 16 obs 48 wins 43/48 success ref 48/48 method 48/48 dropped 0
+  B2[heavy]/RL(g.) [F0] 0.9479 [0.9271, 0.9668] p_less 0.00036 clusters 16 obs 32 wins 27/32 success ref 32/32 method 32/32 dropped 0
+  B2[heavy]/RL(g.) [static] 0.9171 [0.9013, 0.9333] p_less 7e-07 clusters 16 obs 16 wins 16/16 success ref 16/16 method 16/16 dropped 0
+  B2[heavy]/RL(g.) [MA-AT-25-5-50] 0.9362 [0.9237, 0.9463] p_less 0.0013 clusters 4 obs 12 wins 12/12 success ref 12/12 method 12/12 dropped 0
+  B2[heavy]/RL(g.) [MA-AT-50-5-50] 0.9044 [0.8706, 0.9365] p_less 0.011 clusters 4 obs 12 wins 10/12 success ref 12/12 method 12/12 dropped 0
+  B2[heavy]/RL(g.) [SA-AT-50-5-50] 0.9528 [0.9377, 0.9673] p_less 0.0079 clusters 4 obs 12 wins 11/12 success ref 12/12 method 12/12 dropped 0
+  B2[heavy]/RL(g.) [SA-BT-50-5-50] 0.9576 [0.9512, 0.9640] p_less 0.00099 clusters 4 obs 12 wins 10/12 success ref 12/12 method 12/12 dropped 0
+  B2[heavy]/RL(g.) [F0-N1] 0.9420 [0.9226, 0.9647] p_less 0.00022 clusters 16 obs 16 wins 15/16 success ref 16/16 method 16/16 dropped 0
+  B2[heavy]/RL(g.) [F0-N3] 0.9538 [0.9214, 0.9866] p_less 0.013 clusters 16 obs 16 wins 12/16 success ref 16/16 method 16/16 dropped 0
+  B2[heavy]/RL(g.) [static] 0.9171 [0.9013, 0.9333] p_less 7e-07 clusters 16 obs 16 wins 16/16 success ref 16/16 method 16/16 dropped 0
+
+# B2 at 3x budget: report ... --seeds 0 --ref 'B2?scale=3[heavy]'
+14687 completed rows (families ['F1', 'F2', 'F3'], primary settings, CRN seeds [0]) from ['runs/trackD/c1dyn', 'runs/trackD/baselines_d']; worlds: ['DynTaskEnvX[arrival,causal,L=200,det]@6fabb0570f', 'DynTaskEnvX[decision,causal,L=200,det]@6fabb0570f']
+
+== rows per method: success; mean makespan (successful episodes); per-event CPU ms (median over episodes of the episode p50 / p95; process time, loaded host); CPU per episode s (method calls); re-plans, wasted trips per episode
+  B2?scale=3[heavy]                        n=   24 success 24/24 ms  43.13 cpu p50  25090.4 p95  30713.1 cpu/ep  592.84 replans  23.0 wasted 0.00 settings 4 instances 12
+  B2[heavy]                                n=  171 success 171/171 ms  43.85 cpu p50  10150.9 p95  13201.9 cpu/ep  287.96 replans  26.8 wasted 0.00 settings 4 instances 25
+  RL(g.)                                   n=  560 success 560/560 ms  43.91 cpu p50      7.4 p95      9.3 cpu/ep    3.13 replans   0.0 wasted 0.00 settings 4 instances 80
+
+== B2?scale=3[heavy] / B2[heavy]
+  B2?scale=3[heavy]/B2[heavy] [ALL] 0.9890 [0.9634, 1.0125] p_less 0.27 clusters 12 obs 24 wins 10/24 success ref 24/24 method 24/24 dropped 0
+  B2?scale=3[heavy]/B2[heavy] [F1] 1.0191 [0.9934, 1.0502] p_less 0.85 clusters 12 obs 12 wins 4/12 success ref 12/12 method 12/12 dropped 0
+  B2?scale=3[heavy]/B2[heavy] [F3] 0.9597 [0.9127, 1.0032] p_less 0.11 clusters 12 obs 12 wins 6/12 success ref 12/12 method 12/12 dropped 0
+  B2?scale=3[heavy]/B2[heavy] [MA-AT-25-5-50] 1.0395 [1.0305, 1.0552] p_less 0.98 clusters 3 obs 6 wins 2/6 success ref 6/6 method 6/6 dropped 0
+  B2?scale=3[heavy]/B2[heavy] [MA-AT-50-5-50] 0.9719 [0.8882, 1.0271] p_less 0.3 clusters 3 obs 6 wins 3/6 success ref 6/6 method 6/6 dropped 0
+  B2?scale=3[heavy]/B2[heavy] [SA-AT-50-5-50] 0.9426 [0.8938, 0.9740] p_less 0.079 clusters 3 obs 6 wins 3/6 success ref 6/6 method 6/6 dropped 0
+  B2?scale=3[heavy]/B2[heavy] [SA-BT-50-5-50] 1.0046 [0.9456, 1.0621] p_less 0.55 clusters 3 obs 6 wins 2/6 success ref 6/6 method 6/6 dropped 0
+  B2?scale=3[heavy]/B2[heavy] [F1-R2] 1.0191 [0.9934, 1.0502] p_less 0.85 clusters 12 obs 12 wins 4/12 success ref 12/12 method 12/12 dropped 0
+  B2?scale=3[heavy]/B2[heavy] [F3-pf0.2] 0.9597 [0.9127, 1.0032] p_less 0.11 clusters 12 obs 12 wins 6/12 success ref 12/12 method 12/12 dropped 0
+
+== B2?scale=3[heavy] / RL(g.)
+  B2?scale=3[heavy]/RL(g.) [ALL] 1.0269 [1.0103, 1.0439] p_less 0.97 clusters 12 obs 24 wins 8/24 success ref 24/24 method 24/24 dropped 0
+  B2?scale=3[heavy]/RL(g.) [F1] 1.0424 [1.0181, 1.0666] p_less 0.98 clusters 12 obs 12 wins 3/12 success ref 12/12 method 12/12 dropped 0
+  B2?scale=3[heavy]/RL(g.) [F3] 1.0116 [0.9889, 1.0357] p_less 0.78 clusters 12 obs 12 wins 5/12 success ref 12/12 method 12/12 dropped 0
+  B2?scale=3[heavy]/RL(g.) [MA-AT-25-5-50] 1.0833 [1.0277, 1.1473] p_less 0.94 clusters 3 obs 6 wins 0/6 success ref 6/6 method 6/6 dropped 0
+  B2?scale=3[heavy]/RL(g.) [MA-AT-50-5-50] 0.9932 [0.9657, 1.0281] p_less 0.37 clusters 3 obs 6 wins 4/6 success ref 6/6 method 6/6 dropped 0
+  B2?scale=3[heavy]/RL(g.) [SA-AT-50-5-50] 1.0162 [0.9980, 1.0435] p_less 0.82 clusters 3 obs 6 wins 2/6 success ref 6/6 method 6/6 dropped 0
+  B2?scale=3[heavy]/RL(g.) [SA-BT-50-5-50] 1.0169 [0.9929, 1.0424] p_less 0.82 clusters 3 obs 6 wins 2/6 success ref 6/6 method 6/6 dropped 0
+  B2?scale=3[heavy]/RL(g.) [F1-R2] 1.0424 [1.0181, 1.0666] p_less 0.98 clusters 12 obs 12 wins 3/12 success ref 12/12 method 12/12 dropped 0
+  B2?scale=3[heavy]/RL(g.) [F3-pf0.2] 1.0116 [0.9889, 1.0357] p_less 0.78 clusters 12 obs 12 wins 5/12 success ref 12/12 method 12/12 dropped 0
+
+# fidelity-b6
+  cbta  start     mean start   9.005  mean makespan  30.289
+  cbta  makespan  mean start   8.700  mean makespan  30.982
+  cbga  start     mean start  44.414  mean makespan 105.687
+  seq   start     mean start  11.726  mean makespan  33.091
+CBTA-style (start) has the lower average start time than CBGA-style on 20 of 20 static dev instances

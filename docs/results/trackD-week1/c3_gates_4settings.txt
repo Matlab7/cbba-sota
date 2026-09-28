@@ -1,0 +1,190 @@
+== tuned leases (evaluation rows)
+  variant selected: V1 (HYB); DS rho* = 2.0
+  max regret: CEN-F 1.382, HYB 1.192, REP-clamp 1.170, INF-r 1.006, SPARC 1.205, SPARC-V3 1.184, DS 1.170
+  best fixed INF-r 1.006; SPARC margin -18.6 points; K6 fires: True
+  E3a: {'diff': 0.18621649518328964, 'diff_hi95': 0.21713565978612512, 'diff_log': 0.1698194457970459, 'diff_log_hi95': 0.19542975125138268, 'comparator': 'INF-r', 'n_clusters': 80, 'holds': False}
+  K5 (rho=0.5): pooled best fixed INF-r ratio to FULL 1.823; fires: False
+     F1-R2: best fixed INF-r / FULL = 1.853 [1.815, 1.894]
+     F3-pf0.2: best fixed INF-r / FULL = 1.794 [1.754, 1.835]
+  regret by cell:
+     CEN-F      F1-R2@2=1.058 F1-R2@1=1.214 F1-R2@0.5=1.284 F3-pf0.2@2=1.149 F3-pf0.2@1=1.382 F3-pf0.2@0.5=1.269
+     HYB        F1-R2@2=1.066 F1-R2@1=1.087 F1-R2@0.5=1.077 F3-pf0.2@2=1.151 F3-pf0.2@1=1.192 F3-pf0.2@0.5=1.173
+     REP-clamp  F1-R2@2=1.000 F1-R2@1=1.000 F1-R2@0.5=1.068 F3-pf0.2@2=1.088 F3-pf0.2@1=1.138 F3-pf0.2@0.5=1.170
+     INF-r      F1-R2@2=1.006 F1-R2@1=1.002 F1-R2@0.5=1.000 F3-pf0.2@2=1.000 F3-pf0.2@1=1.000 F3-pf0.2@0.5=1.000
+     SPARC      F1-R2@2=1.057 F1-R2@1=1.089 F1-R2@0.5=1.084 F3-pf0.2@2=1.166 F3-pf0.2@1=1.205 F3-pf0.2@0.5=1.169
+     SPARC-V3   F1-R2@2=1.061 F1-R2@1=1.081 F1-R2@0.5=1.025 F3-pf0.2@2=1.172 F3-pf0.2@1=1.184 F3-pf0.2@0.5=1.107
+     DS         F1-R2@2=1.058 F1-R2@1=1.000 F1-R2@0.5=1.068 F3-pf0.2@2=1.149 F3-pf0.2@1=1.138 F3-pf0.2@0.5=1.170
+  SPARC(sel)/CEN-F: F1-R2@2 1.008 [0.989, 1.026]; F1-R2@1 0.896 [0.867, 0.926]; F1-R2@0.5 0.839 [0.806, 0.872]; F3-pf0.2@2 1.002 [0.968, 1.035]; F3-pf0.2@1 0.863 [0.836, 0.890]; F3-pf0.2@0.5 0.924 [0.884, 0.964]
+  success < 100%: CEN-F|F1-R2|1 0.963 (n=160); CEN-F|F1-R2|0.5 0.931 (n=160); CEN-F|F3-pf0.2|2 0.744 (n=160); CEN-F|F3-pf0.2|1 0.725 (n=160); CEN-F|F3-pf0.2|0.5 0.738 (n=160); HYB|F3-pf0.2|2 0.794 (n=160); HYB|F3-pf0.2|1 0.950 (n=160); HYB|F3-pf0.2|0.5 0.850 (n=160); INF-r|F3-pf0.2|2 0.856 (n=160); INF-r|F3-pf0.2|1 0.994 (n=160); REP-clamp|F1-R2|0.5 0.994 (n=160); REP-clamp|F3-pf0.2|2 0.825 (n=160); REP-clamp|F3-pf0.2|1 0.919 (n=160); REP-clamp|F3-pf0.2|0.5 0.831 (n=160); SPARC|F1-R2|0.5 0.988 (n=160); SPARC|F3-pf0.2|2 0.906 (n=160); SPARC|F3-pf0.2|1 0.925 (n=160); SPARC|F3-pf0.2|0.5 0.850 (n=160); SPARC-V3|F1-R2|0.5 0.994 (n=160); SPARC-V3|F3-pf0.2|2 0.812 (n=160); SPARC-V3|F3-pf0.2|1 0.925 (n=160); SPARC-V3|F3-pf0.2|0.5 0.850 (n=160)
+== common lease g=0.3 L=10 (tuning rows)
+  variant selected: V1 (HYB); DS rho* = inf
+  max regret: CEN-F 1.426, HYB 1.133, REP-clamp 1.182, INF-r 1.119, SPARC 1.266, SPARC-V3 1.223, DS 1.182
+  best fixed INF-r 1.119; SPARC margin -1.4 points; K6 fires: True
+  E3a: {'diff': 0.014263704740174354, 'diff_hi95': 0.21193378357282483, 'diff_log': 0.012671462308591064, 'diff_log_hi95': 0.173627137469157, 'comparator': 'INF-r', 'n_clusters': 10, 'holds': False}
+  K5 (rho=0.5): pooled best fixed INF-r ratio to FULL 1.861; fires: False
+     F1-R2: best fixed REP-clamp / FULL = 1.739 [1.585, 1.900]
+     F3-pf0.2: best fixed CEN-F / FULL = 1.886 [1.652, 2.154]
+  regret by cell:
+     CEN-F      F1-R2@2=1.043 F1-R2@1=1.147 F1-R2@0.5=1.350 F3-pf0.2@2=1.426 F3-pf0.2@1=1.147 F3-pf0.2@0.5=1.000
+     HYB        F1-R2@2=1.071 F1-R2@1=1.120 F1-R2@0.5=1.072 F3-pf0.2@2=1.133 F3-pf0.2@1=1.109 F3-pf0.2@0.5=1.062
+     REP-clamp  F1-R2@2=1.000 F1-R2@1=1.000 F1-R2@0.5=1.000 F3-pf0.2@2=1.003 F3-pf0.2@1=1.124 F3-pf0.2@0.5=1.182
+     INF-r      F1-R2@2=1.119 F1-R2@1=1.044 F1-R2@0.5=1.051 F3-pf0.2@2=1.000 F3-pf0.2@1=1.000 F3-pf0.2@0.5=1.005
+     SPARC      F1-R2@2=1.092 F1-R2@1=1.227 F1-R2@0.5=1.047 F3-pf0.2@2=1.127 F3-pf0.2@1=1.266 F3-pf0.2@0.5=1.139
+     SPARC-V3   F1-R2@2=1.056 F1-R2@1=1.130 F1-R2@0.5=1.078 F3-pf0.2@2=1.223 F3-pf0.2@1=1.160 F3-pf0.2@0.5=0.954
+     DS         F1-R2@2=1.000 F1-R2@1=1.000 F1-R2@0.5=1.000 F3-pf0.2@2=1.003 F3-pf0.2@1=1.124 F3-pf0.2@0.5=1.182
+  SPARC(sel)/CEN-F: F1-R2@2 1.027 [0.987, 1.076]; F1-R2@1 0.977 [0.931, 1.020]; F1-R2@0.5 0.794 [0.626, 0.981]; F3-pf0.2@2 0.795 [0.551, 1.034]; F3-pf0.2@1 0.967 [0.867, 1.057]; F3-pf0.2@0.5 1.062 [0.931, 1.224]
+== common lease g=0.3 L=30 (tuning rows)
+  variant selected: V1 (HYB); DS rho* = 2.0
+  max regret: CEN-F 1.208, HYB 1.130, REP-clamp 1.127, INF-r 1.132, SPARC 1.183, SPARC-V3 1.182, DS 1.127
+  best fixed REP-clamp 1.127; SPARC margin -0.3 points; K6 fires: True
+  E3a: {'diff': 0.002723365135675948, 'diff_hi95': 0.17960044160984687, 'diff_log': 0.0024126070295276136, 'diff_log_hi95': 0.1526891926800383, 'comparator': 'REP-clamp', 'n_clusters': 10, 'holds': False}
+  K5 (rho=0.5): pooled best fixed REP-clamp ratio to FULL 1.805; fires: False
+     F1-R2: best fixed HYB / FULL = 1.690 [1.538, 1.849]
+     F3-pf0.2: best fixed INF-r / FULL = 1.849 [1.746, 1.954]
+  regret by cell:
+     CEN-F      F1-R2@2=1.027 F1-R2@1=1.159 F1-R2@0.5=1.131 F3-pf0.2@2=1.119 F3-pf0.2@1=1.208 F3-pf0.2@0.5=1.206
+     HYB        F1-R2@2=1.011 F1-R2@1=1.130 F1-R2@0.5=1.000 F3-pf0.2@2=1.090 F3-pf0.2@1=1.085 F3-pf0.2@0.5=1.080
+     REP-clamp  F1-R2@2=1.000 F1-R2@1=1.000 F1-R2@0.5=1.001 F3-pf0.2@2=1.000 F3-pf0.2@1=1.127 F3-pf0.2@0.5=1.042
+     INF-r      F1-R2@2=1.039 F1-R2@1=1.132 F1-R2@0.5=1.050 F3-pf0.2@2=1.019 F3-pf0.2@1=1.000 F3-pf0.2@0.5=1.000
+     SPARC      F1-R2@2=1.017 F1-R2@1=1.165 F1-R2@0.5=1.043 F3-pf0.2@2=1.145 F3-pf0.2@1=1.183 F3-pf0.2@0.5=1.141
+     SPARC-V3   F1-R2@2=1.029 F1-R2@1=1.065 F1-R2@0.5=0.998 F3-pf0.2@2=1.182 F3-pf0.2@1=1.067 F3-pf0.2@0.5=0.935
+     DS         F1-R2@2=1.027 F1-R2@1=1.000 F1-R2@0.5=1.001 F3-pf0.2@2=1.119 F3-pf0.2@1=1.127 F3-pf0.2@0.5=1.042
+  SPARC(sel)/CEN-F: F1-R2@2 0.984 [0.950, 1.014]; F1-R2@1 0.975 [0.895, 1.105]; F1-R2@0.5 0.884 [0.776, 0.999]; F3-pf0.2@2 0.974 [0.887, 1.071]; F3-pf0.2@1 0.898 [0.775, 1.045]; F3-pf0.2@0.5 0.896 [0.791, 1.017]
+== common lease g=0.3 L=60 (tuning rows)
+  variant selected: V1 (HYB); DS rho* = 2.0
+  max regret: CEN-F 1.482, HYB 1.126, REP-clamp 1.135, INF-r 1.127, SPARC 1.162, SPARC-V3 1.129, DS 1.135
+  best fixed HYB 1.126; SPARC margin 0.0 points; K6 fires: True
+  E3a: {'diff': 0.0, 'diff_hi95': 0.22954139152002223, 'diff_log': 0.0, 'diff_log_hi95': 0.18784221940441892, 'comparator': 'HYB', 'n_clusters': 10, 'holds': False}
+  K5 (rho=0.5): pooled best fixed INF-r ratio to FULL 1.804; fires: False
+     F1-R2: best fixed HYB / FULL = 1.658 [1.521, 1.802]
+     F3-pf0.2: best fixed INF-r / FULL = 1.834 [1.734, 1.944]
+  regret by cell:
+     CEN-F      F1-R2@2=1.027 F1-R2@1=1.157 F1-R2@0.5=1.144 F3-pf0.2@2=1.079 F3-pf0.2@1=1.194 F3-pf0.2@0.5=1.482
+     HYB        F1-R2@2=1.011 F1-R2@1=1.126 F1-R2@0.5=1.000 F3-pf0.2@2=1.068 F3-pf0.2@1=1.093 F3-pf0.2@0.5=1.090
+     REP-clamp  F1-R2@2=1.000 F1-R2@1=1.000 F1-R2@0.5=1.010 F3-pf0.2@2=1.000 F3-pf0.2@1=1.135 F3-pf0.2@0.5=1.075
+     INF-r      F1-R2@2=1.039 F1-R2@1=1.127 F1-R2@0.5=1.070 F3-pf0.2@2=1.013 F3-pf0.2@1=1.000 F3-pf0.2@0.5=1.000
+     SPARC      F1-R2@2=1.017 F1-R2@1=1.162 F1-R2@0.5=1.069 F3-pf0.2@2=1.040 F3-pf0.2@1=1.122 F3-pf0.2@0.5=1.081
+     SPARC-V3   F1-R2@2=1.029 F1-R2@1=1.060 F1-R2@0.5=0.995 F3-pf0.2@2=1.129 F3-pf0.2@1=1.067 F3-pf0.2@0.5=0.970
+     DS         F1-R2@2=1.027 F1-R2@1=1.000 F1-R2@0.5=1.010 F3-pf0.2@2=1.079 F3-pf0.2@1=1.135 F3-pf0.2@0.5=1.075
+  SPARC(sel)/CEN-F: F1-R2@2 0.984 [0.950, 1.014]; F1-R2@1 0.973 [0.884, 1.107]; F1-R2@0.5 0.874 [0.770, 0.989]; F3-pf0.2@2 0.990 [0.831, 1.193]; F3-pf0.2@1 0.915 [0.822, 1.026]; F3-pf0.2@0.5 0.736 [0.628, 0.880]
+== common lease g=1 L=10 (tuning rows)
+  variant selected: V2 (SPARC); DS rho* = inf
+  max regret: CEN-F 1.442, HYB 1.417, REP-clamp 1.152, INF-r 1.102, SPARC 1.182, SPARC-V3 1.194, DS 1.152
+  best fixed INF-r 1.102; SPARC margin -7.9 points; K6 fires: True
+  E3a: {'diff': 0.07939183389295779, 'diff_hi95': 0.23914103710900098, 'diff_log': 0.06954888787687707, 'diff_log_hi95': 0.193860883321245, 'comparator': 'INF-r', 'n_clusters': 10, 'holds': False}
+  K5 (rho=0.5): pooled best fixed INF-r ratio to FULL 1.856; fires: False
+     F1-R2: best fixed REP-clamp / FULL = 1.771 [1.600, 1.942]
+     F3-pf0.2: best fixed INF-r / FULL = 1.813 [1.733, 1.887]
+  regret by cell:
+     CEN-F      F1-R2@2=1.026 F1-R2@1=1.207 F1-R2@0.5=1.442 F3-pf0.2@2=1.157 F3-pf0.2@1=1.177 F3-pf0.2@0.5=1.086
+     HYB        F1-R2@2=1.055 F1-R2@1=1.417 F1-R2@0.5=1.034 F3-pf0.2@2=1.161 F3-pf0.2@1=1.115 F3-pf0.2@0.5=1.137
+     REP-clamp  F1-R2@2=1.000 F1-R2@1=1.000 F1-R2@0.5=1.000 F3-pf0.2@2=1.031 F3-pf0.2@1=1.150 F3-pf0.2@0.5=1.152
+     INF-r      F1-R2@2=1.102 F1-R2@1=1.087 F1-R2@0.5=1.074 F3-pf0.2@2=1.000 F3-pf0.2@1=1.000 F3-pf0.2@0.5=1.000
+     SPARC      F1-R2@2=1.077 F1-R2@1=1.154 F1-R2@0.5=1.126 F3-pf0.2@2=1.165 F3-pf0.2@1=1.179 F3-pf0.2@0.5=1.182
+     SPARC-V3   F1-R2@2=1.042 F1-R2@1=1.114 F1-R2@0.5=1.040 F3-pf0.2@2=1.194 F3-pf0.2@1=1.068 F3-pf0.2@0.5=1.026
+     DS         F1-R2@2=1.000 F1-R2@1=1.000 F1-R2@0.5=1.000 F3-pf0.2@2=1.031 F3-pf0.2@1=1.150 F3-pf0.2@0.5=1.152
+  SPARC(sel)/CEN-F: F1-R2@2 1.049 [0.990, 1.112]; F1-R2@1 0.956 [0.847, 1.125]; F1-R2@0.5 0.781 [0.589, 1.008]; F3-pf0.2@2 1.007 [0.929, 1.075]; F3-pf0.2@1 1.002 [0.952, 1.049]; F3-pf0.2@0.5 1.088 [0.938, 1.264]
+== common lease g=1 L=30 (tuning rows)
+  variant selected: V1 (HYB); DS rho* = 2.0
+  max regret: CEN-F 1.373, HYB 1.122, REP-clamp 1.177, INF-r 1.117, SPARC 1.177, SPARC-V3 1.180, DS 1.177
+  best fixed INF-r 1.117; SPARC margin -0.6 points; K6 fires: True
+  E3a: {'diff': 0.0057023568491816334, 'diff_hi95': 0.21118000709799709, 'diff_log': 0.005093017043750869, 'diff_log_hi95': 0.17589981999787777, 'comparator': 'INF-r', 'n_clusters': 10, 'holds': False}
+  K5 (rho=0.5): pooled best fixed HYB ratio to FULL 1.792; fires: False
+     F1-R2: best fixed HYB / FULL = 1.668 [1.535, 1.810]
+     F3-pf0.2: best fixed INF-r / FULL = 1.832 [1.699, 1.974]
+  regret by cell:
+     CEN-F      F1-R2@2=1.027 F1-R2@1=1.148 F1-R2@0.5=1.373 F3-pf0.2@2=1.086 F3-pf0.2@1=1.233 F3-pf0.2@0.5=1.346
+     HYB        F1-R2@2=1.011 F1-R2@1=1.113 F1-R2@0.5=1.000 F3-pf0.2@2=1.122 F3-pf0.2@1=1.072 F3-pf0.2@0.5=1.050
+     REP-clamp  F1-R2@2=1.000 F1-R2@1=1.000 F1-R2@0.5=1.013 F3-pf0.2@2=1.000 F3-pf0.2@1=1.177 F3-pf0.2@0.5=1.072
+     INF-r      F1-R2@2=1.039 F1-R2@1=1.117 F1-R2@0.5=1.088 F3-pf0.2@2=1.012 F3-pf0.2@1=1.000 F3-pf0.2@0.5=1.000
+     SPARC      F1-R2@2=1.017 F1-R2@1=1.173 F1-R2@0.5=1.020 F3-pf0.2@2=1.103 F3-pf0.2@1=1.177 F3-pf0.2@0.5=1.072
+     SPARC-V3   F1-R2@2=1.029 F1-R2@1=1.023 F1-R2@0.5=0.971 F3-pf0.2@2=1.180 F3-pf0.2@1=1.103 F3-pf0.2@0.5=0.900
+     DS         F1-R2@2=1.027 F1-R2@1=1.000 F1-R2@0.5=1.013 F3-pf0.2@2=1.086 F3-pf0.2@1=1.177 F3-pf0.2@0.5=1.072
+  SPARC(sel)/CEN-F: F1-R2@2 0.984 [0.950, 1.014]; F1-R2@1 0.969 [0.879, 1.123]; F1-R2@0.5 0.728 [0.592, 0.877]; F3-pf0.2@2 1.034 [0.946, 1.131]; F3-pf0.2@1 0.869 [0.789, 0.946]; F3-pf0.2@0.5 0.780 [0.646, 0.922]
+== common lease g=1 L=60 (tuning rows)
+  variant selected: V1 (HYB); DS rho* = 2.0
+  max regret: CEN-F 1.443, HYB 1.137, REP-clamp 1.179, INF-r 1.141, SPARC 1.196, SPARC-V3 1.188, DS 1.179
+  best fixed HYB 1.137; SPARC margin 0.0 points; K6 fires: True
+  E3a: {'diff': 0.0, 'diff_hi95': 0.2502062443753694, 'diff_log': 0.0, 'diff_log_hi95': 0.2030277005842876, 'comparator': 'HYB', 'n_clusters': 10, 'holds': False}
+  K5 (rho=0.5): pooled best fixed HYB ratio to FULL 1.780; fires: False
+     F1-R2: best fixed HYB / FULL = 1.669 [1.536, 1.811]
+     F3-pf0.2: best fixed INF-r / FULL = 1.857 [1.717, 1.985]
+  regret by cell:
+     CEN-F      F1-R2@2=1.027 F1-R2@1=1.167 F1-R2@0.5=1.339 F3-pf0.2@2=1.099 F3-pf0.2@1=1.271 F3-pf0.2@0.5=1.443
+     HYB        F1-R2@2=1.011 F1-R2@1=1.137 F1-R2@0.5=1.000 F3-pf0.2@2=1.112 F3-pf0.2@1=1.056 F3-pf0.2@0.5=1.023
+     REP-clamp  F1-R2@2=1.000 F1-R2@1=1.000 F1-R2@0.5=1.015 F3-pf0.2@2=1.000 F3-pf0.2@1=1.179 F3-pf0.2@0.5=1.064
+     INF-r      F1-R2@2=1.039 F1-R2@1=1.141 F1-R2@0.5=1.083 F3-pf0.2@2=1.043 F3-pf0.2@1=1.000 F3-pf0.2@0.5=1.000
+     SPARC      F1-R2@2=1.017 F1-R2@1=1.196 F1-R2@0.5=1.020 F3-pf0.2@2=1.085 F3-pf0.2@1=1.110 F3-pf0.2@0.5=1.094
+     SPARC-V3   F1-R2@2=1.029 F1-R2@1=1.048 F1-R2@0.5=0.980 F3-pf0.2@2=1.188 F3-pf0.2@1=1.091 F3-pf0.2@0.5=0.897
+     DS         F1-R2@2=1.027 F1-R2@1=1.000 F1-R2@0.5=1.015 F3-pf0.2@2=1.099 F3-pf0.2@1=1.179 F3-pf0.2@0.5=1.064
+  SPARC(sel)/CEN-F: F1-R2@2 0.984 [0.950, 1.014]; F1-R2@1 0.974 [0.862, 1.158]; F1-R2@0.5 0.747 [0.613, 0.887]; F3-pf0.2@2 1.012 [0.858, 1.169]; F3-pf0.2@1 0.831 [0.763, 0.913]; F3-pf0.2@0.5 0.709 [0.622, 0.817]
+== common lease g=3 L=10 (tuning rows)
+  variant selected: V1 (HYB); DS rho* = inf
+  max regret: CEN-F 1.356, HYB 1.155, REP-clamp 1.117, INF-r 1.131, SPARC 1.206, SPARC-V3 1.169, DS 1.117
+  best fixed REP-clamp 1.117; SPARC margin -3.8 points; K6 fires: True
+  E3a: {'diff': 0.03822671259280952, 'diff_hi95': 0.18177009956694348, 'diff_log': 0.03365597383730723, 'diff_log_hi95': 0.15052530996325877, 'comparator': 'REP-clamp', 'n_clusters': 10, 'holds': False}
+  K5 (rho=0.5): pooled best fixed INF-r ratio to FULL 1.893; fires: False
+     F1-R2: best fixed REP-clamp / FULL = 1.763 [1.585, 1.970]
+     F3-pf0.2: best fixed INF-r / FULL = 1.888 [1.758, 2.014]
+  regret by cell:
+     CEN-F      F1-R2@2=1.037 F1-R2@1=1.124 F1-R2@0.5=1.356 F3-pf0.2@2=1.129 F3-pf0.2@1=1.115 F3-pf0.2@0.5=1.168
+     HYB        F1-R2@2=1.050 F1-R2@1=1.085 F1-R2@0.5=1.028 F3-pf0.2@2=1.155 F3-pf0.2@1=1.134 F3-pf0.2@0.5=1.100
+     REP-clamp  F1-R2@2=1.000 F1-R2@1=1.000 F1-R2@0.5=1.000 F3-pf0.2@2=1.000 F3-pf0.2@1=1.117 F3-pf0.2@0.5=1.110
+     INF-r      F1-R2@2=1.131 F1-R2@1=1.040 F1-R2@0.5=1.077 F3-pf0.2@2=1.014 F3-pf0.2@1=1.000 F3-pf0.2@0.5=1.000
+     SPARC      F1-R2@2=1.057 F1-R2@1=1.072 F1-R2@0.5=1.015 F3-pf0.2@2=1.206 F3-pf0.2@1=1.198 F3-pf0.2@0.5=1.057
+     SPARC-V3   F1-R2@2=1.036 F1-R2@1=1.020 F1-R2@0.5=1.026 F3-pf0.2@2=1.169 F3-pf0.2@1=1.113 F3-pf0.2@0.5=0.983
+     DS         F1-R2@2=1.000 F1-R2@1=1.000 F1-R2@0.5=1.000 F3-pf0.2@2=1.000 F3-pf0.2@1=1.117 F3-pf0.2@0.5=1.110
+  SPARC(sel)/CEN-F: F1-R2@2 1.012 [0.984, 1.041]; F1-R2@1 0.965 [0.875, 1.087]; F1-R2@0.5 0.758 [0.591, 0.983]; F3-pf0.2@2 1.023 [0.964, 1.093]; F3-pf0.2@1 1.018 [0.964, 1.078]; F3-pf0.2@0.5 0.942 [0.691, 1.181]
+== common lease g=3 L=30 (tuning rows)
+  variant selected: V1 (HYB); DS rho* = 2.0
+  max regret: CEN-F 1.186, HYB 1.143, REP-clamp 1.132, INF-r 1.127, SPARC 1.296, SPARC-V3 1.140, DS 1.132
+  best fixed INF-r 1.127; SPARC margin -1.5 points; K6 fires: True
+  E3a: {'diff': 0.015139562090919378, 'diff_hi95': 0.19274720160372422, 'diff_log': 0.013339386547557286, 'diff_log_hi95': 0.16541320668821935, 'comparator': 'INF-r', 'n_clusters': 10, 'holds': False}
+  K5 (rho=0.5): pooled best fixed INF-r ratio to FULL 1.792; fires: False
+     F1-R2: best fixed HYB / FULL = 1.679 [1.530, 1.830]
+     F3-pf0.2: best fixed INF-r / FULL = 1.792 [1.672, 1.933]
+  regret by cell:
+     CEN-F      F1-R2@2=1.027 F1-R2@1=1.153 F1-R2@0.5=1.186 F3-pf0.2@2=1.123 F3-pf0.2@1=1.138 F3-pf0.2@0.5=1.124
+     HYB        F1-R2@2=1.011 F1-R2@1=1.143 F1-R2@0.5=1.000 F3-pf0.2@2=1.133 F3-pf0.2@1=1.094 F3-pf0.2@0.5=1.123
+     REP-clamp  F1-R2@2=1.000 F1-R2@1=1.000 F1-R2@0.5=1.008 F3-pf0.2@2=1.000 F3-pf0.2@1=1.132 F3-pf0.2@0.5=1.073
+     INF-r      F1-R2@2=1.039 F1-R2@1=1.127 F1-R2@0.5=1.067 F3-pf0.2@2=1.061 F3-pf0.2@1=1.000 F3-pf0.2@0.5=1.000
+     SPARC      F1-R2@2=1.017 F1-R2@1=1.168 F1-R2@0.5=0.999 F3-pf0.2@2=1.296 F3-pf0.2@1=1.124 F3-pf0.2@0.5=1.050
+     SPARC-V3   F1-R2@2=1.029 F1-R2@1=1.044 F1-R2@0.5=0.938 F3-pf0.2@2=1.140 F3-pf0.2@1=1.029 F3-pf0.2@0.5=0.941
+     DS         F1-R2@2=1.027 F1-R2@1=1.000 F1-R2@0.5=1.008 F3-pf0.2@2=1.123 F3-pf0.2@1=1.132 F3-pf0.2@0.5=1.073
+  SPARC(sel)/CEN-F: F1-R2@2 0.984 [0.950, 1.014]; F1-R2@1 0.991 [0.883, 1.147]; F1-R2@0.5 0.843 [0.750, 0.947]; F3-pf0.2@2 1.009 [0.931, 1.093]; F3-pf0.2@1 0.962 [0.846, 1.099]; F3-pf0.2@0.5 0.999 [0.879, 1.141]
+== common lease g=3 L=60 (tuning rows)
+  variant selected: V3 (SPARC-V3); DS rho* = 2.0
+  max regret: CEN-F 1.230, HYB 1.158, REP-clamp 1.135, INF-r 1.154, SPARC 1.231, SPARC-V3 1.140, DS 1.135
+  best fixed REP-clamp 1.135; SPARC margin -0.4 points; K6 fires: True
+  E3a: {'diff': 0.004306497638456364, 'diff_hi95': 0.2473434178873108, 'diff_log': 0.0037860740089361578, 'diff_log_hi95': 0.19913020043954974, 'comparator': 'REP-clamp', 'n_clusters': 10, 'holds': False}
+  K5 (rho=0.5): pooled best fixed INF-r ratio to FULL 1.793; fires: False
+     F1-R2: best fixed HYB / FULL = 1.653 [1.520, 1.785]
+     F3-pf0.2: best fixed INF-r / FULL = 1.795 [1.672, 1.936]
+  regret by cell:
+     CEN-F      F1-R2@2=1.027 F1-R2@1=1.139 F1-R2@0.5=1.203 F3-pf0.2@2=1.067 F3-pf0.2@1=1.230 F3-pf0.2@0.5=1.223
+     HYB        F1-R2@2=1.011 F1-R2@1=1.158 F1-R2@0.5=1.000 F3-pf0.2@2=1.127 F3-pf0.2@1=1.124 F3-pf0.2@0.5=1.143
+     REP-clamp  F1-R2@2=1.000 F1-R2@1=1.000 F1-R2@0.5=1.032 F3-pf0.2@2=1.000 F3-pf0.2@1=1.135 F3-pf0.2@0.5=1.051
+     INF-r      F1-R2@2=1.039 F1-R2@1=1.154 F1-R2@0.5=1.084 F3-pf0.2@2=1.078 F3-pf0.2@1=1.000 F3-pf0.2@0.5=1.000
+     SPARC      F1-R2@2=1.017 F1-R2@1=1.176 F1-R2@0.5=1.010 F3-pf0.2@2=1.231 F3-pf0.2@1=1.177 F3-pf0.2@0.5=1.075
+     SPARC-V3   F1-R2@2=1.029 F1-R2@1=1.066 F1-R2@0.5=0.966 F3-pf0.2@2=1.140 F3-pf0.2@1=1.042 F3-pf0.2@0.5=0.946
+     DS         F1-R2@2=1.027 F1-R2@1=1.000 F1-R2@0.5=1.032 F3-pf0.2@2=1.067 F3-pf0.2@1=1.135 F3-pf0.2@0.5=1.051
+  SPARC(sel)/CEN-F: F1-R2@2 1.001 [0.980, 1.021]; F1-R2@1 0.936 [0.868, 1.017]; F1-R2@0.5 0.803 [0.691, 0.937]; F3-pf0.2@2 1.068 [1.005, 1.136]; F3-pf0.2@1 0.847 [0.742, 0.967]; F3-pf0.2@0.5 0.774 [0.668, 0.898]
+== tuned leases on the tuning rows
+  variant selected: V3 (SPARC-V3); DS rho* = 2.0
+  max regret: CEN-F 1.193, HYB 1.150, REP-clamp 1.169, INF-r 1.154, SPARC 1.210, SPARC-V3 1.140, DS 1.169
+  best fixed HYB 1.150; SPARC margin 1.1 points; K6 fires: True
+  E3a: {'diff': -0.010663966592414864, 'diff_hi95': 0.13498168490683102, 'diff_log': -0.009314561956679679, 'diff_log_hi95': 0.11705462681214855, 'comparator': 'HYB', 'n_clusters': 10, 'holds': False}
+  K5 (rho=0.5): pooled best fixed HYB ratio to FULL 1.780; fires: False
+     F1-R2: best fixed HYB / FULL = 1.669 [1.536, 1.811]
+     F3-pf0.2: best fixed INF-r / FULL = 1.792 [1.672, 1.933]
+  regret by cell:
+     CEN-F      F1-R2@2=1.027 F1-R2@1=1.180 F1-R2@0.5=1.193 F3-pf0.2@2=1.123 F3-pf0.2@1=1.192 F3-pf0.2@0.5=1.124
+     HYB        F1-R2@2=1.011 F1-R2@1=1.150 F1-R2@0.5=1.000 F3-pf0.2@2=1.133 F3-pf0.2@1=1.069 F3-pf0.2@0.5=1.060
+     REP-clamp  F1-R2@2=1.000 F1-R2@1=1.000 F1-R2@0.5=1.022 F3-pf0.2@2=1.000 F3-pf0.2@1=1.169 F3-pf0.2@0.5=1.052
+     INF-r      F1-R2@2=1.039 F1-R2@1=1.154 F1-R2@0.5=1.073 F3-pf0.2@2=1.051 F3-pf0.2@1=1.000 F3-pf0.2@0.5=1.000
+     SPARC      F1-R2@2=1.017 F1-R2@1=1.210 F1-R2@0.5=1.004 F3-pf0.2@2=1.137 F3-pf0.2@1=1.123 F3-pf0.2@0.5=1.050
+     SPARC-V3   F1-R2@2=1.029 F1-R2@1=1.066 F1-R2@0.5=0.943 F3-pf0.2@2=1.140 F3-pf0.2@1=1.072 F3-pf0.2@0.5=0.941
+     DS         F1-R2@2=1.027 F1-R2@1=1.000 F1-R2@0.5=1.022 F3-pf0.2@2=1.123 F3-pf0.2@1=1.169 F3-pf0.2@0.5=1.052
+  SPARC(sel)/CEN-F: F1-R2@2 1.001 [0.980, 1.021]; F1-R2@1 0.903 [0.834, 0.996]; F1-R2@0.5 0.791 [0.679, 0.926]; F3-pf0.2@2 1.015 [0.967, 1.071]; F3-pf0.2@1 0.900 [0.824, 0.988]; F3-pf0.2@0.5 0.837 [0.770, 0.914]
+K7 flips across the lease grid: {'k5_fire': False, 'k6_fire': False, 'variant': True, 'best_fixed': True, 'rho_star': True, 'sparc_beats_cenf_lo': True}
+wrote docs/results/trackD-week1/c3_gates_4settings.json

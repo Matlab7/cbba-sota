@@ -309,6 +309,7 @@ class Belief:
         self.log_len = vec[L.LOG]
         self._logs: list[LogEvent] | None = None
         self._kind: np.ndarray | None = None
+        self._absents: set[tuple[int, int]] | None = None
 
     # ---- tasks
     def task_state(self, j: int) -> TaskEvent | None:
@@ -383,8 +384,26 @@ class Belief:
         return {(e.robot, e.task) for e in self.log_events() if e.kind == ABANDON}
 
     def absents(self) -> set[tuple[int, int]]:
-        """(member, task) pairs declared absent on site (rule 4.6(a))."""
-        return {(e.robot, e.task) for e in self.log_events() if e.kind == ABSENT}
+        """(member, task) pairs declared absent on site (rule 4.6(a)) that no later knowledge of that member
+        supersedes. An absent record describes one missed rendezvous: a newer record of the member heading to or
+        waiting at the task, or a newer route version of the member that contains the task, makes it count again
+        (C3 dev pilot, 2026-09-28: permanent absents made waiting robots ignore a member re-assigned to the task,
+        a livelock). Failure declarations (4.6 b) still count every absent record as evidence."""
+        if self._absents is None:
+            out = set()
+            for e in self.log_events():
+                if e.kind != ABSENT:
+                    continue
+                m, j = e.robot, e.task
+                rec = self.record(m)
+                if rec is not None and rec.time > e.time + EPS and rec.mode in (TRAVEL, WAIT) and rec.target == j:
+                    continue
+                ver = self.route(m)
+                if ver is not None and ver.time > e.time + EPS and j in ver.tasks:
+                    continue
+                out.add((m, j))
+            self._absents = out
+        return self._absents
 
     def n_orphan_events(self) -> int:
         return int(self.log_len.sum())
@@ -405,13 +424,41 @@ def suspected(belief: Belief, b: int, timeout: float) -> bool:
     return rec is not None and rec.mode != STATION and belief.now - rec.time > timeout + EPS
 
 
+def overdue_commitment(belief: Belief, b: int, h_f: float = 10.0) -> int:
+    """Rule 4.6(c), second part (C3 convention, 2026-09-28): robot b is silent for >= h_f and its last record promised
+    to arrive at its target (TRAVEL: ETA; WAIT: already there) or to finish its work there (WORK: predicted finish) by
+    a time now overdue by h_f. Returns that task (the robot counts as absent there, like an ``absent`` record of
+    4.6(a), and as failure evidence for 4.6(b)), else -1. A robot that dies on the way to a
+    task nobody else waits at leaves no on-site witness; without this rule the task keeps it as a committed member
+    forever (dev pilot, SA-BT F3)."""
+    rec = belief.record(b)
+    if rec is None or rec.mode not in (TRAVEL, WAIT, WORK) or rec.target < 0:
+        return -1
+    now = belief.now
+    if now - rec.time < h_f - EPS or now < rec.t_ref + h_f - EPS:
+        return -1
+    return int(rec.target)
+
+
+def overdue_absents(belief: Belief, h_f: float = 10.0) -> frozenset[tuple[int, int]]:
+    """(robot, task) pairs of ``overdue_commitment`` for every robot."""
+    out = []
+    for b in range(belief.layout.A):
+        j = overdue_commitment(belief, b, h_f)
+        if j >= 0:
+            out.append((b, j))
+    return frozenset(out)
+
+
 def declared_failed(belief: Belief, b: int, h_f: float = 10.0) -> bool:
-    """Rule 4.6(b): silence >= h_f AND at least one ``absent`` record about b. A silent robot without on-site
-    evidence is only unreachable (clamped), never failed."""
+    """Rule 4.6(b): silence >= h_f AND at least one ``absent`` record about b (or, C3 convention, an overdue
+    commitment of b, ``overdue_commitment``). A silent robot without such evidence is only unreachable (clamped),
+    never failed."""
     rec = belief.record(b)
     if rec is None or belief.now - rec.time < h_f - EPS:
         return False
-    return any(e.kind == ABSENT and e.robot == b for e in belief.log_events())
+    return overdue_commitment(belief, b, h_f) >= 0 or any(e.kind == ABSENT and e.robot == b
+                                                          for e in belief.log_events())
 
 
 def failed_set(belief: Belief, rule: str, timeout: float = 5 * TICK, h_f: float = 10.0) -> frozenset[int]:
@@ -426,6 +473,41 @@ def failed_set(belief: Belief, rule: str, timeout: float = 5 * TICK, h_f: float 
     raise ValueError(rule)
 
 
+def overdue_aborts(belief: Belief, dur, h_f: float = 10.0) -> frozenset[int]:
+    """Rule 4.6(c) (C3 convention, added 2026-09-28): a task whose newest known event is a START is treated as
+    aborted (open again) when its predicted finish (start + nominal duration ``dur[j]``) is overdue by ``h_f`` and
+    every member of that start has been silent for at least ``h_f``. A robot that fails while working alone leaves
+    no on-site witness (no ABORT observer, no absent record), so without this rule its task stays "started" in every
+    replica forever. A wrong inference (the crew finished but is out of reach) costs a duplicate visit (tolerated,
+    as in 4.6(a)); it does not declare anyone failed."""
+    kind = belief.task_kind()
+    now = belief.now
+    heard = None
+    out = []
+    for j in np.flatnonzero(kind == START):
+        ev = belief.task_state(int(j))
+        if now < ev.time + float(dur[j]) + h_f - EPS or not ev.members:
+            continue
+        if heard is None:
+            heard = belief.heard_time()
+        if all(now - heard[m] >= h_f - EPS for m in ev.members):
+            out.append(int(j))
+    return frozenset(out)
+
+
+def effective_kind(belief: Belief, dur=None, h_f: float = 10.0) -> np.ndarray:
+    """``task_kind`` with rule 4.6(c) applied (``dur`` None: the raw kinds)."""
+    kind = belief.task_kind()
+    if dur is None:
+        return kind
+    ab = overdue_aborts(belief, dur, h_f)
+    if not ab:
+        return kind
+    kind = kind.copy()
+    kind[list(ab)] = ABORT
+    return kind
+
+
 # -------------------------------------------------------------------- leases (4.3) and on-site evidence (4.6a)
 @dataclass(frozen=True)
 class LeaseConfig:
@@ -438,6 +520,7 @@ class LeaseConfig:
     max_wait: float = 30.0  # L, grid {10, 30, 60}
     detector_timeout: float = 5 * TICK  # h = 5 ticks
     silence: float = 2.0  # a planned member unheard for longer than this is "silent" (4.6a)
+    overdue_h: float | None = None  # C3: with h_f, overdue commitments of silent robots count as absent (4.6c)
 
     @staticmethod
     def grid() -> list[LeaseConfig]:
@@ -475,8 +558,10 @@ def lease_check(belief: Belief, robot: int, task: int, wait_since: float, presen
     waited = now - wait_since
     present = {int(x) for x in present} | {robot}
     absent_known = {m for (m, j) in belief.absents() if j == task}
-    planned = [m for m in planned_members(belief, task, exclude=robot)
-               if m not in present and m not in absent_known and m not in failed]
+    if cfg.overdue_h is not None:
+        absent_known |= {m for (m, j) in overdue_absents(belief, cfg.overdue_h) if j == task}
+    planned_all = [m for m in planned_members(belief, task, exclude=robot) if m not in present and m not in absent_known]
+    planned = [m for m in planned_all if m not in failed]
     heard = belief.heard_time()
     if cfg.mode == "detector":
         coming = [m for m in planned if not suspected(belief, m, cfg.detector_timeout)]
@@ -492,7 +577,10 @@ def lease_check(belief: Belief, robot: int, task: int, wait_since: float, presen
         reason = "no_partner"
     if not reason:
         return LeaseDecision(False, "", ())
-    silent = tuple(m for m in planned if now - heard[m] > cfg.silence + EPS)
+    # absent records name every silent planned member, including declared-failed ones: rule 4.6(b) keeps a failed
+    # robot on its committed head, so without this record planners would keep it in that coalition forever and send
+    # robots to wait for it again (a livelock found in the C3 dev pilot, 2026-09-28)
+    silent = tuple(m for m in planned_all if now - heard[m] > cfg.silence + EPS)
     return LeaseDecision(True, reason, silent)
 
 
