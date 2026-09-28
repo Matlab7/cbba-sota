@@ -137,6 +137,16 @@ def test_c1_grid_and_tune_variants():
             at.parse_variant(bad)
 
 
+def test_test_grid_is_c1_without_the_curves():
+    """The frozen test grid: every C1/C2 point of grid c1, none of the descriptive anytime-curve points."""
+    at = _script("anytime")
+    for name in ("SA-AT-50-5-50", "MA-AT-50-5-200", "MA-AT-150-5-500"):
+        s = get(name)
+        assert at.grid_test(s, 0) == at.grid_test(s, 49) == at.grid_c1(s, at.EXTENDED)
+        assert not any(c == 8 and b in ("0.5", "1", "2", "5", "10") for _, c, b in at.grid_test(s, 0))
+    assert at.GRIDS["test"] is at.grid_test and at.LATE_RULES["test"] == "score"
+
+
 def test_construct_streams_are_read_off_at_every_budget():
     """Stream rows: best plan finished by each budget, env-replayed; the 8-stream row is the best of the streams."""
     at = _script("anytime")

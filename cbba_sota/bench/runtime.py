@@ -16,6 +16,7 @@ import hashlib
 import json
 import multiprocessing as mp
 import os
+import re
 import socket
 import subprocess
 import sys
@@ -100,6 +101,36 @@ def code_version(root: Path = ROOT) -> str:
     if head and h.digest() == hashlib.sha1().digest():
         return head
     return f"{head or 'nocommit'}-dirty-{h.hexdigest()[:12]}"
+
+
+PREREG = ROOT / "docs" / "prereg-phase1.md"  # frozen before the test split runs; records the source trees it covers
+
+
+def frozen_source(path: Path | None = None) -> dict[str, str] | None:
+    """The git object ids of the ``SOURCE`` entries that a frozen pre-registration records (``Status: FROZEN`` and a
+    line ``- `<entry>` tree|blob: `<sha>``` per entry), or None if the file is not frozen or incomplete."""
+    path = PREREG if path is None else path
+    text = path.read_text() if path.exists() else ""
+    if not re.search(r"^Status: FROZEN", text, re.MULTILINE):
+        return None
+    pattern = r"^- `?(cbba_sota|scripts|pyproject\.toml)`? (?:tree|blob): `?([0-9a-f]{40})`?"
+    found = dict(re.findall(pattern, text, re.MULTILINE))
+    return found if set(found) == set(SOURCE) else None
+
+
+def require_frozen(root: Path = ROOT) -> str:
+    """``require_clean()`` for a test-split campaign, which also exits unless the pre-registration is frozen and the
+    checkout's committed source trees are exactly the ones it records (the frozen solver and harness)."""
+    version = require_clean()
+    frozen = frozen_source()
+    if frozen is None:
+        raise SystemExit(f"the test split runs only under a frozen pre-registration ({PREREG} is not frozen)")
+    for entry, sha in sorted(frozen.items()):
+        now = subprocess.run(["git", "rev-parse", f"HEAD:{entry}"], cwd=root, capture_output=True, text=True,
+                             check=False).stdout.strip()
+        if now != sha:
+            raise SystemExit(f"{entry} is {now or 'missing'} at HEAD, but the frozen pre-registration records {sha}")
+    return version
 
 
 def require_clean(allow_dirty: bool = False) -> str:

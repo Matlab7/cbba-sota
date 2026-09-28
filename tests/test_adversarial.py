@@ -327,6 +327,27 @@ def test_code_version():
     assert v == "unknown" or re.fullmatch(r"[0-9a-f]{40}|([0-9a-f]{40}|nocommit)-dirty-[0-9a-f]{12}", v)
 
 
+def test_test_split_needs_the_frozen_preregistration(tmp_path, monkeypatch):
+    """The test split runs only when docs/prereg-phase1.md says FROZEN and records exactly the committed source trees."""
+    heads = {e: subprocess.run(["git", "rev-parse", f"HEAD:{e}"], cwd=runtime.ROOT, capture_output=True, text=True,
+                               check=True).stdout.strip() for e in runtime.SOURCE}
+    lines = "".join(f"- `{e}` {'blob' if e.endswith('.toml') else 'tree'}: `{sha}`\n" for e, sha in heads.items())
+    prereg = tmp_path / "prereg.md"
+    monkeypatch.setattr(runtime, "PREREG", prereg)
+    monkeypatch.setattr(runtime, "require_clean", lambda allow_dirty=False: "v")
+    prereg.write_text("Status: DRAFT\n" + lines)
+    assert runtime.frozen_source() is None
+    with pytest.raises(SystemExit, match="not frozen"):
+        runtime.require_frozen()
+    prereg.write_text("Status: FROZEN on 2026-09-28\n" + lines)
+    assert runtime.frozen_source() == heads and runtime.require_frozen() == "v"
+    prereg.write_text("Status: FROZEN\n" + lines.replace(heads["scripts"], "0" * 40))
+    with pytest.raises(SystemExit, match="scripts"):
+        runtime.require_frozen()
+    prereg.write_text("Status: FROZEN\n" + lines.splitlines()[0])  # incomplete record
+    assert runtime.frozen_source() is None
+
+
 def test_timed_campaigns_refuse_a_dirty_tree(monkeypatch):
     dirty, clean = "0" * 40 + "-dirty-" + "1" * 12, "0" * 40
     monkeypatch.setattr(runtime, "code_version", lambda: dirty)

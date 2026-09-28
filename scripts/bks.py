@@ -61,7 +61,7 @@ from cbba_sota.bench.configs import RUNS_DIR
 from cbba_sota.hetero.replay import succeeded
 
 OUT = RUNS_DIR / "bks"
-ANYTIME = (RUNS_DIR / "anytime", RUNS_DIR / "anytime_c1")  # timed campaigns of the first and the second host
+ANYTIME = (RUNS_DIR / "anytime", RUNS_DIR / "anytime_c1", RUNS_DIR / "anytime_test")  # timed campaigns
 SPLIT = "val"
 SETTINGS = ("SA-BT-25-5-20", "SA-AT-25-5-20", "MA-AT-25-5-20", *cd.SETTINGS)
 SECONDS = {20: 30.0, 50: 90.0, 200: 240.0, 500: 600.0}  # T per task count (see the module docstring)
@@ -278,7 +278,7 @@ def collect(args) -> None:
                     extra += f", BKS to certified bound {x['bks_to_lb_pct']:.2f}%"
             print(f"  {x['run']:18s} n={x['n']:2d} gap to BKS {x['gap_to_bks_pct']:.2f}%, found BKS {x['found_bks']}{extra}")
     OUT.mkdir(parents=True, exist_ok=True)
-    (OUT / f"{SPLIT}_bks.json").write_text(json.dumps(out))
+    (OUT / f"{SPLIT}_bks.json").write_text(json.dumps(out))  # SPLIT: --split
     print(f"\nwrote {OUT / f'{SPLIT}_bks.json'}: {sum(map(len, out.values()))} instances")
     if args.csv:
         import csv
@@ -368,7 +368,7 @@ def run(args) -> None:
 
 
 def main() -> None:
-    global OUT
+    global OUT, SPLIT
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("command", choices=["run", "collect"])
     ap.add_argument("--settings", nargs="+", default=list(SETTINGS))
@@ -382,7 +382,12 @@ def main() -> None:
     ap.add_argument("--check", action="store_true", help="BKS-budget check runs: compared with the BKS, not in it")
     ap.add_argument("--out", type=Path, default=OUT, help="rows and BKS table (smoke tests)")
     ap.add_argument("--allow-dirty", action="store_true", help="run on uncommitted source (smoke tests only)")
+    ap.add_argument("--split", choices=["val", "test"], default="val",
+                    help="collect: the best of every run on this split (test: the timed campaign's rows only)")
     args = ap.parse_args()
+    SPLIT = args.split
+    if args.command == "run" and SPLIT != "val":
+        raise SystemExit("long BKS and reference runs use val only")
     OUT = args.out
     (run if args.command == "run" else collect)(args)
 

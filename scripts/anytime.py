@@ -106,7 +106,7 @@ FAIL = cd.FAIL
 QUIET = 0.4  # a lane starts a unit only when at most this share of the cgroup's CPU periods was throttled
 RL_FIRST_ONE = 10.0  # RL budgets up to this many seconds start with a lockstep batch of 1 sample (else 4)
 DISTURBED = 0.4  # rows whose job saw a larger throttled share are re-run on resume and left out of reports
-LATE_RULES = {"phase1b": "drop", "c1": "score"}  # how reports treat runs over their budget (``at_budget``)
+LATE_RULES = {"phase1b": "drop", "c1": "score", "test": "score"}  # how reports treat late runs (``at_budget``)
 LATE_RULE = "drop"
 
 
@@ -153,7 +153,14 @@ def grid_c1(setting, i: int = 0) -> list[tuple[str, int, str]]:
     return jobs
 
 
-GRIDS = {"phase1b": grid, "c1": grid_c1}
+def grid_test(setting, i: int = 0) -> list[tuple[str, int, str]]:
+    """The confirmatory test-split grid of the frozen pre-registration: the ``c1`` points of every instance (C1 at B1
+    and 2B1 on 8 cores, C2 with ALNS2 on 1 core at 0.5, 1, 2 s and B1, the 8 restart streams) without the anytime
+    curves of instances 0-4, which are descriptive and come from val."""
+    return grid_c1(setting, EXTENDED)
+
+
+GRIDS = {"phase1b": grid, "c1": grid_c1, "test": grid_test}
 GRID = grid  # --grid
 
 
@@ -420,8 +427,10 @@ def _units(settings: list[str], n: int, n_large: int, done: set[tuple], rng: ran
 
 def run(args, plan=None) -> None:
     os.environ.update(cd._ONE)
+    if SPLIT == "test" and (GRID is not grid_test or plan is not None):
+        raise SystemExit("the test split runs the frozen grid only: anytime.py run --split test --grid test")
+    version = runtime.require_frozen() if SPLIT == "test" else runtime.require_clean(args.allow_dirty)
     OUT.mkdir(parents=True, exist_ok=True)
-    version = runtime.require_clean(args.allow_dirty)
     units = _units(args.settings, args.n, args.n_large, _done(version), random.Random(0), max_budget=args.max_budget,
                    methods=args.methods, plan=plan)
     print(f"{len(units)} units, {sum(map(len, units))} jobs, {args.lanes} lanes, split {SPLIT}", flush=True)
@@ -572,7 +581,7 @@ def _fmt(g: dict | None) -> str:
 def report(args) -> None:
     from cbba_sota.stats import holm
 
-    bks_all = bks.load_bks()
+    bks_all = bks.load_bks(SPLIT)
     gaps, rats, curves = [], [], []
     for name in args.settings:
         if name not in bks_all:
@@ -903,8 +912,8 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("command", choices=["run", "report", "tune", "tune-report"])
     ap.add_argument("--grid", choices=list(GRIDS), default="phase1b", help="run/report: the campaign's grid")
-    ap.add_argument("--split", choices=["val", "dev"], default=None,
-                    help="default val (tune: dev); test is refused until the prereg freeze")
+    ap.add_argument("--split", choices=["val", "dev", "test"], default=None,
+                    help="default val (tune: dev); test only with --grid test under the frozen pre-registration")
     ap.add_argument("--methods", nargs="+", default=None, choices=METHODS, help="run: only these methods")
     ap.add_argument("--variants", nargs="+", default=[], help="tune: METHOD:param=value[,param=value]")
     ap.add_argument("--refs", nargs="*", default=["ALNS2", "CPSAT"], choices=METHODS, help="tune: reference methods")
@@ -924,6 +933,8 @@ def main() -> None:
     ap.add_argument("--allow-dirty", action="store_true", help="run on uncommitted source (smoke tests only)")
     args = ap.parse_args()
     tuning = args.command.startswith("tune")
+    if tuning and args.split == "test":
+        raise SystemExit("tuning uses dev only")
     OUT = args.out or (RUNS_DIR / "tune_dev" if tuning else OUT)
     SPLIT = args.split or ("dev" if tuning else "val")
     GRID = GRIDS[args.grid]
