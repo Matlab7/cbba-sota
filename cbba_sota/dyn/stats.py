@@ -350,8 +350,9 @@ def pair_rows(rows: Iterable[Mapping], method_a: str, method_b: str, *, value: s
     rb = [side[method_b][k] for k in keys]
     sa = np.array([bool(r[success_key]) for r in ra], bool)
     sb = np.array([bool(r[success_key]) for r in rb], bool)
-    va = np.array([float(r[value]) for r in ra])
-    vb = np.array([float(r[value]) for r in rb])
+    # a failed episode may carry no value (``scripts/trackD_run.py`` rows: makespan None); drop / impute handle it
+    va = np.array([np.nan if r[value] is None else float(r[value]) for r in ra])
+    vb = np.array([np.nan if r[value] is None else float(r[value]) for r in rb])
     if failure == "drop":
         keep = sa & sb
     else:

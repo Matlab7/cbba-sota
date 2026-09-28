@@ -8,6 +8,8 @@ Declared semantic changes (Section 3.2; each has a regression test in ``tests/te
 
 - D1 release masking: a task with ``release > t`` is not selectable and its observation row is all zero (the released
   network treats an all-zero row as padding, ``attention.get_attn_pad_mask``). Release epochs re-poll idle agents.
+  A release epoch (and the window end) is an epoch of its own even when every agent is busy, so its ``release``
+  event is reported at the release time (K0 fix, 2026-09-28: ``check_finished`` used to jump the clock past it).
 - D2 arrival-order coalitions (``coalition="arrival"``): among a task's committed members (in commit order), the
   task starts at the first arrival at which the members present cover it; members arriving later (late) or at the
   same instant but not needed (redundant) leave on arrival (a *wasted trip*) and are free again at that time.
@@ -18,7 +20,10 @@ Declared semantic changes (Section 3.2; each has a regression test in ``tests/te
   arrival order the redundant member leaves early, which changes the whole rollout (e.g. RL(g.) on MA-AT-25-5-50
   dev 0: 44.54 native vs 39.66). The default ``coalition="auto"`` therefore resolves to "arrival" for plan following
   (``run_plan``) and to "decision" for policies and native loops (the RL's own env, bit-identical static
-  reduction); ``world`` records the rule in force.
+  reduction); ``world`` records the rule in force. Plans with residual repair (spec 4.1 keeps every frozen member
+  and adds extras) can be non-minimal; there the two rules legitimately differ (arrival: the redundant member makes
+  a wasted trip; decision: its join is refused, event ``refused``). Gate K0 (``scripts/trackD_k0.py``) checks
+  decision == arrival on every minimal-cover plan-following episode.
 - D3 causal observations (``obs="causal"``, default): an agent's travel feature is its observed arrival if it has
   arrived, else ETA = departure + nominal travel + stall observed so far; durations are nominal until the task
   finishes; predicted starts use those ETAs. ``obs="oracle"`` keeps the native rows (realized future times leak).
@@ -34,6 +39,10 @@ Declared semantic changes (Section 3.2; each has a regression test in ``tests/te
   stall, so it looks stalled until detection), a task it was working on is aborted, and a task still waiting for
   it cannot start. At detection (onset + h) the robot leaves every coalition (``known_failed``), an aborted task is
   reset and restarts from scratch (full duration) when re-covered, and a structural ``failure`` event is emitted.
+  If the task's departed members no longer cover it, its present members leave (D5 ii); a present member that has
+  itself halted but is not detected yet is believed alive and "leaves" too (it stays halted in place), so the task's
+  cover does not reveal its failure before its own detection (``abandon`` / ``leave_on_arrival`` likewise treat an
+  undetected halted robot as alive).
   Policies delete known-failed rows from the agent observation (``RLPolicy``; a zero row is the same for the network
   except row 0, where the released network returns NaN, so rows are deleted, not zeroed). Onsets and detections are
   processed inside ``next_decision``, so every driver of the native loop gets them.
@@ -42,14 +51,21 @@ Declared semantic changes (Section 3.2; each has a regression test in ``tests/te
   finished and every live robot is home. With H = 0 the native end-of-episode rule runs unchanged.
 - D8 with H > 0, an idle agent waits in place while it may not go home (it is re-polled at every epoch).
 
+Travel: continuous at nominal speed outside the LoRR stall intervals of the agent's calendar; a zero-length trip (an
+agent at its depot sent home) does not move and is not stalled.
+
 Two execution APIs (both drive the env's own decision loop: ``next_decision`` / ``agent_step`` /
 ``check_finished``):
 
 - ``run_plan(controller, routes)``: plan following (the loop of ``TaskEnv.execute_by_route``). Each agent follows
   its route (0-based task ids) and departs when its previous task finishes. At every epoch the controller receives
   the events of that instant (``Event``; structural kinds: release, failure, abandon, idle, membership; noise kinds:
-  finish, wasted, window_end, wakeup) and may rewrite routes (``set_route``), abandon waiting agents (``abandon``),
-  ask to be woken (``request_wakeup``) or inject events (``post_event``, e.g. comm-layer membership changes).
+  finish, wasted, refused, window_end, wakeup) and may rewrite routes (``set_route``), abandon waiting agents
+  (``abandon``), release a travelling agent from its task (``leave_on_arrival``: it leaves when it arrives, a wasted
+  trip), ask to be woken (``request_wakeup``) or inject events (``post_event``, e.g. comm-layer membership changes).
+  Under the decision-order rule a route step onto an already covered task is refused (event ``refused``; the agent
+  is re-polled at once and takes its next route task). With ``skip_finished`` (good comms) agents skip route tasks
+  that are finished or already started (a late member cannot join a started task).
   ``state()`` is the causal snapshot a planner may read; ``predict_ready`` the Section 4.1 predictor on it.
 - ``run_policy(policy)``: a per-agent policy (the loop of ``Worker.run_episode`` / ``cbba_sota.solvers.rl``), e.g.
   ``RLPolicy`` (released checkpoint) or ``NearestPolicy`` (paper greedy, distance bug fixed).
@@ -86,19 +102,27 @@ STRUCTURAL = frozenset({"release", "failure", "abandon", "idle", "membership"})
 _HERE = Path(__file__).resolve().parent
 
 
-def code_hash() -> str:
-    """Short hash of the env and perturbation code (rows record which world produced them)."""
+def _hash_files() -> str:
     h = hashlib.sha1()
     for name in ("env.py", "perturb.py"):
         h.update((_HERE / name).read_bytes())
     return h.hexdigest()[:10]
 
 
+_CODE_HASH = _hash_files()  # at import: the code this process runs, even if the files change on disk later
+
+
+def code_hash() -> str:
+    """Short hash of the env and perturbation code this process imported (rows record which world produced them;
+    computed once at import, so an edit on disk during a campaign cannot relabel rows of running workers)."""
+    return _CODE_HASH
+
+
 @dataclass(frozen=True)
 class Event:
     """Something that happened at time ``t``. ``structural`` kinds are the Section 4.2 re-plan triggers."""
 
-    kind: str  # release | failure | abandon | idle | membership | finish | wasted | window_end | wakeup
+    kind: str  # release | failure | abandon | idle | membership | finish | wasted | refused | window_end | wakeup
     t: float
     tasks: tuple[int, ...] = ()
     agents: tuple[int, ...] = ()
@@ -251,6 +275,7 @@ class DynTaskEnvX(TaskEnv):
         self.failed_known = np.zeros(A, bool)  # failure detected
         self._dead_pos: dict[int, np.ndarray] = {}
         self._left = [None] * A  # time an agent left its current task without working (abandon / wasted trip)
+        self._leave = np.zeros(A, bool)  # plan mode: leaves its current task on arrival (``leave_on_arrival``)
         self._idle = np.zeros(A, bool)
         self._route: list[list[int]] = [[] for _ in range(A)]
         self.legs: list[list[tuple[float, float, float, int]]] = [[] for _ in range(A)]  # (decided, dep, tau, to)
@@ -394,6 +419,10 @@ class DynTaskEnvX(TaskEnv):
         if ta <= current_time or (end and not self._all_covered()):
             return False  # an onset, detection or wake-up comes first; the next next_decision processes it
         if len(decision_agents[0]) + len(decision_agents[1]) == 0:
+            if not end:
+                # a release epoch or the window end with every agent busy: it is an epoch of its own (its events
+                # are reported at that time), so do not jump the clock past it (native: only the end of episode)
+                return False
             self.current_time = current_time
             returned = all(a["returned"] or self.dead[i] for i, a in self.agent_dic.items())
             return bool(returned and np.all(self.get_matrix(self.task_dic, "finished")))
@@ -481,6 +510,9 @@ class DynTaskEnvX(TaskEnv):
                 a["next_decision"], a["assigned"] = self._left[i], False
                 continue
             c = a["current_task"]
+            if self._leave[i] and c >= 0:  # released from its task: an epoch at its arrival, where it leaves
+                a["next_decision"], a["assigned"] = self.get_arrival_time(i, c), False
+                continue
             if c >= 0:
                 task = self.task_dic[c]
                 if task["feasible_assignment"] and i in task["members"]:
@@ -507,11 +539,10 @@ class DynTaskEnvX(TaskEnv):
 
     def abandon(self, i: int) -> bool:
         """Controller action: agent ``i`` leaves the task it is waiting at (arrived, not started). Returns False if it
-        is not waiting at an unstarted task."""
+        is not waiting at an unstarted task. A halted robot whose failure is not detected yet is treated as alive
+        (it is believed to leave; physically it stays halted where it is), so nothing leaks before detection."""
         a = self.agent_dic[i]
         c = a["current_task"]
-        if self.dead[i]:  # a halted robot does nothing; answer as if it left, so nothing leaks before detection
-            return True
         if c < 0 or self._left[i] is not None:
             return False
         task = self.task_dic[c]
@@ -521,6 +552,37 @@ class DynTaskEnvX(TaskEnv):
         if task["feasible_assignment"] and task["time_start"] <= now and i in task["coalition"]:
             return False  # working
         self._abandon(i, c, now, "controller")
+        self.task_update()
+        self.agent_update()
+        return True
+
+    def leave_on_arrival(self, i: int, on: bool = True) -> bool:
+        """Controller action (plan mode): agent ``i``, travelling to its current task, is released from it: it no
+        longer counts for the task's cover and leaves when it arrives (a wasted trip, D2), then follows its route.
+        ``on=False`` takes the release back (it is a member again). The env cannot redirect a leg in flight. Returns
+        False if the agent is not travelling to a task (or, with ``on=False``, was not released). A halted robot
+        not detected yet is treated as alive (as in ``abandon``)."""
+        a = self.agent_dic[i]
+        c = a["current_task"]
+        if c < 0 or self._left[i] is not None or self.get_arrival_time(i, c) <= self.current_time:
+            return False
+        task = self.task_dic[c]
+        if on:
+            if self._leave[i] or i not in task["members"]:
+                return False
+            if task["feasible_assignment"] and task["time_start"] <= self.current_time and i in task["coalition"]:
+                return False  # cannot happen for a traveller; kept for safety
+            task["members"].remove(i)
+            if i in task["coalition"]:
+                task["coalition"].remove(i)
+            if task["feasible_assignment"] and not task["finished"]:
+                task["feasible_assignment"] = False  # recompute the cover without it
+                task["time_start"], task["time_finish"] = 0, 0
+        else:
+            if not self._leave[i]:
+                return False
+            task["members"].append(i)
+        self._leave[i] = bool(on)
         self.task_update()
         self.agent_update()
         return True
@@ -546,7 +608,7 @@ class DynTaskEnvX(TaskEnv):
     def _arrive(self, agent_id: int, dep: float, tau: float) -> float:
         """Arrival through the agent's stall calendar (continuous travel at nominal speed outside stalls)."""
         starts, ends = self.delays[agent_id]
-        if starts.size == 0:
+        if starts.size == 0 or tau <= 0:  # no stalls, or no movement (a robot at its depot sent home): not stalled
             return dep + tau  # same float op as the native env
         t, rem = dep, tau
         k = int(np.searchsorted(ends, t, side="right"))  # first interval ending after t
@@ -602,6 +664,7 @@ class DynTaskEnvX(TaskEnv):
         if task_id >= 0 and previous_task < 0:
             agent["returned"] = False  # leaves its depot (possible after a re-plan)
         self._left[agent_id] = None
+        self._leave[agent_id] = False
         self._idle[agent_id] = False
         if agent_id not in task["members"]:
             task["members"].append(agent_id)
@@ -680,7 +743,9 @@ class DynTaskEnvX(TaskEnv):
                 if self.abandon_on_failure:
                     gone = []
                     for m in list(task["members"]):
-                        if not self.dead[m] and self.get_arrival_time(m, c) <= t:
+                        # present members leave; one that halted but is not detected yet is believed alive, so it
+                        # "leaves" too (it stays halted in place): the task's cover does not leak its failure
+                        if self.get_arrival_time(m, c) <= t:
                             self._abandon(m, c, t, "partner-failed")
                             gone.append(m)
                     info["abandoned"] = tuple(gone)
@@ -746,6 +811,14 @@ class DynTaskEnvX(TaskEnv):
             if c < 0:
                 continue
             task = self.task_dic[c]
+            if self._leave[i]:  # released by the controller while travelling: leaves on arrival (a wasted trip)
+                if self.get_arrival_time(i, c) <= t:
+                    self._leave[i] = False
+                    task["wasted"].append(i)
+                    self.stats["wasted"] += 1
+                    self._left[i] = t
+                    evs.append(Event("wasted", t, (c,), (i,), (("reason", "released"),)))
+                continue
             if task["feasible_assignment"] and i in task["members"] and i not in task["coalition"] \
                     and self.get_arrival_time(i, c) <= t:
                 task["members"].remove(i)
@@ -784,8 +857,8 @@ class DynTaskEnvX(TaskEnv):
     def run_plan(self, controller: Controller | None = None, routes: Sequence[Sequence[int]] | None = None, *,
                  max_time: float = MAX_TIME, skip_finished: bool = True) -> Episode:
         """Plan following in the env loop (``execute_by_route`` generalized). ``routes``: initial 0-based routes.
-        ``skip_finished``: agents skip route tasks that are already finished (good comms; set False when a
-        controller models per-robot beliefs and wants stale visits to become wasted trips)."""
+        ``skip_finished``: agents skip route tasks that are already finished or started (good comms; set False when
+        a controller models per-robot beliefs and wants stale visits to become wasted trips)."""
         self.init_state()
         self._mode = "plan"
         if routes is not None:
@@ -835,7 +908,9 @@ class DynTaskEnvX(TaskEnv):
                 self._skip_finished(i, skip_finished)
                 a = self.agent_dic[i]
                 if self._route[i]:
-                    self.agent_step(i, self._route[i].pop(0) + 1, 0)
+                    j = self._route[i].pop(0)
+                    if self.agent_step(i, j + 1, 0)[0] == -1:  # decision order: joining a covered task is refused
+                        self._pending_events.append(Event("refused", t, (j,), (i,)))  # re-polled at once
                 elif self.may_go_home():
                     if a["current_task"] < 0 and a["arrival_time"][-1] <= t and np.isnan(a["next_decision"]):
                         continue  # already home
@@ -848,9 +923,12 @@ class DynTaskEnvX(TaskEnv):
         return self._episode()
 
     def _skip_finished(self, i: int, skip: bool) -> None:
+        """Drop leading route tasks that are finished or already started (a late member cannot join a started
+        task: the trip would be wasted; both are observed under good comms)."""
         if skip:
-            r = self._route[i]
-            while r and self.task_dic[r[0]]["finished"]:
+            r, now = self._route[i], self.current_time
+            while r and (self.task_dic[r[0]]["finished"] or (self.task_dic[r[0]]["feasible_assignment"]
+                                                             and self.task_dic[r[0]]["time_start"] <= now)):
                 r.pop(0)
 
     def _call(self, controller: Controller, t: float, evs: list[Event]) -> None:

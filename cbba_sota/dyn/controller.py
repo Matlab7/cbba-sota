@@ -3,16 +3,20 @@
 ``PlanController`` is the ``Controller`` of ``cbba_sota.dyn.env``: at every epoch with events it maps the env's
 events to trigger kinds (release -> ``release``; failure, abandon -> ``orphan``; idle -> ``idle`` when open tasks
 exist, i.e. released tasks that are neither committed, started nor finished, the spec's repair region (the env's
-own ``open_tasks`` count also includes committed tasks); finish, wasted, window_end, wakeup -> noise), asks the policy whether to re-plan (spec 4.2), builds the belief
-(``PlanState``) from the env's causal snapshot ``env.state()`` with the declared predictors (spec 4.1), and writes
-the new routes back (``env.set_route``).
+own ``open_tasks`` count also includes committed tasks); finish, wasted, refused, window_end, wakeup -> noise), asks
+the policy whether to re-plan (spec 4.2), builds the belief (``PlanState``) from the env's causal snapshot
+``env.state()`` with the declared predictors (spec 4.1), and writes the new routes back (``env.set_route``).
 
 Commitment bookkeeping lives here, because the env only knows which members *departed*: a task is committed once
 any member departed to it, and its coalition (the adopted plan's, plus residual extras) and key are then frozen.
 Members that abandon (a partner's failure detection, spec 4.3), fail, or arrive late or redundant (D2, a wasted
 trip) leave the frozen coalition. The env cannot
-redirect a travelling robot; if a plan releases a commitment (G4 fallback) a travelling member is abandoned from it
-when it arrives (``request_wakeup`` at its ETA).
+redirect a travelling robot; if a plan releases a commitment (G4 fallback) a travelling member is released from it
+(``env.leave_on_arrival``) and leaves when it arrives (a wasted trip), a waiting one leaves at once (``env.abandon``).
+
+Lease = failure detector (spec 4.3, good comms): a robot waiting at a committed task leaves it when a coalition
+partner is detected failed and the members that departed to it no longer cover it. The env applies this rule to
+partners that had departed (the only ones it knows); ``_partner_failed`` applies it to frozen partners that had not.
 """
 from __future__ import annotations
 
@@ -24,7 +28,7 @@ from cbba_sota.hetero.instance import Instance
 __all__ = ["PlanController", "run_env"]
 
 EVENT_KIND = {"release": "release", "failure": "orphan", "abandon": "orphan", "finish": "finish",
-              "wasted": "wasted", "window_end": "horizon", "wakeup": "wakeup"}
+              "wasted": "wasted", "refused": "wasted", "window_end": "horizon", "wakeup": "wakeup"}
 
 
 class PlanController:
@@ -37,6 +41,8 @@ class PlanController:
         self.keys = np.full(T, np.nan)
         self.key_floor = -1.0
         self.pending: dict[int, int] = {}  # robot -> released task it must leave on arrival
+        self._seen = [0] * inst.n_agents  # legs of each robot already read from ``env.legs``
+        self._restarts = [0] * T  # aborted-and-reset count of each task already seen
         self.cpu: list[float] = []
 
     # ---- events -> trigger kinds ---------------------------------------------------------------------------------
@@ -56,15 +62,28 @@ class PlanController:
                    and not sv.started[j] and not self.frozen[j])
 
     def on_events(self, env, t: float, events) -> bool:
+        self._commit_departures(env)  # departures since the last call happened before this epoch's events
+        for j, task in env.task_dic.items():  # started, then aborted and reset since the last call: the commitment
+            if task["restarts"] != self._restarts[j]:  # ended at the start (``_freeze`` would have cleared it)
+                self._restarts[j] = task["restarts"]
+                self.frozen[j] = ()
+        hit: set[int] = set()  # committed tasks that lost a frozen member to a failure detection
         for e in events:  # members that left a coalition are no longer frozen in it
             if e.kind == "failure":
-                gone = set(e.agents) | set(e.get("abandoned", ()) or ())
-                self.frozen = [tuple(m for m in f if m not in gone) for f in self.frozen]
-            elif e.kind in ("abandon", "wasted"):  # left the coalition (a wasted trip: late or redundant arrival)
+                hit |= {j for j, f in enumerate(self.frozen) if set(e.agents) & set(f)}
+                failed = set(e.agents)  # a failed robot leaves every coalition
+                self.frozen = [tuple(m for m in f if m not in failed) for f in self.frozen]
+                gone = set(e.get("abandoned", ()) or ())  # its partners left only the failed robot's task
+                for j in e.tasks:
+                    self.frozen[j] = tuple(m for m in self.frozen[j] if m not in gone)
+            elif e.kind in ("abandon", "wasted", "refused"):  # left the coalition (wasted trip: late, redundant or
+                #                                                   released arrival; refused: decision-order rule)
                 for j in e.tasks:
                     self.frozen[j] = tuple(m for m in self.frozen[j] if m not in e.agents)
         sv = env.state()
-        if self._leave_released(env, sv):
+        self._leave_released(sv)
+        left = self._partner_failed(env, sv, sorted(hit))
+        if left:
             sv = env.state()  # the abandons changed the coalitions
         self._freeze(sv)
         kinds = self.kinds(events, self.n_open(sv))
@@ -81,30 +100,55 @@ class PlanController:
         return True
 
     # ---- commitments ----------------------------------------------------------------------------------------------
-    def _freeze(self, sv) -> None:
+    def _commit_departures(self, env) -> None:
+        """A task is committed at the first departure of any member to it (spec 4.1); its coalition is then frozen
+        as the plan in force at that departure has it (the incumbent: departures happen after the controller call
+        of their epoch, so no newer plan exists). Departures are read from the env's leg log, in order, so a member
+        that left again before this call (abandon, wasted trip) is removed afterwards by its event."""
         inc = self.policy.incumbent
+        for i, legs in enumerate(env.legs):
+            for leg in legs[self._seen[i]:]:
+                j = int(leg[3])
+                if j < 0:
+                    continue
+                if not self.frozen[j]:
+                    planned = tuple(inc.members[j]) if inc is not None else ()
+                    self.frozen[j] = tuple(sorted(set(planned) | {i}))
+                elif i not in self.frozen[j]:
+                    self.frozen[j] = tuple(sorted(set(self.frozen[j]) | {i}))
+            self._seen[i] = len(legs)
+
+    def _freeze(self, sv) -> None:
+        """Started or finished tasks are no longer commitments (an aborted task is open again until a member departs
+        to it anew); known-failed robots leave every coalition."""
         for j in range(len(self.frozen)):
             if sv.finished[j] or sv.started[j]:
                 self.frozen[j] = ()
-                continue
-            dep = tuple(m for m in sv.committed[j] if sv.alive[m] and self.pending.get(m) != j)
-            if dep and not self.frozen[j]:  # first departure since the last plan: freeze its coalition
-                planned = tuple(inc.members[j]) if inc is not None else ()
-                self.frozen[j] = tuple(sorted(set(planned) | set(dep)))
-            elif dep:
-                self.frozen[j] = tuple(sorted(set(self.frozen[j]) | set(dep)))
-            self.frozen[j] = tuple(m for m in self.frozen[j] if sv.alive[m])
+            else:
+                self.frozen[j] = tuple(m for m in self.frozen[j] if sv.alive[m])
 
-    def _leave_released(self, env, sv) -> bool:
-        """Robots that arrived at a task whose commitment was released leave it; returns True if any did."""
+    def _partner_failed(self, env, sv, tasks) -> bool:
+        """Good-comms lease = failure detector (spec 4.3) for coalition partners that had not departed yet: a robot
+        waiting at a committed task leaves it when a frozen partner is detected failed and the members that departed
+        to it no longer cover it. (The env applies the same rule itself to partners that had departed, the only
+        ones it knows.) The task is then re-planned with its residual requirement. Returns True if anyone left."""
         left = False
-        for i, j in list(self.pending.items()):
-            if sv.mode[i] == "wait" and sv.target[i] == j:
-                left |= bool(env.abandon(i))
-                del self.pending[i]
-            elif sv.mode[i] in ("failed", "idle", "home", "to_home") or sv.target[i] != j:
-                del self.pending[i]
+        for j in tasks:
+            task = env.task_dic[j]
+            if sv.finished[j] or sv.started[j] or task["feasible_assignment"]:
+                continue  # done, working, or the departed members still cover it (it starts when they arrive)
+            for m in sv.present[j]:
+                if sv.mode[m] == "wait" and env.abandon(m):
+                    self.frozen[j] = tuple(x for x in self.frozen[j] if x != m)
+                    left = True
         return left
+
+    def _leave_released(self, sv) -> None:
+        """Forget released robots once they are no longer travelling to the released task (the env made them leave
+        on arrival, ``leave_on_arrival``, or they failed)."""
+        for i, j in list(self.pending.items()):
+            if sv.mode[i] != "travel" or sv.target[i] != j:
+                del self.pending[i]
 
     # ---- belief ---------------------------------------------------------------------------------------------------
     def belief(self, env, sv) -> PlanState:
@@ -168,14 +212,14 @@ class PlanController:
                 locked = self.pending.get(i) != c and c not in released
                 if r and r[0] == c:
                     r = r[1:]
-                    self.pending.pop(i, None)
+                    if self.pending.pop(i, None) is not None:
+                        env.leave_on_arrival(i, False)  # planned there again: a member once more
                 elif c in r and locked:
                     raise AssertionError(f"robot {i} is committed to task {c} but the plan puts it later: {r}")
                 elif m == "wait":  # leaves now (it may come back later if ``c`` is further down its route)
                     env.abandon(i)
-                else:  # leaves on arrival
+                elif self.pending.get(i) != c and env.leave_on_arrival(i):  # leaves when it arrives
                     self.pending[i] = c
-                    env.request_wakeup(float(sv.eta[i]))
             env.set_route(i, r)
 
 

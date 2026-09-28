@@ -11,6 +11,10 @@ Methods:
   greedy                    the paper greedy, distance bug fixed, online (B7, ``NearestPolicy``)
   OL-construct              descriptive smoke reference, only for cells without release: our constructor plan
                             (8 restarts) on the nominal instance, followed open loop (no re-planning)
+  SPARC, SPARC-rk, ins-only, every-event, open-loop, B3, B4, B5
+                            rolling planners (``cbba_sota.dyn.methods``) through ``PlanController`` in ``run_plan``;
+                            need ``--tier light`` or ``heavy`` (budgets in ``methods.TIERS``, overridable by
+                            parameters, e.g. ``'B4?restarts=15'``); planner seeds come from the belief (spec 4.1)
   ctrl:<module>:<factory>   a plan-following controller: ``factory(env, realization, tier, seed, **params)``
                             returns an object with ``on_events(env, t, events)`` (``run_plan``)
   pol:<module>:<factory>    a policy: ``factory(env, realization, tier, seed, **params)`` returns an object with
@@ -20,6 +24,11 @@ Methods:
 
 Budget tiers (docs/trackD-spec.md Section 3.6): native | light | heavy; passed to factories, recorded in rows.
 Deterministic budgets only; nothing here reads a wall clock inside an episode (CPU is measured, not used).
+
+Worlds: ``--world env`` (default) is the ground truth ``DynTaskEnvX``. ``--world executor`` runs the rolling
+planners in the hand-written executor (``cbba_sota.dyn.executor``), allowed for speed only where gate K0 holds
+(``scripts/trackD_k0.py``: executor == env trajectories at the verified env/executor code); its rows say so in
+``world`` and carry the executor code hash.
 
 Dev split only (the validation split of the spec is not generated yet; the test split is refused). Workers are
 capped at 12, each single-threaded (OMP/MKL/NUMBA/torch = 1). Output: runs/trackD/campaign/rows*.jsonl.
@@ -48,6 +57,7 @@ OUT = ROOT / "runs" / "trackD" / "campaign"
 MAX_WORKERS = 12
 _ONE_THREAD = {k: "1" for k in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS", "NUMBA_NUM_THREADS")}
 BUILTIN = ("RL(g.)", "RL(s.1)", "greedy", "OL-construct")
+WORLDS = ("env", "executor")
 
 
 # --- cases -----------------------------------------------------------------------------------------------------------
@@ -79,8 +89,11 @@ def parse_method(method: str) -> tuple[str, dict]:
 
 
 def world_options(args) -> dict:
-    return {"coalition": args.coalition, "obs": args.obs, "lease_L": args.lease_L,
+    opts = {"coalition": args.coalition, "obs": args.obs, "lease_L": args.lease_L,
             "abandon_on_failure": not args.no_abandon_on_failure}
+    if getattr(args, "world", "env") != "env":
+        opts["world"] = args.world  # env rows keep their case ids (no key added)
+    return opts
 
 
 def case_id(case: dict) -> str:
@@ -162,7 +175,8 @@ def run_case(case: dict, prov: dict) -> dict:
 
     from cbba_sota.bench import configs
     from cbba_sota.dyn import perturb
-    from cbba_sota.dyn.env import NearestPolicy, RLPolicy, code_hash, make_env
+    from cbba_sota.dyn.env import code_hash
+    from cbba_sota.dyn.methods import PLANNERS, make_policy
 
     row = {k: case[k] for k in ("case_id", "setting", "split", "instance", "seed", "cell", "family", "method",
                                  "tier")}
@@ -179,45 +193,87 @@ def run_case(case: dict, prov: dict) -> dict:
         if rz.excluded:
             row.update(status="excluded", note="failure realization leaves a task uncoverable (excluded, paired)")
             return row
-        env = make_env(s.instance_path(case["split"], case["instance"]), rz, **case["options"])
+        options = dict(case["options"])
+        world = options.pop("world", "env")
         name, params = parse_method(case["method"])
         pseed = policy_seed(row["instance_key"], case["seed"], name)
         row["method_seed"] = pseed
-        if name in ("RL(g.)", "RL(s.1)"):
-            ep = env.run_policy(RLPolicy(_net(), sample=name == "RL(s.1)", seed=pseed), shuffle_seed=pseed)
-        elif name == "greedy":
-            ep = env.run_policy(NearestPolicy())
-        elif name == "OL-construct":
-            if rz.cell.release != "none":
-                raise ValueError("OL-construct needs every task known at t = 0")
-            from cbba_sota.solvers import greedy
-
-            plan = greedy.construct(env.nominal_instance(), restarts=int(params.get("restarts", 8)), seed=pseed)
-            ep = env.run_plan(routes=plan.routes())
-        elif name.startswith("ctrl:"):
-            ctl = _factory(name)(env, rz, case["tier"], pseed, **params)
-            ep = env.run_plan(ctl)
-        elif name.startswith("pol:"):
-            pol = _factory(name)(env, rz, case["tier"], pseed, **params)
-            ep = env.run_policy(pol, shuffle_seed=pseed if params.get("shuffle", True) else None)
+        if world == "executor":
+            if name not in PLANNERS:
+                raise ValueError(f"the executor world runs the rolling planners only, not {name!r}")
+            row.update(_run_executor(s, case, rz, make_policy(name, case["tier"], **params)))
         else:
-            raise ValueError(f"unknown method {case['method']!r}")
-        cpu = np.asarray(ep.cpu_event_s, float) * 1e3
-        row.update(
-            status="completed", world=ep.world, makespan=ep.makespan, success=ep.success, completion=ep.completion,
-            env_finished=ep.env_finished, makespan_or_cap=ep.makespan_or_cap,  # P90 input / failure imputation
-            travel=ep.travel, wait=ep.wait, wait_per_agent=ep.wait / max(rz.n_agents, 1),
-            wasted_trips=ep.wasted_trips, abandons=ep.abandons, restarts=ep.restarts, failures=ep.failures,
-            detected=ep.detected, decisions=ep.decisions, controller_calls=ep.controller_calls, replans=ep.replans,
-            route_versions=ep.route_versions, structural_events=ep.structural_events, epochs=ep.epochs,
-            cpu_events=len(cpu), cpu_ms_p50=float(np.percentile(cpu, 50)) if cpu.size else None,
-            cpu_ms_p95=float(np.percentile(cpu, 95)) if cpu.size else None,
-            cpu_ms_max=float(cpu.max()) if cpu.size else None, cpu_ms_event=[round(float(x), 4) for x in cpu],
-            cpu_method_s=ep.cpu_total_s)
+            row.update(_run_env(s, case, rz, options, name, params, pseed))
     except Exception as e:  # noqa: BLE001  (recorded in the row, not fatal for the campaign)
         row.update(status="error", error=f"{type(e).__name__}: {e}", traceback=traceback.format_exc()[-2000:])
     row.update(wall_s=time.perf_counter() - wall0, cpu_s=time.process_time() - cpu0)
     return row
+
+
+def _run_env(s, case: dict, rz, options: dict, name: str, params: dict, pseed: int) -> dict:
+    """One episode in the ground truth ``DynTaskEnvX``."""
+    import numpy as np
+
+    from cbba_sota.dyn.env import NearestPolicy, RLPolicy, make_env
+    from cbba_sota.dyn.methods import PLANNERS, make_controller
+
+    env = make_env(s.instance_path(case["split"], case["instance"]), rz, **options)
+    if name in PLANNERS:
+        ep = env.run_plan(make_controller(env, rz, case["tier"], pseed, method=name, **params))
+    elif name in ("RL(g.)", "RL(s.1)"):
+        ep = env.run_policy(RLPolicy(_net(), sample=name == "RL(s.1)", seed=pseed), shuffle_seed=pseed)
+    elif name == "greedy":
+        ep = env.run_policy(NearestPolicy())
+    elif name == "OL-construct":
+        if rz.cell.release != "none":
+            raise ValueError("OL-construct needs every task known at t = 0")
+        from cbba_sota.solvers import greedy
+
+        plan = greedy.construct(env.nominal_instance(), restarts=int(params.get("restarts", 8)), seed=pseed)
+        ep = env.run_plan(routes=plan.routes())
+    elif name.startswith("ctrl:"):
+        ctl = _factory(name)(env, rz, case["tier"], pseed, **params)
+        ep = env.run_plan(ctl)
+    elif name.startswith("pol:"):
+        pol = _factory(name)(env, rz, case["tier"], pseed, **params)
+        ep = env.run_policy(pol, shuffle_seed=pseed if params.get("shuffle", True) else None)
+    else:
+        raise ValueError(f"unknown method {case['method']!r}")
+    cpu = np.asarray(ep.cpu_event_s, float) * 1e3
+    return {"status": "completed", "world": ep.world, "makespan": ep.makespan, "success": ep.success,
+            "completion": ep.completion, "env_finished": ep.env_finished,
+            "makespan_or_cap": ep.makespan_or_cap,  # P90 input / failure imputation
+            "travel": ep.travel, "wait": ep.wait, "wait_per_agent": ep.wait / max(rz.n_agents, 1),
+            "wasted_trips": ep.wasted_trips, "abandons": ep.abandons, "restarts": ep.restarts,
+            "failures": ep.failures, "detected": ep.detected, "decisions": ep.decisions,
+            "controller_calls": ep.controller_calls, "replans": ep.replans, "route_versions": ep.route_versions,
+            "structural_events": ep.structural_events, "epochs": ep.epochs, "cpu_events": len(cpu),
+            "cpu_ms_p50": float(np.percentile(cpu, 50)) if cpu.size else None,
+            "cpu_ms_p95": float(np.percentile(cpu, 95)) if cpu.size else None,
+            "cpu_ms_max": float(cpu.max()) if cpu.size else None,
+            "cpu_ms_event": [round(float(x), 4) for x in cpu], "cpu_method_s": ep.cpu_total_s}
+
+
+def _run_executor(s, case: dict, rz, policy) -> dict:
+    """A rolling planner in the hand-written executor (K0-verified world; see the module docstring)."""
+    import numpy as np
+
+    from cbba_sota.dyn.executor import Executor, Realization
+    from cbba_sota.hetero import Instance
+
+    inst = Instance.from_pickle(s.instance_path(case["split"], case["instance"]))
+    ex = Executor(inst, Realization.from_perturb(rz), detect_h=rz.detect_after)
+    res = ex.run(policy)
+    cpu = np.array([d["cpu_s"] for d in policy.decisions if d["replan"]], float) * 1e3
+    return {"status": "completed", "world": res["world"], "makespan": res["makespan"] if res["success"] else None,
+            "success": res["success"], "completion": res["completion"],
+            "makespan_or_cap": res["makespan"] if res["success"] else 200.0, "travel": res["travel"],
+            "wasted_trips": res["wasted"], "abandons": res["abandons"], "restarts": res["aborts"],
+            "failures": res["n_failed"], "replans": res["n_replans"], "cpu_events": len(cpu),
+            "cpu_ms_p50": float(np.percentile(cpu, 50)) if cpu.size else None,
+            "cpu_ms_p95": float(np.percentile(cpu, 95)) if cpu.size else None,
+            "cpu_ms_max": float(cpu.max()) if cpu.size else None, "cpu_ms_event": [round(float(x), 4) for x in cpu],
+            "cpu_method_s": float(cpu.sum() / 1e3), "note": "cpu = planner calls only (executor world)"}
 
 
 # --- main --------------------------------------------------------------------------------------------------------------
@@ -254,6 +310,7 @@ def main(argv=None) -> None:
     ap.add_argument("--obs", default="causal", choices=["causal", "oracle"])
     ap.add_argument("--lease-L", dest="lease_L", type=float, default=200.0)
     ap.add_argument("--no-abandon-on-failure", action="store_true")
+    ap.add_argument("--world", default="env", choices=WORLDS, help="env (ground truth) or executor (K0-verified)")
     ap.add_argument("--workers", type=int, default=8)
     ap.add_argument("--out", default=str(OUT))
     ap.add_argument("--rows", default="rows.jsonl", help="output file name in --out (one per concurrent runner)")

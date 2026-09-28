@@ -1,9 +1,16 @@
 """Plan-following event executor for DynHeteroMRTA-X: a fast *surrogate* world for planner pilots.
 
-Ground truth is the env (``DynTaskEnvX``, agent A, ``cbba_sota/dyn/env.py``). This executor is the hand-written
-world that spec Section 8 allows for speed only after gate K0 (executor vs env replay); until K0 passes, every
-number it produces must be labelled "executor (surrogate, pre-K0)". It implements the spec semantics as read by
-agent B; where agent A's env differs, the env wins and this file is aligned.
+Ground truth is the env (``DynTaskEnvX``, ``cbba_sota/dyn/env.py``, driven by ``controller.PlanController``). This
+executor is the hand-written world that spec Section 8 allows for speed only after gate K0 (executor vs env
+replay, ``scripts/trackD_k0.py``); every number it produces is labelled with ``world`` =
+``Executor[surrogate]@<hash of this file>``, and K0 holds only for the env / controller / executor code it was run
+on. Where the env and this file differ, the env wins and this file is aligned. Aligned on day 2 (K0): the belief
+conventions of ``PlanController.belief`` (started = in progress, committed = departed and not started, a finish at
+this epoch frees its members now, failed robots at their depot), commitment at the first departure with the
+plan's coalition, ending at the task's start (a wasted trip also leaves it), head locks only on committed tasks, a
+halted traveller looks stalled until detected, a released commitment makes a traveller leave on arrival
+(``released``, the env's ``leave_on_arrival``), a zero-length leg is not stalled, the D7 end time, and the lease =
+failure detector rule for frozen partners (survivors leave unless the departed members still cover).
 
 Semantics (spec 3.2, 4.3; good communication = instant, lossless, global knowledge):
 - Robots follow their adopted route in key order and depart when their previous task finishes (at t = 0 from the
@@ -41,11 +48,26 @@ import numpy as np
 from cbba_sota.dyn.planner import AT_DEPOT, AT_POINT, DynPlan, PlanState, travel_from
 from cbba_sota.hetero.instance import Instance
 
-__all__ = ["WORLD", "Executor", "Policy", "Realization", "kappa_of", "make_realization"]
+__all__ = ["WORLD", "Executor", "Policy", "Realization", "code_hash", "kappa_of", "make_realization"]
 
 TICK = 0.1  # env dt
 MAX_TIME = 200.0
-WORLD = "executor (surrogate, pre-K0)"
+WORLD = "Executor[surrogate]"
+
+
+def _hash_file() -> str:
+    import hashlib
+    from pathlib import Path
+
+    return hashlib.sha1(Path(__file__).read_bytes()).hexdigest()[:10]
+
+
+_CODE_HASH = _hash_file()
+
+
+def code_hash() -> str:
+    """Short hash of this file as imported (the executor world's code; rows record it)."""
+    return _CODE_HASH
 
 IDLE, MOVE, WAIT, WORK, HOME, DEAD = range(6)
 STRUCTURAL = frozenset({"release", "orphan", "idle", "membership"})
@@ -197,6 +219,9 @@ class Executor:
         self.ver = np.zeros(A, np.int64)
         self.phys_dead = np.zeros(A, bool)
         self.known_dead = np.zeros(A, bool)
+        self.delays = [(np.asarray(s, float), np.asarray(e, float)) for s, e in world.delays]  # stall calendars
+        self.legs: list[list[tuple[float, int, float]]] = [[] for _ in range(A)]  # (departure, task | -1, arrival)
+        self.released = np.zeros(A, bool)  # travelling to a task whose commitment was released: leaves on arrival
         self.home_t = np.zeros(A)
         # bookkeeping
         self.heap: list = []
@@ -212,8 +237,8 @@ class Executor:
 
     # ---- physics -------------------------------------------------------------------------------------------------
     def arrive(self, i: int, dep: float, tau: float) -> float:
-        starts, ends = self.world.delays[i]
-        if starts.size == 0:
+        starts, ends = self.delays[i]
+        if starts.size == 0 or tau <= 0:  # no stalls, or no movement: not stalled (as the env)
             return dep + tau
         t, rem = dep, tau
         k = int(np.searchsorted(ends, t, side="right"))
@@ -230,7 +255,7 @@ class Executor:
         return t + rem
 
     def stalled(self, i: int, a: float, b: float) -> float:
-        starts, ends = self.world.delays[i]
+        starts, ends = self.delays[i]
         if starts.size == 0 or b <= a:
             return 0.0
         return float(np.clip(np.minimum(ends, b) - np.maximum(starts, a), 0.0, None).sum())
@@ -282,18 +307,23 @@ class Executor:
         dest = self.depot[i] if j < 0 else self.loc[j]
         self.ver[i] += 1
         if j < 0 and tau == 0.0:
+            self.legs[i].append((t, -1, t))
             self.mode[i], self.tgt[i], self.at[i] = HOME, -1, AT_DEPOT
             self.xy[i] = self.depot[i]
             self.home_t[i] = t
             return
         arr = self.arrive(i, t, tau)
-        self.travel += tau
+        self.legs[i].append((t, j, arr))
+        self.travel += float(np.linalg.norm(np.asarray(xy, float) - dest))  # distance, as the env counts it
         self.mode[i], self.tgt[i] = MOVE, j
         self.leg[i] = (t, tau, np.array(xy, float), np.array(dest, float), arr)
+        self.released[i] = False
         if j >= 0:
-            if not self.committed[j]:
+            if not self.frozen[j]:  # first departure: the task is committed with the plan's coalition (spec 4.1)
                 self.committed[j] = True
-                self.frozen[j] = tuple(self.planned[j])
+                self.frozen[j] = tuple(sorted(set(self.planned[j]) | {i}))
+            elif i not in self.frozen[j]:
+                self.frozen[j] = tuple(sorted(set(self.frozen[j]) | {i}))
             self._push(arr, 2, "ARR", i, int(self.ver[i]))
         else:
             self._push(arr, 3, "HOME", i, int(self.ver[i]))
@@ -332,6 +362,7 @@ class Executor:
             self.start_t[j] = t
             self.finish_t[j] = t + self.world.dur_real[j]
             self.working[j] = tuple(sorted(pres))
+            self.frozen[j] = ()  # a started task is no longer a commitment (after an abort it is open again)
             for i in pres:
                 self.mode[i] = WORK
             self.fin_ver[j] += 1
@@ -350,9 +381,14 @@ class Executor:
         pos = np.array(self.xy, float)
         pos_task = np.array(self.at, np.int64)
         head = np.full(A, -1, np.int64)
+        # PlanState conventions (as ``controller.PlanController.belief``): started = in progress, committed = a
+        # member departed and not started / finished (head locks too); members only for committed tasks
+        started = self.started & ~self.done
+        committed = self.committed & ~self.started & ~self.done
         for i in range(A):
             m = int(self.mode[i])
-            if self.known_dead[i]:
+            if self.known_dead[i]:  # takes no work; canonical entries (as ``PlanController.belief``)
+                pos[i], pos_task[i] = self.depot[i], AT_DEPOT
                 continue
             if m == MOVE and self.tgt[i] >= 0:
                 j = int(self.tgt[i])
@@ -364,7 +400,7 @@ class Executor:
                     moved = (t - dep) - st
                     ready[i] = t + max(tau - moved, 0.0) * kap
                 pos[i], pos_task[i] = self.loc[j], j  # not locked if it leaves on arrival (j later in its route)
-                head[i] = j if self.committed[j] and i in self.frozen[j] and j not in self.route[i] else -1
+                head[i] = j if committed[j] and i in self.frozen[j] and not self.released[i] else -1
             elif m == MOVE:  # heading home: free once there
                 dep, tau, _, _, _ = self.leg[i]
                 st = self.stalled(i, dep, t)
@@ -376,17 +412,19 @@ class Executor:
             elif m == WAIT:
                 j = int(self.tgt[i])
                 ready[i], pos[i], pos_task[i] = self.present[j].get(i, t), self.loc[j], j
-                head[i] = j if self.committed[j] and i in self.frozen[j] else -1
+                head[i] = j if committed[j] and i in self.frozen[j] else -1
             elif m == WORK:
                 j = int(self.tgt[i])
-                ready[i] = max(self.start_t[j] + inst.dur[j], t)
+                # a task that finished at this epoch frees its members now (they are dispatched after the call)
+                ready[i] = t if self.done[j] else max(self.start_t[j] + inst.dur[j], t)
                 pos[i], pos_task[i] = self.loc[j], j
             elif m == HOME:
                 ready[i], pos[i], pos_task[i] = t, self.depot[i], AT_DEPOT
             else:  # IDLE
                 ready[i] = t
+        members = [tuple(self.frozen[j]) if committed[j] else () for j in range(self.T)]
         return PlanState(inst=inst, now=t, released=self.known.copy(), done=self.done.copy(),
-                         started=self.started.copy(), committed=self.committed.copy(), members=list(self.frozen),
+                         started=started, committed=committed, members=members,
                          keys=np.nan_to_num(self.key.copy(), nan=0.0), alive=~self.known_dead, ready=ready, pos=pos,
                          pos_task=pos_task, head=head, kappa=kap, key_floor=self.key_floor)
 
@@ -418,15 +456,24 @@ class Executor:
             m = int(self.mode[i])
             if m in (MOVE, WAIT) and self.tgt[i] >= 0:
                 j = int(self.tgt[i])
-                locked = self.committed[j] and i in self.frozen[j] and j not in released
+                locked = not self.released[i] and j not in released  # as ``controller.PlanController.adopt``
                 if r and r[0] == j:
                     r = r[1:]
+                    self.released[i] = False  # planned there (again): a member
                 elif j in r and locked:
                     raise AssertionError(f"robot {i} is committed to task {j} but the plan puts it later: {r}")
                 else:  # released commitment (or no longer a member): leave (on arrival if travelling)
                     self.route[i] = r
-                    if not self.phys_dead[i] and m == WAIT:
-                        go.append(i)
+                    if m == MOVE:  # leaves when it arrives (the env's ``leave_on_arrival``: a wasted trip)
+                        self.released[i] = True
+                    if m == WAIT:  # leaves the waiting place now (the env's ``abandon``)
+                        self.abandons += 1
+                        if self.phys_dead[i]:  # halted, not detected: believed to leave, stays in place (env)
+                            self.present[j].pop(i, None)
+                            self.mode[i], self.tgt[i], self.at[i] = IDLE, -1, j
+                            self.xy[i] = self.loc[j]
+                        else:
+                            go.append(i)
                     continue
             elif m == WORK:
                 j = int(self.tgt[i])
@@ -465,6 +512,7 @@ class Executor:
         n_replans = 0
         cpu = []
         status = "ok"
+        end_t = 0.0
         while self.heap:
             t = self.heap[0][0]
             if t > self.max_time:
@@ -492,9 +540,11 @@ class Executor:
                     j = int(self.tgt[a])
                     kinds.add("arrive")
                     # not (or no longer) expected here now: a released commitment, possibly re-planned for later
-                    stale = a not in self.frozen[j] and (a not in self.planned[j] or j in self.route[a])
+                    stale = bool(self.released[a])  # its commitment was released: it leaves (env ``_settle``)
+                    self.released[a] = False
                     if self.done[j] or self.started[j] or stale:
-                        self.wasted += 1
+                        self.wasted += 1  # a wasted trip: it leaves the coalition (``PlanController`` on ``wasted``)
+                        self.frozen[j] = tuple(x for x in self.frozen[j] if x != a)
                         self.mode[a], self.tgt[a], self.at[a] = IDLE, -1, j
                         self.xy[a] = self.loc[j]
                         freed.append(a)
@@ -540,10 +590,11 @@ class Executor:
                     if not self.route[i] and not self.phys_dead[i]:
                         self._go_idle(int(i), t)
             if self.done.all() and all(self.mode[i] == HOME for i in range(self.A) if not self.phys_dead[i]):
-                break
+                end_t = t  # D7: the first time every task is finished and every live robot is home (possibly
+                break      # a failure onset of the last robot still on its way home, as in the env)
         alive = ~self.phys_dead
         ok = status == "ok" and bool(self.done.all()) and bool((self.mode[alive] == HOME).all())
-        ms = float(self.home_t[alive].max()) if ok and alive.any() else self.max_time
+        ms = float(max(end_t, self.home_t[alive].max(initial=0.0))) if ok else self.max_time
         if ok and ms >= self.max_time:
             ok = False
         return {"makespan": ms if ok else self.max_time, "raw_makespan": ms, "success": ok,
@@ -553,7 +604,7 @@ class Executor:
                 "cpu_s_p95": float(np.percentile(cpu, 95)) if cpu else 0.0, "wasted": self.wasted,
                 "aborts": self.aborts, "abandons": self.abandons, "redirects": self.redirects,
                 "travel": self.travel,
-                "n_failed": int(self.phys_dead.sum()), "world": WORLD}
+                "n_failed": int(self.phys_dead.sum()), "world": f"{WORLD}@{code_hash()}"}
 
     def _fail(self, i: int, t: float) -> None:
         """Onset: the robot halts; a task it works on cannot finish (known at detection), one it is expected at
@@ -561,6 +612,13 @@ class Executor:
         if self.phys_dead[i]:
             return
         self.phys_dead[i] = True
+        if self.mode[i] == MOVE and self.leg[i][4] > t:  # halted mid-leg: looks stalled until detected (env D6)
+            self.travel -= float(np.linalg.norm(self.leg[i][3] - self._point(i, t)))  # the untravelled rest
+            s, e = self.delays[i]
+            keep = s < t
+            self.delays[i] = (np.append(s[keep], t), np.append(np.minimum(e[keep], t), np.inf))
+            dep, j, _ = self.legs[i][-1]
+            self.legs[i][-1] = (dep, j, np.inf)  # never arrives
         if self.mode[i] == WORK:
             j = int(self.tgt[i])
             if not self.done[j]:
@@ -595,14 +653,20 @@ class Executor:
             if self.done[j] or self.started[j]:
                 continue
             self._try_start(j, t)
-            if not self.started[j]:
-                for k in list(self.present[j]):
+            # the members that departed to j (present, or travelling there; failures not yet detected included, as
+            # in the env) still cover it: it starts when they arrive, nobody leaves (env ``_fail_detect``)
+            dep = set(self.present[j]) | {int(k) for k in np.flatnonzero((self.mode == MOVE) & (self.tgt == j)
+                                                                          & ~self.released)}
+            dep = [k for k in dep if not self.known_dead[k]]
+            covered = bool(dep) and bool((self.inst.ab[dep].sum(axis=0) >= self.inst.req[j]).all())
+            if not self.started[j] and not covered:
+                for k in list(self.present[j]):  # an undetected halted robot is believed to leave too (env)
+                    self.present[j].pop(k)
+                    self.frozen[j] = tuple(x for x in self.frozen[j] if x != k)
+                    self.mode[k], self.tgt[k], self.at[k] = IDLE, -1, j
+                    self.xy[k] = self.loc[j]
+                    self.abandons += 1
                     if not self.phys_dead[k]:
-                        self.present[j].pop(k)
-                        self.frozen[j] = tuple(x for x in self.frozen[j] if x != k)
-                        self.mode[k], self.tgt[k], self.at[k] = IDLE, -1, j
-                        self.xy[k] = self.loc[j]
-                        self.abandons += 1
                         freed.append(k)
             if not self.frozen[j]:
                 self.committed[j] = False  # nobody left who departed: the task is open again

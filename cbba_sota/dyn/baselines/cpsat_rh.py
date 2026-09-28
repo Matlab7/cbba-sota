@@ -324,10 +324,23 @@ def _species_cap(prob: Problem) -> np.ndarray:
 
 def _prune_minimal(prob: Problem, order: list[int], members: list[tuple[int, ...]], window: list[int],
                    lam: float) -> tuple:
-    """Drop redundant members of the window tasks, in order, latest arrival first; returns the scheduled solution."""
+    """Drop redundant members of the window tasks, in order, latest arrival first; returns the scheduled solution.
+    A CP-SAT coalition wider than the kernel's member slots (``prob.W``) is first cut to fit by dropping redundant
+    members, highest robot id first (a minimal cover always fits; day-2 fix of a crash in ``Problem.load``)."""
     ab, req = prob.arrays[K.I_AB], prob.arrays[K.I_REQ]
     sol = prob.new_sol()
     members = list(members)
+    for x in window:
+        if len(members[x]) > prob.W:
+            m = sorted(members[x])
+            tot = ab[m].sum(axis=0)
+            for i in sorted(m, reverse=True):
+                if len(m) <= prob.W:
+                    break
+                if (tot - ab[i] >= req[x]).all():
+                    tot = tot - ab[i]
+                    m.remove(i)
+            members[x] = tuple(m)
     prob.load(sol, order, members, lam)
     wset = set(window)
     for x in order:
