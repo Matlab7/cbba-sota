@@ -1,0 +1,19 @@
+[project]
+name = "cbba-sota"
+version = "0.0.1"
+description = "Decentralized multi-agent task allocation research"
+requires-python = ">=3.12"
+dependencies = ["numpy>=1.26", "scipy>=1.14"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.6"]
+
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["cbba_sota*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

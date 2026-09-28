@@ -1,0 +1,160 @@
+
+MA-AT-25-5-50  B1 = 16.34 s  (20 instances with every method)
+  method       cores  mean ms  succ  wall s    CPU s      N  extra
+  ALNS-1           1   36.148  1.00    16.3     16.3    nan  
+  ALNS-8           8   35.515  1.00    16.4    130.6    nan  
+  CPSAT-8          8   39.807  1.00    16.4     95.6    nan  
+  RL-1             1   48.319  1.00    16.0     16.0   20.1  
+  RL-8             8   47.253  1.00    16.3    128.0  158.8  
+  RL64+ALNS-8      8   35.692  1.00    16.4    129.1   64.0  RL(s.64) 47.861 in 6.6s; polished 20
+  greedy           1   93.887  0.80     0.1      0.1    nan  
+  ALNS-8/RL64+ALNS-8  (all others       ) ratio 0.995 [0.988, 1.003] wins 12/20  p(<0.92) 1  gate FAIL   vs per-instance best 0.995 [0.988, 1.003]
+  ALNS-8/CPSAT-8      (others w/o hybrid) ratio 0.890 [0.876, 0.904] wins 20/20  p(<0.92) 0.00032  gate PASS   vs per-instance best 0.890 [0.876, 0.904]
+  ALNS-8/RL-8         (RL, same cores   ) ratio 0.750 [0.731, 0.769] wins 20/20  p(<0.92) 1.1e-12  gate PASS   vs per-instance best 0.750 [0.731, 0.769]
+  ALNS-1/RL64+ALNS-8  (all others       ) ratio 1.014 [1.006, 1.022] wins 5/20  p(<0.92) 1  gate FAIL   vs per-instance best 1.014 [1.006, 1.022]
+  ALNS-1/RL-1         (1-core others    ) ratio 0.748 [0.730, 0.766] wins 20/20  p(<0.92) 6.7e-13  gate PASS   vs per-instance best 0.748 [0.730, 0.766]
+
+MA-AT-25-5-50  B2 = 32.68 s  (20 instances with every method)
+  method       cores  mean ms  succ  wall s    CPU s      N  extra
+  ALNS-1           1   36.013  1.00    32.7     32.7    nan  
+  ALNS-8           8   35.457  1.00    32.7    261.3    nan  
+  CPSAT-8          8   38.992  1.00    32.7    200.9    nan  
+  RL-1             1   48.157  1.00    32.7     32.7   43.0  
+  RL-8             8   46.475  1.00    33.0    260.8  345.0  
+  RL64+ALNS-8      8   35.596  1.00    32.7    260.1   64.0  RL(s.64) 47.861 in 6.5s; polished 20
+  greedy           1   93.887  0.80     0.1      0.1    nan  
+  ALNS-8/RL64+ALNS-8  (all others       ) ratio 0.996 [0.990, 1.003] wins 12/20  p(<0.92) 1  gate FAIL   vs per-instance best 0.996 [0.990, 1.003]
+  ALNS-8/CPSAT-8      (others w/o hybrid) ratio 0.907 [0.892, 0.920] wins 20/20  p(<0.92) 0.04  gate mean<=0.92   vs per-instance best 0.907 [0.892, 0.920]
+  ALNS-8/RL-8         (RL, same cores   ) ratio 0.759 [0.742, 0.777] wins 20/20  p(<0.92) 6.2e-13  gate PASS   vs per-instance best 0.759 [0.742, 0.777]
+  ALNS-1/RL64+ALNS-8  (all others       ) ratio 1.016 [1.004, 1.029] wins 5/20  p(<0.92) 1  gate FAIL   vs per-instance best 1.016 [1.004, 1.029]
+  ALNS-1/RL-1         (1-core others    ) ratio 0.748 [0.736, 0.761] wins 20/20  p(<0.92) 6.5e-16  gate PASS   vs per-instance best 0.748 [0.736, 0.761]
+
+SA-AT-50-5-50  B1 = 29.8 s  (20 instances with every method)
+  method       cores  mean ms  succ  wall s    CPU s      N  extra
+  ALNS-1           1   29.555  1.00    29.8     29.8    nan  
+  ALNS-8           8   28.753  1.00    29.8    238.2    nan  
+  CPSAT-8          8   30.117  1.00    29.9    170.6    nan  
+  RL-1             1   37.032  1.00    29.3     29.3   18.1  
+  RL-8             8   36.521  1.00    29.8    234.4  145.8  
+  RL64+ALNS-8      8   29.263  1.00    29.8    235.8   64.0  RL(s.64) 36.741 in 12.8s; polished 20
+  greedy           1   46.771  1.00     0.3      0.3    nan  
+  ALNS-8/RL64+ALNS-8  (all others       ) ratio 0.983 [0.975, 0.990] wins 18/20  p(<0.92) 1  gate FAIL   vs per-instance best 0.983 [0.976, 0.990]
+  ALNS-8/CPSAT-8      (others w/o hybrid) ratio 0.955 [0.946, 0.964] wins 20/20  p(<0.92) 1  gate FAIL   vs per-instance best 0.955 [0.946, 0.964]
+  ALNS-8/RL-8         (RL, same cores   ) ratio 0.787 [0.778, 0.796] wins 20/20  p(<0.92) 2e-16  gate PASS   vs per-instance best 0.787 [0.778, 0.796]
+  ALNS-1/RL64+ALNS-8  (all others       ) ratio 1.010 [1.003, 1.017] wins 6/20  p(<0.92) 1  gate FAIL   vs per-instance best 1.011 [1.004, 1.018]
+  ALNS-1/RL-1         (1-core others    ) ratio 0.798 [0.786, 0.809] wins 20/20  p(<0.92) 7.5e-14  gate PASS   vs per-instance best 0.798 [0.786, 0.809]
+
+SA-AT-50-5-50  B2 = 59.6 s  (20 instances with every method)
+  method       cores  mean ms  succ  wall s    CPU s      N  extra
+  ALNS-1           1   29.221  1.00    59.6     59.6    nan  
+  ALNS-8           8   28.516  1.00    59.6    476.7    nan  
+  CPSAT-8          8   30.056  1.00    59.7    357.1    nan  
+  RL-1             1   37.025  1.00    59.0     59.0   38.6  
+  RL-8             8   36.207  1.00    60.0    472.1  309.5  
+  RL64+ALNS-8      8   28.564  1.00    59.6    473.9   64.0  RL(s.64) 36.741 in 12.7s; polished 20
+  greedy           1   46.771  1.00     0.3      0.3    nan  
+  ALNS-8/RL64+ALNS-8  (all others       ) ratio 0.998 [0.991, 1.005] wins 12/20  p(<0.92) 1  gate FAIL   vs per-instance best 0.998 [0.991, 1.005]
+  ALNS-8/CPSAT-8      (others w/o hybrid) ratio 0.949 [0.940, 0.959] wins 19/20  p(<0.92) 1  gate FAIL   vs per-instance best 0.949 [0.940, 0.959]
+  ALNS-8/RL-8         (RL, same cores   ) ratio 0.788 [0.777, 0.798] wins 20/20  p(<0.92) 3.3e-15  gate PASS   vs per-instance best 0.788 [0.777, 0.798]
+  ALNS-1/RL64+ALNS-8  (all others       ) ratio 1.023 [1.015, 1.030] wins 2/20  p(<0.92) 1  gate FAIL   vs per-instance best 1.023 [1.015, 1.030]
+  ALNS-1/RL-1         (1-core others    ) ratio 0.790 [0.777, 0.803] wins 20/20  p(<0.92) 1.7e-13  gate PASS   vs per-instance best 0.790 [0.777, 0.803]
+
+MA-AT-50-5-50  B1 = 23.43 s  (20 instances with every method)
+  method       cores  mean ms  succ  wall s    CPU s      N  extra
+  ALNS-1           1   20.831  1.00    23.4     23.4    nan  
+  ALNS-8           8   20.475  1.00    23.5    187.4    nan  
+  CPSAT-8          8   22.433  1.00    23.5    126.0    nan  
+  RL-1             1   28.359  1.00    23.0     23.0   18.6  
+  RL-8             8   27.684  1.00    23.4    184.0  148.0  
+  RL64+ALNS-8      8   20.551  1.00    23.5    184.5   64.0  RL(s.64) 27.891 in 10.1s; polished 20
+  greedy           1   33.098  1.00     0.3      0.3    nan  
+  ALNS-8/RL64+ALNS-8  (all others       ) ratio 0.997 [0.988, 1.006] wins 11/20  p(<0.92) 1  gate FAIL   vs per-instance best 0.997 [0.988, 1.006]
+  ALNS-8/CPSAT-8      (others w/o hybrid) ratio 0.911 [0.900, 0.922] wins 20/20  p(<0.92) 0.065  gate mean<=0.92   vs per-instance best 0.911 [0.900, 0.922]
+  ALNS-8/RL-8         (RL, same cores   ) ratio 0.734 [0.709, 0.760] wins 20/20  p(<0.92) 9.3e-11  gate PASS   vs per-instance best 0.734 [0.709, 0.760]
+  ALNS-1/RL64+ALNS-8  (all others       ) ratio 1.015 [1.005, 1.024] wins 4/20  p(<0.92) 1  gate FAIL   vs per-instance best 1.015 [1.005, 1.024]
+  ALNS-1/RL-1         (1-core others    ) ratio 0.729 [0.705, 0.752] wins 20/20  p(<0.92) 1.2e-11  gate PASS   vs per-instance best 0.729 [0.706, 0.752]
+
+MA-AT-50-5-50  B2 = 46.86 s  (20 instances with every method)
+  method       cores  mean ms  succ  wall s    CPU s      N  extra
+  ALNS-1           1   20.664  1.00    46.9     46.9    nan  
+  ALNS-8           8   20.365  1.00    46.9    374.8    nan  
+  CPSAT-8          8   22.219  1.00    46.9    258.1    nan  
+  RL-1             1   28.119  1.00    46.4     46.4   39.6  
+  RL-8             8   27.231  1.00    47.3    371.3  310.9  
+  RL64+ALNS-8      8   20.423  1.00    46.9    372.9   64.0  RL(s.64) 27.891 in 10.1s; polished 20
+  greedy           1   33.098  1.00     0.3      0.3    nan  
+  ALNS-8/RL64+ALNS-8  (all others       ) ratio 0.999 [0.991, 1.008] wins 12/20  p(<0.92) 1  gate FAIL   vs per-instance best 0.999 [0.991, 1.008]
+  ALNS-8/CPSAT-8      (others w/o hybrid) ratio 0.916 [0.904, 0.928] wins 20/20  p(<0.92) 0.23  gate mean<=0.92   vs per-instance best 0.916 [0.904, 0.928]
+  ALNS-8/RL-8         (RL, same cores   ) ratio 0.743 [0.719, 0.766] wins 20/20  p(<0.92) 4.4e-11  gate PASS   vs per-instance best 0.743 [0.719, 0.766]
+  ALNS-1/RL64+ALNS-8  (all others       ) ratio 1.014 [1.007, 1.020] wins 3/20  p(<0.92) 1  gate FAIL   vs per-instance best 1.014 [1.007, 1.020]
+  ALNS-1/RL-1         (1-core others    ) ratio 0.730 [0.706, 0.753] wins 20/20  p(<0.92) 1.4e-11  gate PASS   vs per-instance best 0.730 [0.706, 0.753]
+
+SA-BT-50-5-50  B1 = 19.14 s  (20 instances with every method)
+  method       cores  mean ms  succ  wall s    CPU s      N  extra
+  ALNS-1           1   17.638  1.00    19.1     19.1    nan  
+  ALNS-8           8   17.515  1.00    19.2    153.0    nan  
+  CPSAT-8          8   18.187  1.00    19.2     84.3    nan  
+  RL-1             1   22.924  1.00    18.8     18.8   19.9  
+  RL-8             8   22.401  1.00    19.1    149.7  157.8  
+  RL64+ALNS-8      8   17.532  1.00    19.2    151.3   64.0  RL(s.64) 22.471 in 7.6s; polished 20
+  greedy           1   26.891  1.00     0.2      0.2    nan  
+  ALNS-8/RL64+ALNS-8  (all others       ) ratio 0.999 [0.996, 1.003] wins 8/20  p(<0.92) 1  gate FAIL   vs per-instance best 0.999 [0.996, 1.003]
+  ALNS-8/CPSAT-8      (others w/o hybrid) ratio 0.963 [0.954, 0.972] wins 20/20  p(<0.92) 1  gate FAIL   vs per-instance best 0.963 [0.954, 0.972]
+  ALNS-8/RL-8         (RL, same cores   ) ratio 0.782 [0.772, 0.793] wins 20/20  p(<0.92) 6e-16  gate PASS   vs per-instance best 0.782 [0.772, 0.793]
+  ALNS-1/RL64+ALNS-8  (all others       ) ratio 1.006 [1.002, 1.011] wins 3/20  p(<0.92) 1  gate FAIL   vs per-instance best 1.006 [1.002, 1.011]
+  ALNS-1/RL-1         (1-core others    ) ratio 0.770 [0.758, 0.782] wins 20/20  p(<0.92) 4.1e-15  gate PASS   vs per-instance best 0.770 [0.758, 0.782]
+
+SA-BT-50-5-50  B2 = 38.28 s  (20 instances with every method)
+  method       cores  mean ms  succ  wall s    CPU s      N  extra
+  ALNS-1           1   17.612  1.00    38.3     38.3    nan  
+  ALNS-8           8   17.500  1.00    38.3    306.1    nan  
+  CPSAT-8          8   17.995  1.00    38.3    173.1    nan  
+  RL-1             1   22.703  1.00    38.1     38.1   42.2  
+  RL-8             8   22.203  1.00    38.7    304.2  337.1  
+  RL64+ALNS-8      8   17.517  1.00    38.3    304.2   64.0  RL(s.64) 22.471 in 7.7s; polished 20
+  greedy           1   26.891  1.00     0.2      0.2    nan  
+  ALNS-8/RL64+ALNS-8  (all others       ) ratio 0.999 [0.995, 1.003] wins 7/20  p(<0.92) 1  gate FAIL   vs per-instance best 1.001 [0.997, 1.005]
+  ALNS-8/CPSAT-8      (others w/o hybrid) ratio 0.973 [0.963, 0.983] wins 17/20  p(<0.92) 1  gate FAIL   vs per-instance best 0.973 [0.963, 0.983]
+  ALNS-8/RL-8         (RL, same cores   ) ratio 0.789 [0.779, 0.799] wins 20/20  p(<0.92) 7.7e-16  gate PASS   vs per-instance best 0.789 [0.779, 0.799]
+  ALNS-1/RL64+ALNS-8  (all others       ) ratio 1.005 [1.000, 1.011] wins 3/20  p(<0.92) 1  gate FAIL   vs per-instance best 1.007 [1.002, 1.012]
+  ALNS-1/RL-1         (1-core others    ) ratio 0.776 [0.769, 0.783] wins 20/20  p(<0.92) 3.1e-19  gate PASS   vs per-instance best 0.776 [0.769, 0.783]
+
+MA-AT-50-5-200  B1 = 75.2 s  (20 instances with every method)
+  method       cores  mean ms  succ  wall s    CPU s      N  extra
+  ALNS-1           1   58.478  1.00    75.2     75.2    nan  
+  ALNS-8           8   56.106  1.00    75.3    601.5    nan  
+  CPSAT-8          8   56.938  1.00    75.3    375.9    nan  
+  RL-1             1   72.321  1.00    70.0     70.0    6.8  
+  RL-8             8   70.982  1.00    73.9    562.6   55.3  
+  RL64+ALNS-8      8   70.701  1.00    92.5    692.8   64.0  RL(s.64) 71.329 in 92.0s; polished 2 overrun>1s 90%
+  greedy           1   87.504  1.00     2.1      2.1    nan  
+  ALNS-8/CPSAT-8      (all others       ) ratio 0.982 [0.964, 0.999] wins 13/20  p(<0.92) 1  gate FAIL   vs per-instance best 0.982 [0.964, 0.999]
+  ALNS-8/CPSAT-8      (others w/o hybrid) ratio 0.982 [0.964, 0.999] wins 13/20  p(<0.92) 1  gate FAIL   vs per-instance best 0.982 [0.964, 0.999]
+  ALNS-8/RL-8         (RL, same cores   ) ratio 0.788 [0.772, 0.803] wins 20/20  p(<0.92) 2.3e-12  gate PASS   vs per-instance best 0.788 [0.772, 0.803]
+  ALNS-1/CPSAT-8      (all others       ) ratio 1.021 [1.001, 1.040] wins 5/20  p(<0.92) 1  gate FAIL   vs per-instance best 1.021 [1.001, 1.040]
+  ALNS-1/RL-1         (1-core others    ) ratio 0.804 [0.786, 0.823] wins 20/20  p(<0.92) 4.4e-10  gate PASS   vs per-instance best 0.804 [0.786, 0.823]
+
+MA-AT-50-5-200  B2 = 150.4 s  (20 instances with every method)
+  method       cores  mean ms  succ  wall s    CPU s      N  extra
+  ALNS-1           1   57.382  1.00   150.4    150.4    nan  
+  ALNS-8           8   55.744  1.00   150.4   1203.1    nan  
+  CPSAT-8          8   56.644  1.00   150.5    770.7    nan  
+  RL-1             1   71.873  1.00   146.3    146.3   13.6   overrun>1s 5%
+  RL-8             8   70.451  1.00   151.5   1174.6  109.7   overrun>1s 30%
+  RL64+ALNS-8      8   56.294  1.00   150.4   1174.8   64.0  RL(s.64) 71.329 in 93.0s; polished 20
+  greedy           1   87.504  1.00     2.1      2.1    nan  
+  ALNS-8/RL64+ALNS-8  (all others       ) ratio 0.991 [0.981, 1.000] wins 14/20  p(<0.92) 1  gate FAIL   vs per-instance best 1.001 [0.990, 1.013]
+  ALNS-8/CPSAT-8      (others w/o hybrid) ratio 0.980 [0.962, 0.998] wins 13/20  p(<0.92) 1  gate FAIL   vs per-instance best 0.980 [0.962, 0.998]
+  ALNS-8/RL-8         (RL, same cores   ) ratio 0.787 [0.773, 0.802] wins 20/20  p(<0.92) 7.3e-13  gate PASS   vs per-instance best 0.787 [0.773, 0.802]
+  ALNS-1/RL64+ALNS-8  (all others       ) ratio 1.020 [1.006, 1.037] wins 5/20  p(<0.92) 1  gate FAIL   vs per-instance best 1.031 [1.015, 1.047]
+  ALNS-1/RL-1         (1-core others    ) ratio 0.796 [0.778, 0.814] wins 20/20  p(<0.92) 5.9e-11  gate PASS   vs per-instance best 0.796 [0.778, 0.814]
+
+Holm over settings, ALNS-8 vs best of all others at B1: MA-AT-25-5-50 0.995 p_adj=1, SA-AT-50-5-50 0.983 p_adj=1, MA-AT-50-5-50 0.997 p_adj=1, SA-BT-50-5-50 0.999 p_adj=1, MA-AT-50-5-200 0.982 p_adj=1
+
+Holm over settings, ALNS-8 vs best of others w/o hybrid at B1: MA-AT-25-5-50 0.890 p_adj=0.0016, SA-AT-50-5-50 0.955 p_adj=1, MA-AT-50-5-50 0.911 p_adj=0.26, SA-BT-50-5-50 0.963 p_adj=1, MA-AT-50-5-200 0.982 p_adj=1
+
+Holm over settings, ALNS-8 vs best of all others at B2: MA-AT-25-5-50 0.996 p_adj=1, SA-AT-50-5-50 0.998 p_adj=1, MA-AT-50-5-50 0.999 p_adj=1, SA-BT-50-5-50 0.999 p_adj=1, MA-AT-50-5-200 0.991 p_adj=1
+
+Holm over settings, ALNS-8 vs best of others w/o hybrid at B2: MA-AT-25-5-50 0.907 p_adj=0.2, SA-AT-50-5-50 0.949 p_adj=1, MA-AT-50-5-50 0.916 p_adj=0.9, SA-BT-50-5-50 0.973 p_adj=1, MA-AT-50-5-200 0.980 p_adj=1
+
+wrote runs/compare_dev/summary.csv and runs/compare_dev/summary_ratios.csv

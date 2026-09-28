@@ -1,0 +1,408 @@
+{
+ "lit": {
+  "works": [
+   {
+    "name": "CBBA with cooperation constraints (Choi, Whitten, How, ACC 2010)",
+    "url": "https://doi.org/10.1109/ACC.2010.5530496",
+    "year": "2010",
+    "what": "First CBBA extension for heterogeneous teams where some tasks need several agents. Agents bid jointly and resolve conflicts with CBBA consensus. Only the metadata was verified (Crossref); the abstract was not re-read.",
+    "eval": "Small UAV simulations with lossless consensus rounds.",
+    "code": "None found",
+    "gap": "Static pre-execution allocation. No execution noise, online arrivals or message loss. Superseded by coupled-constraint CBBA and CBGA."
+   },
+   {
+    "name": "Coupled-constraint CBBA (Whitten, Choi, Johnson, How, ACC 2011)",
+    "url": "https://doi.org/10.1109/ACC.2011.5990917",
+    "year": "2011",
+    "what": "CBBA with unilateral and mutual assignment dependencies and temporal couplings (simultaneity, ordering). From memory of the paper, not re-read here: optimistic and pessimistic bidding strategies, plus iteration-count limits that stop agents waiting forever for partners. Metadata verified via Crossref (55 citations).",
+    "eval": "UAV mission simulations, static task sets.",
+    "code": "No official code",
+    "gap": "The partner-wait limit counts consensus iterations, not wall-clock time, so it is not a lease. Consensus assumes messages are eventually delivered. No repair when a coalition's simultaneous start slips at execution time. Never tested against a MILP or LNS on shared instances."
+   },
+   {
+    "name": "CBBA with time windows and dynamic communication constraints (Ponda et al., ACC 2010)",
+    "url": "https://doi.org/10.1109/ACC.2010.5531232",
+    "year": "2010",
+    "what": "Adds task time windows, fuel cost and heterogeneity to CBBA, a real-time replanning architecture, and handling for changing network topologies (abstract verified).",
+    "eval": "Simulations and indoor flight tests.",
+    "code": "None official. Generic CBBA ports exist (zehuilu/CBBA-Python, MIT).",
+    "gap": "Single-agent tasks only. Communication is intermittent through topology changes, with no packet-loss model."
+   },
+   {
+    "name": "ACBBA (Johnson, Ponda, Choi, How, Infotech@Aerospace 2011) and distributed chance-constrained CBBA (Ponda, Johnson, How, ACC 2012)",
+    "url": "https://doi.org/10.1109/ACC.2012.6315626",
+    "year": "2011/2012",
+    "what": "ACBBA (https://doi.org/10.2514/6.2011-1441) removes CBBA's synchronous rounds for dynamic environments. Chance-constrained CBBA splits a global risk threshold into per-agent risks for stochastic environments (abstract verified).",
+    "eval": "Simulated UAV teams.",
+    "code": "None found",
+    "gap": "Single-robot tasks. Duration and travel uncertainty is handled at allocation time, not by execution-time repair of synchronized coalitions."
+   },
+   {
+    "name": "CBGA, Consensus-Based Grouping Algorithm (Hunt, Meng, Hinde, Huang, Cognitive Computation 2014)",
+    "url": "https://doi.org/10.1007/s12559-014-9265-0",
+    "year": "2014",
+    "what": "CBBA extended to tasks that need several cooperating agents, with equipment requirements and task dependencies. Claims conflict-free convergence, deadlock prevention, 'assignment storage for dynamic environments' and a compact data structure that cuts communication (abstract verified). Its descendants are mostly UAV papers (improved CBGA 2020, 2023 and 2024; MM-CBGA).",
+    "eval": "Simulations. Reports data volume and consensus time, not optimality gap.",
+    "code": "No official code (a GitHub search for CBGA found nothing relevant)",
+    "gap": "Static allocation. No loss model or execution uncertainty. CBTA later reported much later average task start times for CBGA on multi-agent tasks."
+   },
+   {
+    "name": "CBTA, Consensus-Based Timetable Algorithm (Wang, Liu, Qiu, Zhou, RA-L 2022)",
+    "url": "https://doi.org/10.1109/LRA.2022.3220155",
+    "year": "2022",
+    "what": "Decentralized allocation of simultaneous multi-agent tasks. Each agent builds a timetable by comparing the estimated start time it can offer with the start times other agents placed; a consensus phase then resolves conflicts. Objective: minimize average task start time. Matches CBBA on single-agent tasks and gives much lower average start time than CBGA on multi-agent tasks, across communication topologies (abstract verified; 44 to 53 citations).",
+    "eval": "Simulations with different network topologies. Links are lossless.",
+    "code": "None found (no arXiv version, no GitHub hit)",
+    "gap": "Plans once before execution. No online arrivals, duration or travel noise, message loss or robot failure. The objective is average start time, not makespan. Of its 44 citers (Semantic Scholar list), none adds lossy links plus execution repair for simultaneous tasks. This is the problem-closest CBBA-family baseline and would have to be reimplemented."
+   },
+   {
+    "name": "MM-CBGA for multi-mode composite tasks (Picard, AAMAS 2023)",
+    "url": "https://doi.org/10.5555/3545946.3598677",
+    "year": "2023",
+    "what": "CBGA adapted to composite tasks with several ways (modes) of completing them across private resource slots, for Earth-observation satellite constellations (abstract verified).",
+    "eval": "Simulated constellations with realistic order books. Compared with centralized greedy and sequential auctions.",
+    "code": "Not verified",
+    "gap": "Satellite slot scheduling, not robot travel with synchronized arrival. No lossy links or execution noise."
+   },
+   {
+    "name": "Threshold-aware consensus-based auction for coalition allocation with delta gossip (Wei, Qiu, Zhang, Guan, AINIT 2026)",
+    "url": "https://doi.org/10.1109/AINIT70033.2026.11557853",
+    "year": "2026",
+    "what": "Coalition allocation under probabilistic success thresholds. Each agent takes at most one task, and tasks may need several agents. A consensus auction whose 'delta gossip' sends only incrementally updated declaration records. Tested under different communication modes, topologies and agent-failure rates. Delta gossip greatly reduces transmitted entries while completion stays similar to full-table exchange (abstract verified).",
+    "eval": "Simulations against an adapted consensus-based auction.",
+    "code": "None found",
+    "gap": "One task per agent: no sequencing, schedules or synchronized start times. Small venue, no public benchmark. Closest prior art for 'coalition allocation plus incremental gossip plus failures'."
+   },
+   {
+    "name": "GCBHA, group consensus-driven auction for heterogeneous cooperative tasks (Wang et al., arXiv 2508.02015)",
+    "url": "https://arxiv.org/abs/2508.02015",
+    "year": "2025",
+    "what": "Splits tasks that exceed one agent's capability into subtasks, clusters nearby tasks, and auctions the groups with time windows (warehouse setting).",
+    "eval": "Self-built instances. Reports allocation time, solution quality and cost-prediction error.",
+    "code": "None found",
+    "gap": "No communication loss or execution uncertainty. Splitting into subtasks relaxes true simultaneous coalitions."
+   },
+   {
+    "name": "CFSTP (Ramchurn et al., AAMAS 2010) and D-CTS (Capezzuto, Tarapore, Ramchurn, EUMAS 2021)",
+    "url": "https://arxiv.org/abs/2106.00379",
+    "year": "2010/2021",
+    "what": "Coalition formation where agents form, disband and re-form coalitions to meet task deadlines and workloads. D-CTS distributes the anytime CTS algorithm over a factor graph. From public London Fire Brigade records the authors built a 347,588-task dynamic stream. With up to 150 agents and 3000 tasks it completes 3.79% more tasks than DSA-SDP with an order of magnitude less communication (PDF read).",
+    "eval": "Java test framework with a dynamic arrival stream from real incident data.",
+    "code": "github.com/lcpz/cfstp (README says MIT; Zenodo 4764646). LFB dataset on Zenodo 4728012 (OGL-UK-2.0).",
+    "gap": "No packet-loss or delay model ('loss' does not occur in the paper). Agents are homogeneous fire engines. The objective is completed tasks, not makespan with synchronized start. No execution noise. Still the only externally anchored, licensed, dynamic coalition arrival stream found."
+   },
+   {
+    "name": "Learning Policies for Dynamic Coalition Formation (Bezerra, dos Santos, Park, RA-L 2025)",
+    "url": "https://arxiv.org/abs/2412.20397",
+    "year": "2025",
+    "what": "Decentralized MAPPO with spatial action maps, intention sharing (decayed path maps) and revision of task choices. Tasks need l robots at once and spawn online (Bernoulli p=0.01-0.04, or instant respawn). Communication range 8 cells in a 20x20 grid, lossless.",
+    "eval": "GyMRTA grid world with 10 to 1000 robots. The only baseline is the market method PCFA, which it beats in every configuration.",
+    "code": "GyMRTA not released",
+    "gap": "Homogeneous robots, one-step task durations, one weak baseline, no packet loss, no heterogeneous traits and no makespan. Not comparable to HeteroMRTA."
+   },
+   {
+    "name": "ITAGS (IROS 2021), D-ITAGS (RA-L 2023), Q-ITAGS (arXiv 2404.07902)",
+    "url": "https://arxiv.org/abs/2209.13092",
+    "year": "2021-2024",
+    "what": "Centralized interleaved trait-based coalition formation, scheduling and motion planning. D-ITAGS adds targeted repair after disruptions (changes in capabilities, requirements and task durations; 8 event types) and derives suboptimality bounds. Repair is much faster than recomputing from scratch with little or no loss in makespan. The baseline is the same algorithm without the repair module (PDF read).",
+    "eval": "Simulated emergency-response scenarios. Q-ITAGS also uses a video-game dataset.",
+    "code": "No code link in the D-ITAGS paper. amessing/grstaps (GPL-3.0) is an earlier related project.",
+    "gap": "Centralized, and assumes every disruption is detected and known to the planner. No communication model, although the introduction mentions communication loss. Repair quality roughly equals re-solve quality, so repair only saves compute."
+   },
+   {
+    "name": "Online coordination with task precedence and coalitions (Gosrich et al., T-RO 2025)",
+    "url": "https://arxiv.org/abs/2509.15052",
+    "year": "2025",
+    "what": "Coalition allocation over a task graph as network flow. An online solver re-allocates at each task completion using observed rewards. It beats the offline plan by 50% at 8 tasks and by 200%+ at 15 or more tasks, by 25-200% even with a perfect model, and by 55-63% under 10-40% catastrophic task failures (PDF verified).",
+    "eval": "Random missions up to 40 tasks and 100 agents. Compared with MINLP and greedy. High-fidelity Unity/ROS testbed.",
+    "code": "No link in the paper",
+    "gap": "Centralized, with no communication constraints. Uncertainty is in the reward model, not duration or travel. The size of the online-vs-offline gain warns that most of any dynamic benefit comes from re-planning at all, so a central rolling re-solve baseline is mandatory."
+   },
+   {
+    "name": "Heterogeneous coalition formation and scheduling with multi-skilled robots (Aswale, Pinciroli, arXiv 2306.11936)",
+    "url": "https://arxiv.org/abs/2306.11936",
+    "year": "2023",
+    "what": "Two centralized schedulers, one optimal and one heuristic (1x-2x of optimal), for dynamic coalitions of multi-skilled robots under stochastic travel times.",
+    "eval": "Self-generated small instances",
+    "code": "Not found",
+    "gap": "Centralized and offline. No communication model or online repair."
+   },
+   {
+    "name": "Resilient task allocation (Mayya et al., RA-L 2021) and STRATA (Ravichandar et al., JAAMAS 2020)",
+    "url": "https://arxiv.org/abs/2009.04593",
+    "year": "2020-2021",
+    "what": "Trait-based allocation of heterogeneous robots with aggregated capability requirements. Mayya et al. re-allocate when capabilities degrade and relax constraints for graceful degradation (abstract verified). STRATA (https://doi.org/10.1007/s10458-020-09461-y) handles large teams with stochastic traits.",
+    "eval": "Coverage and target-tracking simulations",
+    "code": "Not verified",
+    "gap": "Centralized optimization. No scheduling, synchronized start, or communication loss."
+   },
+   {
+    "name": "SADCHER (Bichler, Matoses Gimenez, Alonso-Mora, MRS 2025)",
+    "url": "https://arxiv.org/abs/2510.14851",
+    "year": "2025",
+    "what": "Imitation learning from 250k optimal schedules. Graph attention plus transformer predicts rewards; relaxed bipartite matching yields real-time assignments with dynamic coalitions and precedence.",
+    "eval": "Randomized instances against learning and heuristic baselines. The authors' own scaling study shows Greedy competitive at 20 robots and more than 70 tasks (from the prior sweep).",
+    "code": "github.com/jakbichler/Sadcher has no LICENSE. Dataset on 4TU.",
+    "gap": "Centralized, deterministic, lossless. A second anchor benchmark, but code reuse is legally unclear."
+   },
+   {
+    "name": "HeteroMRTA (Dai et al., RA-L 2025) and its 2025-2026 citers",
+    "url": "https://doi.org/10.1109/LRA.2025.3534682",
+    "year": "2025",
+    "what": "The anchor benchmark and RL baseline (Apache-2.0). Of its 42 citers on Semantic Scholar, the relevant ones are: DODRL-HMRTA, 'heterogeneous MRTA with dynamic uncertainties' (Neurocomputing 2026, https://doi.org/10.1016/j.neucom.2026.135060, abstract not accessible); model-based RL rollout for heterogeneous task assignment with online requests under distribution shift (arXiv 2608.21554, real hospital nursing requests); LLM-generated MILP with event-triggered rescheduling for robot failures and urgent tasks (RA-L 2026, 10.1109/LRA.2026.3723332); Balance-Aware Pointerformer, min-max MDOVRP without coalitions (RA-L 2026); proactive fault recovery by successor pre-assignment (CSCWD 2026, abstract not accessible); SADCHER.",
+    "eval": "HeteroMRTA: RALTestSet and generated sets, compared with CTAS-D MILP.",
+    "code": "marmotlab/HeteroMRTA (Apache-2.0)",
+    "gap": "No citer found that evaluates HeteroMRTA instances or its RL policy under lossy or range-limited links or execution delays. DODRL-HMRTA and the CSCWD fault-recovery paper could not be read and must be checked before claiming novelty."
+   },
+   {
+    "name": "Dec-MCTS (Best, Cliff, Patten, Mettu, Fitch, IJRR 2019)",
+    "url": "https://doi.org/10.1177/0278364918755924",
+    "year": "2018/2019",
+    "what": "Each robot keeps a distribution over joint plans. Robots exchange compressed search trees under intermittent communication. Anytime, suits online replanning, and compares favorably with centralized MCTS even with severely degraded communication (abstract verified).",
+    "eval": "Generalized team orienteering and online active object recognition with real data",
+    "code": "No official code, only unofficial ports (JennyLynnFletcher/Dec-MCTS)",
+    "gap": "No hard coalition synchronization. The objective is information gain or orienteering reward. Does not scale to 50-150 robots with coupled schedules."
+   },
+   {
+    "name": "DGA (Patel et al., ICRA 2020), HIPC (Johnson, Choi, How 2013) and DMCHBA (Samiei, Sun, T-RO 2024)",
+    "url": "https://doi.org/10.1109/ICRA40945.2020.9197314",
+    "year": "2013-2024",
+    "what": "Three decentralized designs that each hold a copy of the team plan. DGA: each robot evolves full team plans and exchanges improved ones. HIPC (https://arc.aiaa.org/doi/10.2514/6.2013-4888): implicit planning for the local team plus plan consensus. DMCHBA (https://doi.org/10.1109/TRO.2023.3335656): agents flood knowledge, then each solves the same assignment. These lead the CV_MRTA lossy benchmark (DGA and DMCHBA on MinMax, HIPC and DGA on MinSum).",
+    "eval": "CV_MRTA (Bernoulli, Gilbert-Elliott and Rayleigh loss, 500 paired instances) and Nayak RA-L 2020",
+    "code": "CV_MRTA repo (no reuse license)",
+    "gap": "Single-robot tasks only; no coalitions or synchronized starts. DGA costs 1.35-16 s per decision. No online arrivals or execution noise. Closest prior art for 'replicated plan plus local search under loss', but not for coalitions."
+   },
+   {
+    "name": "LNS-Auction (Sadeghi, Smith, Unmanned Systems 2017)",
+    "url": "https://doi.org/10.1142/S2301385017500066",
+    "year": "2017",
+    "what": "Decentralized LNS: tasks are removed from robot paths and re-inserted through combinatorial auctions, for heterogeneous multi-vehicle GTSP (abstract verified). The prior sweep reports 16% average deviation from a centralized GTSP solver.",
+    "eval": "Benchmarking against a centralized GTSP solver",
+    "code": "Not found",
+    "gap": "No coalitions, synchronization, loss or online events. Prior art for 'decentralized LNS repair'."
+   },
+   {
+    "name": "CC-OPI (Liu, Zhang, arXiv 2609.19208, Sep 2026)",
+    "url": "https://arxiv.org/abs/2609.19208",
+    "year": "2026",
+    "what": "Event-driven online Performance-Impact auction that negotiates during execution. Mechanisms: a monotonic versioned completed-task set merged on contact (in effect a grow-only-set CRDT), a non-preemptive state lock on each UAV's current action (lease-like), and a global-clock emergency pool for tasks near their deadline. Proves finite termination and freedom from stale-completion deadlock. At 250 m range, task completion rate is about 0.80, 7 points above online PI and CBBA. Task completion is almost unchanged under link loss: 0.78-0.79, with a paired difference of -0.5 pp at 50% per-receiver loss (PDF verified).",
+    "eval": "Self-built UAV testbed, 30 seeds, packet loss, terrain occlusion and runtime task arrivals",
+    "code": "Declared github.com/bdathe-lb/CC-OPI-Exp was 404 (per the 2026-09-27 sweep; not found by a GitHub search)",
+    "gap": "Single-UAV tasks only (no coalition terms in the paper). Assumes a shared mission clock and a known task catalog. Self-defined world. Its insensitivity to loss suggests loss alone may not separate methods; range partitions and delays matter more."
+   },
+   {
+    "name": "CV_MRTA benchmark (Lott, Honary, arXiv 2609.13711) and Nayak et al. (RA-L 2020)",
+    "url": "https://arxiv.org/abs/2609.13711",
+    "year": "2020/2026",
+    "what": "External channel-model anchors: Bernoulli, Gilbert-Elliott and Rayleigh fading. 500 paired 10-target instances across 25 conditions, reporting route quality, reliability, message rate and compute for CBAA, ACBBA, PI, HIPC, DMCHBA and DGA (abstract verified). Nayak: https://doi.org/10.1109/LRA.2019.2963646.",
+    "eval": "Collaborative Visit on a 19x19 grid, 4 robots",
+    "code": "github.com/jlott22/CV_MRTA_Benchmark (no reuse license, so only the protocol is reusable)",
+    "gap": "Single-robot tasks, tiny scale, static targets, no execution noise, no centralized or optimal reference."
+   },
+   {
+    "name": "Auctions under limited communication (Otte, Kuhlman, Sofge, Autonomous Robots 2020)",
+    "url": "https://doi.org/10.1007/s10514-019-09828-5",
+    "year": "2019/2020",
+    "what": "Analysis and experiments on how lossy links degrade several auction families (158 citations)",
+    "eval": "Simulations and robots",
+    "code": "Not verified",
+    "gap": "Single-robot tasks. No coalition synchronization."
+   },
+   {
+    "name": "Epistemic planning for heterogeneous robots (Bramblett, Bezzo, arXiv 2308.00579)",
+    "url": "https://arxiv.org/abs/2308.00579",
+    "year": "2023",
+    "what": "Robots use dynamic epistemic logic to track what disconnected teammates believe, and a MIP to choose both task allocation and gossip, so they keep executing through long disconnections (abstract verified).",
+    "eval": "Small simulations and hardware experiments",
+    "code": "Not found",
+    "gap": "Small scale. No coalition synchronization, benchmark or strong baselines. Prior art for reasoning about teammates' possibly stale plans."
+   },
+   {
+    "name": "Gossip-based heterogeneous MRTA for makespan (Chakraa et al., CASE 2025)",
+    "url": "https://doi.org/10.1109/CASE58245.2025.11164022",
+    "year": "2025",
+    "what": "Gossip consensus with iterative local task-sequence exchanges between pairs of robots to reduce makespan (abstract verified).",
+    "eval": "Simulations",
+    "code": "Not found",
+    "gap": "Single-robot tasks. No loss model or execution noise."
+   },
+   {
+    "name": "Action Dependency Graph (Hönig et al., RA-L 2019) and Switchable ADG (Berndt et al., T-RO, arXiv 2312.04190)",
+    "url": "https://doi.org/10.1109/LRA.2019.2894217",
+    "year": "2019-2024",
+    "what": "Execute MAPF plans robustly under unforeseen slow-downs by keeping the planned inter-robot order (ADG). SADG uses a receding-horizon MILP to re-order safely while keeping deadlock freedom (abstracts verified).",
+    "eval": "Warehouse simulations and mixed-reality robots",
+    "code": "Not verified",
+    "gap": "MAPF with a centralized re-ordering step. This is exact prior art for 'key order implies deadlock-free execution under delays', so that idea alone is not novel for coalition plans."
+   },
+   {
+    "name": "Token Passing (Ma et al., AAMAS 2017) and k-TP/p-TP robust MAPD with delays (Lodigiani, Basilico, Amigoni 2023)",
+    "url": "https://arxiv.org/abs/2303.17422",
+    "year": "2017/2023",
+    "what": "Decentralized MAPD in which agents take turns on a shared token. k-TP and p-TP give deterministic or probabilistic robustness to delays and replan less than TP with online replanning (abstract verified).",
+    "eval": "MAPD grid benchmarks",
+    "code": "Not verified",
+    "gap": "Single-robot tasks. The token assumes a shared, reliably updated memory."
+   },
+   {
+    "name": "League of Robot Runners 2026 execution-delay model (Start-Kit v3.0.0, 2026-03-13)",
+    "url": "https://github.com/MAPF-Competition/Start-Kit",
+    "year": "2026",
+    "what": "Published perturbation model, verified in inc/DelayGenerator.h and Input_Output_Format.md. At each tick every available agent is delayed with probability pDelay (Bernoulli), or the number of delayed agents is Poisson with rate teamSize x pDelay. Delay length is Uniform or clipped Gaussian on [minDelay, maxDelay] (gaussMeanRatio, gaussStdRatio). Participants see only the model names, not the numeric parameters.",
+    "eval": "Lifelong MAPD competition with a centralized planner",
+    "code": "MIT",
+    "gap": "No coalitions or communication model. Its delay generator can be ported directly as the external execution-noise anchor for HeteroMRTA."
+   },
+   {
+    "name": "SCoBA (Choudhury et al., RSS 2020)",
+    "url": "https://arxiv.org/abs/2005.13109",
+    "year": "2020",
+    "what": "Hierarchical allocation under task-completion uncertainty and time windows: per-agent tree-search policies plus conflict resolution. Optimal in expectation and fast enough to interleave with execution (abstract verified).",
+    "eval": "Conveyor pick-and-place and drone delivery against an oracle and baselines",
+    "code": "github.com/sisl/SCoBA.jl (MIT)",
+    "gap": "Single-robot tasks, centralized conflict resolution, no communication model."
+   },
+   {
+    "name": "Synchronized vehicle routing (OR): Drexl survey 2012, ALNS for VRPTW with synchronized visits (Liu, Tao, Xie 2019), LNS plus CP with synchronization (Hojabri et al. 2018)",
+    "url": "https://doi.org/10.1287/trsc.1110.0400",
+    "year": "2012-2019",
+    "what": "Standard centralized theory and metaheuristics for routing with synchronization. Liu et al.: https://doi.org/10.1016/j.cor.2018.08.002. Hojabri et al.: https://doi.org/10.1016/j.cor.2017.11.011.",
+    "eval": "Static benchmark instances (home health care and others)",
+    "code": "Mostly none",
+    "gap": "Static and centralized. Algorithmic prior art for coalition LNS: the insertion and removal moves are not new."
+   },
+   {
+    "name": "Synchronized visits with stochastic travel and service times (Hashemi Doulabi, Pesant, Rousseau, Transportation Science 2020)",
+    "url": "https://doi.org/10.1287/trsc.2019.0956",
+    "year": "2020",
+    "what": "Two-stage stochastic integer program without big-M, solved by L-shaped branch-and-cut. Solves home-health instances with 15 patients optimally and reaches a 3.57% gap at 20 patients (abstract verified).",
+    "eval": "Home-health and operating-room instances",
+    "code": "Not found",
+    "gap": "Offline a-priori plan, no online repair, tiny scale. The only stochastic synchronized-routing anchor found."
+   },
+   {
+    "name": "Dynamic multi-skill workforce scheduling and routing with synchronization and anticipated tasks (Demiray, Tolga, Yücel, Computers & Industrial Engineering 2026)",
+    "url": "https://doi.org/10.1016/j.cie.2026.112203",
+    "year": "2026",
+    "what": "The only dynamic synchronized-routing OR paper found (title and metadata only; the abstract is paywalled).",
+    "eval": "Unknown",
+    "code": "Unknown",
+    "gap": "Presumably centralized. Must be read to confirm there is no decentralized or lossy variant."
+   },
+   {
+    "name": "Proactive-reactive project scheduling (Lambrechts, Demeulemeester, Herroelen, J. Scheduling 2008) and the decentralized RCMPSP line (Homberger 2007)",
+    "url": "https://doi.org/10.1007/s10951-007-0021-0",
+    "year": "2007-2008",
+    "what": "Buffered baseline schedules plus reactive repair under uncertain resources and durations. The key-order plus forward-pass evaluator is equivalent to the serial schedule-generation scheme from this literature.",
+    "eval": "PSPLIB-style instances",
+    "code": "None",
+    "gap": "Centralized. No travel or robots. Baseline robust-scheduling ideas (buffers, repair policies) that reviewers will expect to see."
+   },
+   {
+    "name": "Distributed multiagent simple temporal problems and temporal decoupling (Boerkoel, Durfee, JAIR 2013; ICAPS 2013)",
+    "url": "https://doi.org/10.1613/jair.3840",
+    "year": "2013",
+    "what": "Distributed algorithms that decouple agents' temporal constraints so each agent can execute without further communication, plus incremental maintenance of the network.",
+    "eval": "Synthetic temporal networks",
+    "code": "Not verified",
+    "gap": "No allocation or coalition formation. The plan is fixed. Prior art for executing synchronized plans without communication."
+   },
+   {
+    "name": "Replicated state in robot swarms: Buzz virtual stigmergy (Pinciroli, Beltrame 2016), SwarmMesh (2019), blockchain swarms (Strobel et al. 2020, 2023)",
+    "url": "https://arxiv.org/abs/1507.05946",
+    "year": "2016-2023",
+    "what": "Buzz: a swarm-wide tuple space replicated by gossip and resolved with Lamport clocks. SwarmMesh (https://arxiv.org/abs/1909.04905): distributed storage across robots. Strobel et al. (https://doi.org/10.3389/frobt.2020.00054): Byzantine-tolerant blockchain consensus.",
+    "eval": "Swarm simulations and robots",
+    "code": "Buzz is open source (license not verified)",
+    "gap": "Searches of arXiv and Crossref found no paper using CRDTs or replicated state machines for coalition task scheduling. The novelty is real but reads as systems engineering."
+   },
+   {
+    "name": "AssemblyGrid v1 (Bahrpeyma, Heik, Reichelt, arXiv 2609.16075)",
+    "url": "https://arxiv.org/abs/2609.16075",
+    "year": "2026",
+    "what": "New benchmark for multi-robot production with temporary coalitions, decentralized local observations, material transfer and concurrency. Compared a privileged centralized reference, decentralized controllers, and IPPO/MAPPO/QMIX.",
+    "eval": "9 scenarios in Flow, Coalition and Concurrency families",
+    "code": "github.com/Fouad-Bahrpeyma/AssemblyGrid_v1 ('will be public')",
+    "gap": "Grid production domain. No lossy links, no execution-delay model, no OR-grade reference. Too new to be an accepted anchor."
+   }
+  ],
+  "closest_prior_work": "No verified paper combines all four parts of 'replicated key-ordered coalition plan + event gossip + local LNS repair under lossy links': (i) scheduling of coalition tasks that need several robots present at the same time, (ii) every robot holding the whole team plan in a global key order, (iii) gossip of execution events, and (iv) local LNS repair under loss or range limits. The nearest work splits by axis, and each axis has citable prior art.\n\n(1) Closest in mechanism: CC-OPI (Liu & Zhang, arXiv 2609.19208, Sep 2026). It replans only on events during execution, merges a versioned grow-only completed-task set on contact (a grow-only-set CRDT in all but name), holds a non-preemptive state lock (lease-like) and a global-clock emergency pool, and proves freedom from stale-completion deadlock. It is tested under packet loss, occlusion and online arrivals. But its tasks need one UAV, it builds on PI rather than LNS, the testbed is self-built, and the code link is dead. Its loss sweep changed task completion by at most 0.6 pp even at 50% loss.\n\n(2) Closest in problem: CBTA (Wang et al., RA-L 2022). It builds timetables by consensus for simultaneous multi-agent tasks and beats CBGA. But it allocates once before execution, assumes lossless links, minimizes average start time, and has no code. The 2026 threshold-aware coalition auction with delta gossip (AINIT) adds incremental gossip and agent failures, but assigns one task per agent and never schedules.\n\n(3) Replicated plan plus local search under standard loss models: DGA (ICRA 2020), HIPC and DMCHBA lead the CV_MRTA Bernoulli/Gilbert-Elliott/Rayleigh benchmark, but only for single-robot tasks. Sadeghi & Smith (2017) is the decentralized-LNS precedent.\n\n(4) Coalition schedule repair: D-ITAGS (RA-L 2023) does targeted centralized repair with about the same quality as re-solving from scratch, only faster.\n\n(5) Key order making delayed execution deadlock-free: ADG (Hönig et al., RA-L 2019) and SADG (Berndt et al., T-RO) in MAPF.\n\nA reviewer will therefore frame the contribution as 'CBTA/CBGA coalitions + CC-OPI-style replicated state + ADG-style ordering + D-ITAGS-style repair'. Novelty has to come from the combination, from a strong empirical result on HeteroMRTA instances with external perturbation models (LoRR 2026 delays, CV_MRTA/Nayak channels, a D-CTS/LFB-style arrival stream), and from beating a central rolling re-solve and a replicated solver given the same infrastructure. Novelty of any single component will not carry the paper.",
+  "open_gaps": [
+   "No public, licensed benchmark combines coalition tasks that need several robots at once with online arrivals, execution delays and lossy or range-limited links. Every piece of a benchmark built from external anchors exists: HeteroMRTA instances and RL (Apache-2.0); the LoRR 2026 delay generator (MIT; Bernoulli or Poisson events, Uniform or Gaussian durations, hidden parameters); the CV_MRTA and Nayak channel models (the protocol is reusable, the code is unlicensed); and the D-CTS/LFB arrival stream (MIT code, OGL data). No paper has assembled them.",
+   "No citer of HeteroMRTA among the 42 checked evaluates its instances or its RL policy under communication loss, range limits or execution delay. HeteroMRTA itself assumes global broadcast. Two citers could not be read (paywalled), DODRL-HMRTA (Neurocomputing 2026, 'dynamic uncertainties') and the CSCWD 2026 fault-recovery paper, and must be checked before claiming this gap.",
+   "The decentralized coalition auctions (coupled-constraint CBBA, CBGA, CBTA, MM-CBGA, the 2026 threshold-aware auction) all allocate before execution with lossless or topology-only communication. None repairs a coalition whose synchronized start slips during execution. None released code. None reports a gap to MILP or best-known solutions.",
+   "No MRTA paper found uses CRDTs, replicated state machines or wall-clock leases for coalition membership. The nearest are CC-OPI's versioned completed set and state lock, coupled-constraint CBBA's iteration-count partner timeouts, and Buzz's virtual stigmergy. A formal eventual-consistency plus deadlock-freedom argument for coalition plans under loss is open, but reviewers may treat it as engineering.",
+   "OR has almost nothing on dynamic or decentralized synchronized routing. Stochastic synchronized routing is solved offline in two stages with at most 20 patients (Hashemi Doulabi et al., 2020). One dynamic multi-skill paper with synchronization (C&IE 2026) is centralized; only its metadata could be checked. A robust (buffered) or proactive-reactive baseline for coalition schedules under duration noise is missing and would be expected.",
+   "No paper measures coalition-scheduling quality against message budget across a sweep of loss severity, nor reports the gap to a clairvoyant central solver as link quality degrades.",
+   "Warning 1 (CC-OPI): once range partitioning dominates, even 50% link loss changed task completion by at most 0.6 pp. A packet-loss sweep alone may not separate methods. Range limits, partitions and execution delays must be the stressors, and the lossy-network module in cbja/network.py should be checked for this effect in a pilot.",
+   "Warning 2 (Gosrich et al., T-RO 2025): re-planning online beats a fixed plan by 25-200%, even with perfect models. Any gain over a static plan will be credited to re-planning, not to the decentralized mechanism. The deciding baselines are a central rolling re-solve with local fallback and a replicated solver fed by the same gossip.",
+   "Warning 3 (D-ITAGS): targeted repair matches re-solve quality and wins only on compute time. At HeteroMRTA scale a central ALNS or constructor answers in about 1 s, so a decentralized method can win only where the network is the limit, not compute. The analytical and pilot check for collapse to a simple rule should compare local LNS repair with 'replicated solver + gossip, re-solve on every event'.",
+   "Prior art already covers key order making execution deadlock-free (ADG/SADG in MAPF; the serial schedule-generation scheme in RCPSP) and decentralized LNS (Sadeghi & Smith 2017). The contribution must be positioned as empirical: robustness and quality on external anchors, not new algorithmic principles."
+  ]
+ },
+ "env": {
+  "design": "SUMMARY. A dynamic, partially-informed HeteroMRTA can be built as ONE subclass of the original env (`DynTaskEnv(TaskEnv)`, 7 method overrides, no edits to third_party). The released RL checkpoint runs unmodified, and so do the repo's event loops (`rl._episode`, `greedy._run_nearest`, `execute_by_route`). Checks run: with every task released at 0 and no noise, the subclass is bit-identical to the static env (RL greedy and sampled rollouts, paper greedy, ALNS plan replay, on 5 instances). Every method sees the same realized noise by construction (common random numbers).\n\nPilot scope: 4 settings (MA-AT-25-5-50, MA-AT-50-5-50, SA-AT-50-5-50, SA-BT-50-5-50) × 20 dev instances × 16 scenarios × 3 CRN seeds, 13,280 rows.\n\nHeadline results:\n- RL degrades little under noise. With duration noise it loses +1.7–2.8%. Under the LoRR example delays it loses +1.3–2.9%. Its moderate and severe delay rows are dominated by the physical slowdown.\n- An open-loop ALNS plan degrades more (+11–16% under duration noise). It still beats RL by 18–30% in every noise level except the most severe (8–27%). The RL/ALNS gap shrinks from 1.32–1.45 (static) to 1.18–1.29.\n- Under online release, RL gets 3.5–36% worse than its static run. Its edge over the paper greedy largely vanishes (e.g. SA-BT: RL/greedy 0.905 static → 0.99–1.01 under Poisson release).\n- Hiding realized future times (causal observations) does not hurt RL. RL(s.1) is about equal to RL(g.).\n\nConsequence for the paper: against the published RL, most of any dynamic-setting win would be the static solver-quality gap. The genuinely dynamic headroom with global communication is what re-planning recovers: open-loop ALNS is 7–15% above a clairvoyant ALNS under duration noise. A central rolling-horizon re-solve will likely take most of that, which is a collapse risk. The decentralized contribution only matters once communication is limited.\n\n(1) ONLINE TASK RELEASE\n- Masking: override `get_unfinished_tasks` to AND a `released` flag. Everything that reads that flag inherits it: the RL observation mask (`agent_observe`), the greedy's selectable set, and the \"all feasible\" end tests. `agent_step` asserts that no unreleased task is chosen.\n- Observation: unreleased task rows are set to all zeros in `get_current_task_status`. The network's `get_attn_pad_mask` treats all-zero rows as padding (keys masked, and excluded from the nanmean aggregates). Training used zero padding (`obs_padding`), and task rows are never all-zero (requirements are nonzero). So a zero row is the same as the task not existing. Measured over 181 decisions (92 with hidden tasks): max |Δp| = 7.8e-7 against physically deleting the rows, with identical argmax.\n  - The released checkpoint therefore runs unmodified.\n  - A compact variant (delete the rows, remap indices) is numerically equivalent. It halves the forward pass at 150×500 when about 40% of tasks are hidden.\n  - Agents can be hidden the same way: agent rows always have nonzero abilities, so a zero row means an unknown agent. This is the hook for partial knowledge.\n- Events: `next_decision` adds release epochs. Blocked agents (`no_choice`) and idle agents are re-polled at each release, which is the policy's native \"postpone\" semantics. When nothing is pending, the original method runs.\n- Causality fix: `agent_step` back-dates a blocked agent's departure to its previous finish time. This is the paper's flashforward, and it is still active at inference. It is capped at the latest release epoch; without the cap, an agent could leave for a task before that task existed. The cap is a no-op in the static case.\n- Termination: the episode needs all tasks released (this assumes the total task count is known). Idle agents wait in place rather than go home.\n- Release models, each with an external anchor:\n  - R1: the authors' own reactive-planning demo in the released code (`plot_animation`): task IDs ≤ 20 visible at start, +20 every 10 time units.\n  - R2/R3: DVRP-style degree of dynamism 0.5 / 0.8. Arrival times are uniform order statistics on [0, H], with H = 0.5 × the paper's RL(g.) makespan for the setting.\n  - Optional: a LoRR-2026-style reveal window (`numTasksReveal` 1.5 × team size in the Start-Kit example).\n- Online baseline is RL(g.): one rollout with decisions made as events arrive. Best-of-N RL(s.N) is not an online policy in a stochastic world, because it picks the best realized episode in hindsight. It is only legal as model-based lookahead, and that would be a new method.\n\n(2) EXECUTION NOISE WITH COMMON RANDOM NUMBERS\n- Durations: the realized duration is stored in `task['time']`, so the unchanged `task_update` produces realized finish times. The nominal duration is kept in `dur_nom` for observations. Noise is mean-preserving lognormal (dur × exp(σZ − σ²/2)), keyed by (noise seed, instance, task). That makes it identical for every method, since each task runs once.\n- Travel delays follow the LoRR 2026 Start-Kit `DelayGenerator` (verified in the source):\n  - Each tick, each agent not currently delayed starts a delay with probability `pDelay` (bernoulli model). The delay lasts U{minDelay..maxDelay} ticks, and a delayed agent does not move.\n  - The Start-Kit example uses pDelay 0.01 with 1–4 ticks. One tick here is the env's own dt = 0.1.\n  - Each agent gets a pre-drawn calendar in absolute time (geometric gaps), independent of what the planner does. So CRN holds across methods, exactly as in LoRR.\n  - `agent_step` computes the arrival by an analytic walk over that calendar. It matches a brute-force tick simulation to 1e-4, and the delayed fraction is 0.354 vs 0.356 expected. Delays only cost time while travelling.\n- Observation modes:\n  - 'oracle' is the native feature set. It leaks realized future arrivals, starts and durations, because the env commits arrival times at decision time.\n  - 'causal' shows ETA = departure + nominal travel + stall time so far. Predicted start is the max of member ETAs, durations are nominal, and observed values are used once an event has happened.\n  - Result: oracle/causal RL makespan ratio is 0.98–1.02 (one cell 1.035, where the oracle is worse). Use causal as the default.\n- Plans run through `pre_set_route` + `execute_by_route` in the same `DynTaskEnv`, so RL, greedy and ALNS all face the same realization. Key-ordered minimal-cover plans stay deadlock-free under any delay: delays shift times but leave the precedence graph unchanged. So noise alone needs no timeout.\n\n(3) PER-AGENT KNOWLEDGE AND COMMUNICATION (design only)\n- Split ground truth from beliefs:\n  - Ground truth: `DynTaskEnv` physics (legs, arrivals, realized noise).\n  - Per agent i, a belief B_i: a replica of the public state the policy needs.\n    - Task entries: known/released, remaining requirement, believed members, feasible/started/finished, each with a timestamp.\n    - Agent entries: target, departure, nominal ETA, assigned.\n  - Merge rule: last-writer-wins per entry on (event time, agent id), i.e. a state-based CRDT. Abandonments get their own version, because they are the only thing that raises a task's remaining requirement.\n- Messages: claim(i, j, dep, eta); start(j, t, coalition); finish(j, t); abandon(i, j, t); release(j, data) from a station, relayed by gossip; heartbeat(pos). That is O(decisions) messages (180–300 per 50-task episode), not full-table broadcasts. The old CBJA engine died on full-table broadcasts.\n- RL on beliefs: a function `obs_from_belief(B_i, i)` fills the exact feature layout of `get_current_task_status` / `get_current_agent_status`. Unknown tasks and unheard agents become zero rows, which the network treats as padding, so the checkpoint is unchanged. The mask is built from B_i.\n- Channel: a link is up iff the analytic distance between the two agents on their straight legs is ≤ R, and the message survives a loss draw:\n  - Bernoulli p;\n  - Gilbert-Elliott, as a per-link two-state calendar in absolute time (the cbja parameterization: mean good 12 s / bad 3 s, per-state loss);\n  - Rayleigh distance-dependent success;\n  - plus a constant latency.\n  - CRN: link-state calendars are keyed by (seed, i, j), and per-message uniforms by (seed, i, j, send tick).\n  - Use /home/jovyan/dev/cbja/cbja/network.py only as a reference oracle on small cases. Its SimPy per-packet engine is too slow to run inside the campaign.\n- The ground truth must change from decision-order to arrival-order coalitions:\n  - Today, `task_update` marks a task covered at commit time, and `agent_step` instantly rejects a join on a covered task (returns −1 without moving the agent).\n  - With stale beliefs, an agent can commit to an already-covered task. Physically, the task should start when the agents present cover the requirement, and a redundant late arrival re-decides on arrival (a wasted trip).\n  - Regression test: with ideal comms, arrival-order must equal decision-order for the env's minimal covers.\n\n(4) PLAN-FOLLOWING WHEN A PARTNER IS LATE OR ABSENT (design)\n- Late partner (delays only): wait. The env already does this: `agent_update` holds members of a covered task until `time_finish`, and key order guarantees progress.\n- Absent partner (failure, lost claim, inconsistent keys under partial information): each waiting agent holds a lease τ.\n  - On expiry: abandon, broadcast abandon, skip to its next own task (local fallback), and reinsert the task. Reinsertion is done by central rolling re-solve, by every replica (same seed) in the replicated-solver baseline, or by re-auction in CBBA-family methods.\n  - Set τ from the believed partner ETA + margin. Ablate against fixed τ and τ = ∞ (the collapse check).\n  - The env's native lease (`max_waiting_time`) is not usable as is:\n    - Its covered branch is non-causal: it drops early arrivals based on the realized arrival spread known at commit time.\n    - `init_state` and `execute_by_route` hard-reset it to 200.\n    - So override it with a causal lease that looks only at current waiting time.\n  - Agent failure: add `fail_agent(i, t)`. Detected by heartbeat timeout, it removes i from its unstarted coalitions, uncovers those tasks, resets `time_start`, and triggers a re-plan.\n\nROLLING-HORIZON AND CLAIRVOYANT BASELINES need two small solver changes:\n- Start from a state instead of the depot at time 0:\n  - `forward_pass` initialises free = 0 and pos = −1; add `free0`/`pos0`.\n  - ALNS kernels: in `schedule`, the `ret` initialisation becomes `ready[i]`, and outbound travel (`schedule` line 71, `insertion` line 209) becomes `ready[i] + dout[i, t]`. The five return-to-depot uses keep `da`. The greedy constructors (`_dispatch`, `_best_insertion`) change the same way.\n  - Committed coalitions are kept as fixed anchors.\n- Clairvoyant bound with release times: start s = max(s, rel[t]).\n\nPRESPECIFY BEFORE THE CAMPAIGN\n- Primary endpoint: paired makespan ratio vs the best of {RL(g.) online; central rolling-horizon ALNS with solver latency charged in simulated time; replicated solver + gossip; a CBTA/CBGA-style coalition auction; paper greedy}. Report per scenario family, with success rate as a co-primary non-inferiority gate.\n- Secondary endpoints: share of the open-loop→clairvoyant gap closed; messages and bytes; decision latency.\n- Collapse log: count decisions where the proposed method differs from the central re-solve with local fallback.\n- The released checkpoint needs no retraining for any of this.",
+  "code_locations": [
+   "third_party/HeteroMRTA/env/task_env.py:41,213,703 - max_waiting_time=200 (native lease; hard-reset by init_state and execute_by_route)",
+   "third_party/HeteroMRTA/env/task_env.py:271-292 get_current_agent_status - agent rows; uses REALIZED arrival_time/time_start (leak under noise); overridden for causal obs",
+   "third_party/HeteroMRTA/env/task_env.py:294-306 get_current_task_status - task rows [status, req, time(idx 2K), travel, dx, dy, feasible]; zero unreleased rows here",
+   "third_party/HeteroMRTA/env/task_env.py:308-316 get_unfinished_task_mask/get_unfinished_tasks - release masking hook (feeds agent_observe and greedy.selectable)",
+   "third_party/HeteroMRTA/env/task_env.py:329-346 get_contributable_task_mask, get_waiting_tasks - ability mask / max-open-task rule (unchanged)",
+   "third_party/HeteroMRTA/env/task_env.py:348-369 agent_update - next_decision = time_finish (covered member) or arrival+max_waiting_time (waiting); inf for idle",
+   "third_party/HeteroMRTA/env/task_env.py:371-407 task_update - decision-order coalition: covered at commit -> time_start=max(arrival), time_finish=+task['time'] (realized duration injected via task['time']); L381,387-391 non-causal spread-based abandonment; L392-397 waiting-time abandonment (lease)",
+   "third_party/HeteroMRTA/env/task_env.py:409-426 next_decision - event selection; blocked (no_choice) agents re-polled; add release epochs",
+   "third_party/HeteroMRTA/env/task_env.py:428-465 agent_step - L440-441 instant rejection of covered task (must become arrival-order under partial info); L451-454 departure backdating of blocked agents (cap at last release); L455 arrival = dep + travel (inject LoRR delay calendar); L457 location jumps to target at decision time",
+   "third_party/HeteroMRTA/env/task_env.py:467-485 agent_observe - mask assembly (max_waiting=False at inference)",
+   "third_party/HeteroMRTA/env/task_env.py:509-518 check_finished; 686-692 plot_animation reactive_planning (authors' batch-release demo: ids<=20 visible, +20 per 10 time units)",
+   "third_party/HeteroMRTA/env/task_env.py:701-718 execute_by_route and 745-749 pre_set_route - plan-following under identical realization",
+   "third_party/HeteroMRTA/attention.py:10-19 get_attn_pad_mask (all-zero row == padding == absent task/agent); 270-285 encoding_tasks/agents nanmean excludes pads; 76 pointer mask -1e8; 288-299 AttentionNet.forward (size-agnostic, index gathers own agent row)",
+   "third_party/HeteroMRTA/worker.py:45-99 run_episode - event loop; blocked agent -> no_choice, re-polled next step (same as cbba_sota/solvers/rl.py _episode)",
+   "cbba_sota/solvers/rl.py:77 _episode, 127 rollout, 144 lockstep (run unchanged on DynTaskEnv; best_of/sample_many are offline-only under noise)",
+   "cbba_sota/solvers/greedy.py:54 selectable, 75 _run_nearest (online paper greedy runs unchanged on DynTaskEnv); 193, 263 free/pos init for constructors",
+   "cbba_sota/hetero/evaluate.py:36-44 forward_pass free=zeros/pos=-1 -> add free0/pos0 (+ release max) for rolling-horizon and clairvoyant bounds",
+   "cbba_sota/solvers/_alns_kernels.py:54-99 schedule (ret init L61, outbound da L71, return da L92); 189-230 insertion (outbound arr=da L209; return-bound da L226, L245, L312, L322) - the only 7 depot-travel uses to generalise",
+   "cbba_sota/solvers/alns.py:148-165 _inst_arrays (instance tuple; add ready/dout/rel arrays)",
+   "cbba_sota/hetero/replay.py:62 make_env, 79 replay_routes (copy semantics; use DynTaskEnv instead for noisy replay)",
+   "/home/jovyan/dev/cbja/cbja/network.py:57-125 Network (GE burst zones, per-link seeded RNG _rng L109), 294-331 link_state (range/loss/latency truth), 333-360 send - reference oracle for the channel model only",
+   "LoRR Start-Kit src/DelayGenerator.cpp (bernoulli per available agent per tick, uniform int duration) and example_problems/random.domain/random-example_400.json delayConfig {pDelay 0.01, minDelay 1, maxDelay 4, bernoulli, uniform}"
+  ],
+  "prototype_files": [
+   "/home/jovyan/dev/cbba-sota/pilots/trackD/dyn_env.py",
+   "/home/jovyan/dev/cbba-sota/pilots/trackD/check_equivalence.py",
+   "/home/jovyan/dev/cbba-sota/pilots/trackD/run_pilot.py",
+   "/home/jovyan/dev/cbba-sota/pilots/trackD/summarize.py",
+   "/home/jovyan/dev/cbba-sota/pilots/trackD/bench_step.py",
+   "/home/jovyan/dev/cbba-sota/pilots/trackD/out/rows.jsonl",
+   "/home/jovyan/dev/cbba-sota/pilots/trackD/out/summary.txt",
+   "/home/jovyan/dev/cbba-sota/pilots/trackD/out/compact_table.txt",
+   "/home/jovyan/dev/cbba-sota/pilots/trackD/out/alns_plans.json",
+   "/home/jovyan/dev/cbba-sota/pilots/trackD/out/run.log",
+   "/home/jovyan/dev/cbba-sota/pilots/trackD/_snap/ (frozen copy of cbba_sota taken 2026-09-27 22:57 UTC because another agent was editing cbba_sota/solvers mid-run; symlinks to ../../../third_party and ../../../data; dyn_env.py imports from it when present)"
+  ],
+  "pilot_numbers": [
+   "Checks (check_equivalence.py): static regression bit-identical for 15 RL rollouts + paper greedy + ALNS replay on 5 instances. Zero-row vs deleted-row policy: max |dp| 7.75e-7 over 181 decisions (92 with hidden tasks), argmax identical. CRN: realized durations and delay calendars identical across RL and greedy. Delay walk vs brute-force tick simulation: max error 1e-4; delayed fraction 0.354 vs 0.356 expected.",
+   "Campaign: 4 settings × 20 dev instances × 16 scenarios × 3 CRN seeds = 13,280 rows, 966 s on 16 processes (loaded shared host). Static RL(g.) on dev: MA-AT-25-5-50 51.22 (paper test 50.16), MA-AT-50-5-50 30.52 (29.62), SA-AT-50-5-50 39.10 (39.43), SA-BT-50-5-50 24.24 (24.23).",
+   "Static RL(g.)/ALNS open-loop (5 s, 1 core): 1.396, 1.452, 1.316, 1.359 (MA25, MA50, SA-AT, SA-BT).",
+   "N1, LoRR-2026 example delays (pDelay 0.01, 1–4 ticks), degradation vs own static run: RL 1.029/1.013/1.026/1.020; ALNS open-loop 1.030/1.037/1.040/1.036; RL/ALNS 1.39/1.42/1.30/1.34.",
+   "N2, duration noise σ=0.3: RL 1.028/1.017/1.023/1.026; ALNS open-loop 1.108/1.157/1.140/1.159; clairvoyant ALNS on realized durations 1.037/1.011/1.012/1.015 vs nominal. Open-loop/clairvoyant = 1.074/1.145/1.127/1.143 (re-planning headroom 7–15%). RL/clairvoyant = 1.384/1.450/1.322/1.365.",
+   "N3, moderate (pDelay 0.05, 1–10 ticks, about 22% stall; σ=0.3): RL 1.238/1.266/1.285/1.272; ALNS open-loop 1.334/1.420/1.438/1.442; RL/ALNS 1.295/1.294/1.177/1.205.",
+   "N4, severe (pDelay 0.05, 10–50 ticks, about 61% stall; σ=0.6): RL 2.59/2.78/2.80/2.73; ALNS open-loop 2.88/3.32/3.43/3.36; RL/ALNS 1.267/1.222/1.079/1.113. Paper greedy on MA25 fails 27% here (20% static).",
+   "Online release, RL(g.) vs its static run: R1 authors' batch demo 1.086/1.172/1.108/1.357 (SA-BT is release-bound: last batch at t=20 vs static makespan 24). R2 Poisson dod 0.5: 1.065/1.046/1.057/1.035. R3 dod 0.8: 1.103/1.069/1.097/1.078. Release+N3: 1.294/1.301/1.335/1.301. No release-aware clairvoyant bound yet, so part of this is unavoidable.",
+   "RL's edge over the paper greedy shrinks under release: RL/greedy static 0.663/0.933/0.846/0.905 → R2 0.676/0.953/0.888/0.993 → R3 0.706/0.936/0.919/1.014. Greedy itself degrades 0.945–1.11.",
+   "Observation leak, RL(g.) oracle/causal: 0.984–1.035 across 24 cells, mostly not significant. Only MA25-N4 is significant (1.035, CI [1.019, 1.051]), where the oracle is worse. RL(s.1)/RL(g.) online about 0.98–1.01. RL success 100% in every cell; paper greedy 80% on MA-AT-25-5-50 in every scenario.",
+   "Step cost (CPU, 1 torch thread, shared host with load 48–67): per decision obs 1.0–1.9 ms + forward 5–6 ms at 25–50 agents × 50 tasks; 180–300 decisions per episode; dynamic wrapper overhead about 0 (obs 0.96→1.01 ms). MA-AT-50-5-200: obs 2.9 ms + forward 10.8–11.7 ms. MA-AT-150-5-500: obs 7.2–7.4 ms + forward 43 ms (compact obs 22.8 ms with 200 of 500 tasks hidden). On an H100 at batch 1: forward about 4 ms at every scale, so the Python obs build (7 ms) dominates."
+  ],
+  "risks": [
+   "Collapse risk, the main one: with global communication the RL loses little to noise, and open-loop ALNS already beats it by 8–30% (18–30% outside the severe cell). A win over the published RL in the dynamic setting would mostly be the static solver gap. The genuinely dynamic headroom is the open-loop→clairvoyant gap (7–15% under duration noise), and a central rolling-horizon ALNS re-solve probably captures most of it. Before claiming a mechanism, measure that re-solve and log how often the proposed method decides differently from it (CBJA lesson).",
+   "Decentralization only matters under communication limits. With perfect gossip, a replicated solver equals the central one. The partial-information wrapper (belief CRDT + channel) and arrival-order coalitions are not built yet, and they are where both the headroom and the engineering risk sit.",
+   "The RL policy assumes global state. Under partial information it sees a belief with zeroed rows it never saw in that pattern during training (padding was only at the tail). Its degradation could be large, which would make it an easy baseline that reviewers call a strawman. It is still the published method, but pair it with RL fed by the same gossip infrastructure.",
+   "Degradation vs the static run mixes the physical slowdown (delays, release-bound tasks) with decision quality. Fair reporting needs a clairvoyant reference per scenario: release-time ALNS (start >= release) and ALNS on realized durations; with delays this needs per-agent time-dependent travel. The evaluator/kernel changes for this are identified (7 depot-travel uses plus the start computation) but not implemented.",
+   "Faithfulness choices that must be declared: tick = env dt 0.1; delays only while travelling; release horizon = 0.5 × paper RL(g.) makespan; total task count known; idle agents wait in place; departure back-dating capped at the last release. Severe-noise and batch-release cells are partly release/physics-bound.",
+   "The env's native lease is non-causal (its covered branch uses the realized arrival spread at commit time), and its coalition semantics are decision-order. Both must change under partial information. The arrival-order version must be regression-tested to equal decision-order under ideal comms, otherwise baselines will not transfer.",
+   "CRN for communication is only approximate if message draws depend on method-specific send times. Use per-link state calendars in absolute time and per-(link, send-tick) uniforms.",
+   "Engineering hazard seen during the pilot: another agent was editing cbba_sota/solvers concurrently. ALNS asserted mid-edit, so the pilot uses a frozen snapshot (pilots/trackD/_snap, 22:57 UTC); its ALNS may differ from the current v2. One transient file-read error on the shared filesystem also occurred and was retried. Timings come from a heavily loaded host and are indicative only.",
+   "Instance scale: all pilot numbers are 50-task dev settings. Large settings (200–500 tasks) cost 43 ms per decision on CPU for the forward pass alone, and each RL episode runs about 1 minute, so campaigns at scale need GPU batching or the compact observation.",
+   "External anchors are partial. The LoRR delay model is verified from the Start-Kit source and example config; the HeteroMRTA batch-release demo is from the authors' released code. Poisson release and lognormal durations are conventions (DVRP, stochastic scheduling), not benchmark-specific published settings, and there are no published dynamic HeteroMRTA numbers to compare against."
+  ]
+ }
+}

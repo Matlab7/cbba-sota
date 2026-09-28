@@ -1,0 +1,30 @@
+diff --git a/env/task_env.py b/env/task_env.py
+index 154832b..a473613 100644
+--- a/env/task_env.py
++++ b/env/task_env.py
+@@ -118,7 +118,7 @@ class TaskEnv:
+                            'time_start': 0,
+                            'time_finish': 0,
+                            'status': tasks_ini[i, :],
+-                           'time': float(tasks_time[i, :]),
++                           'time': float(tasks_time[i, 0]),
+                            'sum_waiting_time': 0,
+                            'efficiency': 0,
+                            'abandoned_agent': [],
+@@ -379,13 +379,13 @@ class TaskEnv:
+                 # Agents will wait for the other agents to arrive
+                 if (task['status'] <= 0).all():
+                     if np.max(arrival) - np.min(arrival) <= self.max_waiting_time:
+-                        task['time_start'] = float(np.max(arrival, keepdims=True))
+-                        task['time_finish'] = float(np.max(arrival, keepdims=True) + task['time'])
++                        task['time_start'] = float(np.max(arrival))
++                        task['time_finish'] = float(np.max(arrival) + task['time'])
+                         task['feasible_assignment'] = True
+                         f_task.append(task['ID'])
+                     else:
+                         task['feasible_assignment'] = False
+-                        infeasible_members = arrival <= np.max(arrival, keepdims=True) - self.max_waiting_time
++                        infeasible_members = arrival <= np.max(arrival) - self.max_waiting_time
+                         for member in np.array(task['members'])[infeasible_members]:
+                             task['members'].remove(member)
+                             task['abandoned_agent'].append(member)

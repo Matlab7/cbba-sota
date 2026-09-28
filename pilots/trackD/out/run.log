@@ -1,0 +1,113 @@
+3680 jobs
+0/3680 6s
+50/3680 15s
+100/3680 27s
+150/3680 35s
+200/3680 45s
+250/3680 55s
+300/3680 65s
+350/3680 77s
+multiprocessing.pool.RemoteTraceback: 
+"""
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/multiprocessing/pool.py", line 125, in worker
+    result = (True, func(*args, **kwds))
+                    ^^^^^^^^^^^^^^^^^^^
+  File "/home/jovyan/dev/cbba-sota/pilots/trackD/run_pilot.py", line 139, in run_job
+    env = mk()
+          ^^^^
+  File "/home/jovyan/dev/cbba-sota/pilots/trackD/run_pilot.py", line 135, in mk
+    return make_dyn_env(job["path"], sc, inst_key=job["inst_key"], noise_seed=job["noise_seed"],
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/jovyan/dev/cbba-sota/pilots/trackD/dyn_env.py", line 272, in make_dyn_env
+    env = load_env(path_or_env) if not isinstance(path_or_env, TaskEnv) else path_or_env
+          ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/jovyan/dev/cbba-sota/pilots/trackD/_snap/cbba_sota/bench/heteromrta.py", line 35, in load_env
+  File "/usr/lib/python3.12/pathlib.py", line 1021, in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/pathlib.py", line 1015, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/jovyan/dev/cbba-sota/pilots/trackD/_snap/data/hetero/MA-AT-25-5-50/dev/env_8.pkl'
+"""
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/jovyan/dev/cbba-sota/pilots/trackD/run_pilot.py", line 242, in <module>
+    main()
+  File "/home/jovyan/dev/cbba-sota/pilots/trackD/run_pilot.py", line 232, in main
+    for k, rows in enumerate(pool.imap_unordered(run_job, jobs)):
+  File "/usr/lib/python3.12/multiprocessing/pool.py", line 873, in next
+    raise value
+FileNotFoundError: [Errno 2] No such file or directory: '/home/jovyan/dev/cbba-sota/pilots/trackD/_snap/data/hetero/MA-AT-25-5-50/dev/env_8.pkl'
+3302 jobs
+0/3302 6s
+50/3302 18s
+100/3302 30s
+150/3302 44s
+200/3302 56s
+250/3302 67s
+300/3302 78s
+350/3302 87s
+400/3302 98s
+450/3302 108s
+500/3302 119s
+550/3302 132s
+600/3302 148s
+650/3302 165s
+700/3302 179s
+750/3302 193s
+800/3302 209s
+850/3302 225s
+900/3302 241s
+950/3302 254s
+1000/3302 266s
+1050/3302 281s
+1100/3302 295s
+1150/3302 309s
+1200/3302 324s
+1250/3302 342s
+1300/3302 356s
+1350/3302 370s
+1400/3302 385s
+1450/3302 401s
+1500/3302 419s
+1550/3302 438s
+1600/3302 457s
+1650/3302 478s
+1700/3302 494s
+1750/3302 511s
+1800/3302 531s
+1850/3302 550s
+1900/3302 569s
+1950/3302 587s
+2000/3302 605s
+2050/3302 625s
+2100/3302 643s
+2150/3302 660s
+2200/3302 678s
+2250/3302 697s
+2300/3302 714s
+2350/3302 731s
+2400/3302 747s
+2450/3302 759s
+2500/3302 770s
+2550/3302 783s
+2600/3302 795s
+2650/3302 807s
+2700/3302 818s
+2750/3302 830s
+2800/3302 843s
+2850/3302 856s
+2900/3302 867s
+2950/3302 880s
+3000/3302 893s
+3050/3302 905s
+3100/3302 917s
+3150/3302 929s
+3200/3302 942s
+3250/3302 955s
+3300/3302 966s
+done 966.3135762214661

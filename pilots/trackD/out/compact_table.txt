@@ -1,0 +1,12 @@
+degradation vs own static (mean of per-instance ratios, 20 inst x 3 CRN seeds); RL(g.) / ALNS-ol in-scenario
+setting         static RL/ALNS |  N1-lorr RL  ALNS  RL/ALNS | N2-dur.3 RL  ALNS  RL/ALNS |   N3-mod RL  ALNS  RL/ALNS |   N4-sev RL  ALNS  RL/ALNS
+MA-AT-25-5-50            1.396 |        1.029 1.030   1.390 |        1.028 1.108   1.294 |        1.238 1.334   1.295 |        2.589 2.875   1.267
+MA-AT-50-5-50            1.452 |        1.013 1.037   1.416 |        1.017 1.157   1.277 |        1.266 1.420   1.294 |        2.777 3.322   1.222
+SA-AT-50-5-50            1.316 |        1.026 1.040   1.297 |        1.023 1.140   1.183 |        1.285 1.438   1.177 |        2.804 3.428   1.079
+SA-BT-50-5-50            1.359 |        1.020 1.036   1.338 |        1.026 1.159   1.206 |        1.272 1.442   1.205 |        2.730 3.364   1.113
+
+RL(g.) degradation under release (no noise) and release+N3 (causal); greedy same
+MA-AT-25-5-50   R1-batch: RL 1.086 gr 1.108  R2-pois.5: RL 1.065 gr 1.074  R3-pois.8: RL 1.103 gr 1.093  R2+N3/causal: RL 1.294 gr 1.220
+MA-AT-50-5-50   R1-batch: RL 1.172 gr 1.098  R2-pois.5: RL 1.046 gr 1.022  R3-pois.8: RL 1.069 gr 1.066  R2+N3/causal: RL 1.301 gr 1.285
+SA-AT-50-5-50   R1-batch: RL 1.108 gr 1.018  R2-pois.5: RL 1.057 gr 1.010  R3-pois.8: RL 1.097 gr 1.015  R2+N3/causal: RL 1.335 gr 1.253
+SA-BT-50-5-50   R1-batch: RL 1.357 gr 1.225  R2-pois.5: RL 1.035 gr 0.945  R3-pois.8: RL 1.078 gr 0.963  R2+N3/causal: RL 1.301 gr 1.168
