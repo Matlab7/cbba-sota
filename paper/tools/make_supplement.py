@@ -63,10 +63,10 @@ def gap_cell(g: dict | None) -> str:
 def gaps_table(gaps: list[dict], split: str) -> str:
     """Mean gap to the best known plan (%) per method, cores and budget; CPU share at B1."""
     present = [b for b in BUDGETS if any(g["budget"] == b for g in gaps)]
+    header = ["Setting & Method & " + " & ".join(budget_label(b) for b in present) + r" & CPU \\", r"\midrule"]
     lines = [r"\begin{longtable}{ll" + "r" * len(present) + "r}",
-             CAPTION_GAPS.replace("SPLIT", split) + r"\label{tab:supp-gaps}\\", r"\toprule",
-             "Setting & Method & " + " & ".join(budget_label(b) for b in present) + r" & CPU \\", r"\midrule",
-             r"\endhead"]
+             CAPTION_GAPS.replace("SPLIT", split) + r"\label{tab:supp-gaps}\\", r"\toprule", *header,
+             r"\endfirsthead", r"\toprule", *header, r"\endhead"]
     for name in SETTINGS:
         rows = [g for g in gaps if g["setting"] == name]
         if not rows:

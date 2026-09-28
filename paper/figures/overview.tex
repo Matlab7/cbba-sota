@@ -1,128 +1,187 @@
-% Overview figure (TikZ). Included by main.tex; needs tikz with the libraries arrows.meta, calc, patterns and
-% decorations.pathreplacing. Colours: Okabe-Ito (colour-blind safe), as in the data figures.
+% Overview figure (TikZ, icons in figures/icons.tex). Included by main.tex; needs the TikZ libraries arrows.meta and
+% calc. Colours: Okabe-Ito (colour-blind safe), as in the data figures.
 \definecolor{oiBlue}{HTML}{0072B2}\definecolor{oiOrange}{HTML}{E69F00}\definecolor{oiVerm}{HTML}{D55E00}
-\definecolor{oiGreen}{HTML}{009E73}\definecolor{oiPink}{HTML}{CC79A7}
-\begin{tikzpicture}[
-    x=1cm, y=1cm, font=\scriptsize, >={Stealth[length=1.6mm]},
-    panel/.style={draw=#1, line width=0.6pt, rounded corners=2pt},
-    head/.style={fill=#1, text=white, font=\footnotesize\bfseries, anchor=north west, inner sep=2pt,
-                 minimum height=3.6mm, rounded corners=1pt},
-    robot/.style={circle, fill=#1, draw=black!70, line width=0.3pt, minimum size=2.4mm, inner sep=0pt},
-    task/.style={circle, draw=black!80, fill=white, line width=0.5pt, minimum size=4.2mm, inner sep=0pt,
-                 font=\tiny\bfseries},
-    depot/.style={rectangle, fill=#1, draw=black!70, line width=0.3pt, minimum size=2.4mm, inner sep=0pt},
-    tbox/.style={rectangle, rounded corners=1pt, draw=black!70, fill=black!4, minimum width=6.2mm,
-                 minimum height=4.2mm, inner sep=1pt, font=\tiny\bfseries},
-    step/.style={rectangle, rounded corners=4pt, draw=#1, fill=#1!12, line width=0.5pt, align=center,
-                 inner sep=1.2pt, font=\tiny, text width=10.5mm, minimum height=6.2mm},
-    meth/.style={rectangle, rounded corners=1pt, draw=black!50, fill=black!3, inner sep=1pt,
-                 minimum width=21mm, minimum height=3.1mm, font=\tiny, anchor=west},
-    chev/.style={rectangle, rounded corners=1pt, draw=#1, fill=#1!12, font=\tiny, align=center, inner sep=1.2pt,
-                 minimum height=6.5mm, text width=9.2mm},
-    note/.style={font=\tiny, align=left, anchor=west, execute at begin node={\hyphenpenalty=10000}},
+\definecolor{oiGreen}{HTML}{009E73}\definecolor{oiPink}{HTML}{CC79A7}\definecolor{oiSky}{HTML}{56B4E9}
+\input{figures/icons}
+\begin{tikzpicture}[x=1cm, y=1cm, font=\scriptsize, >={Stealth[length=1.5mm]},
+    title/.style={anchor=north west, font=\footnotesize\bfseries, inner sep=2pt, fill=white, rounded corners=1pt},
+    lab/.style={font=\scriptsize, inner sep=1pt, text=black!80},
+    route/.style={->, line width=0.9pt, #1},
+    link/.style={black!50, line width=0.5pt, dash pattern=on 0.9pt off 1.2pt},
+    card/.style={draw=black!55, fill=white, rounded corners=2pt, minimum width=8mm, minimum height=8.2mm,
+                 line width=0.4pt, inner sep=0pt},
+    stn/.style={draw=#1, fill=#1!10, line width=0.6pt, rounded corners=2pt, minimum width=9.5mm,
+                minimum height=9mm, inner sep=0pt},
+    op/.style={circle, draw=#1, fill=#1!15, line width=0.7pt, minimum size=8.4mm, inner sep=0pt},
+    mbox/.style={draw=#1, fill=#1!12, rounded corners=2pt, minimum width=5.8mm, minimum height=5.6mm, inner sep=0pt,
+                 line width=0.5pt},
+    flow/.style={->, black!60, line width=0.45pt},
   ]
-% ---------------------------------------------------------------------------------------------------------------
-% (a) Problem
-\draw[panel=oiBlue] (0,0) rectangle (5.25,5.3);
-\node[head=oiBlue] at (0.05,5.25) {(a) Coalitions with synchronised starts};
-\node[depot=oiBlue] (dA) at (0.4,4.35) {};
-\node[robot=oiBlue] (r1) at (0.95,4.35) {};
-\node[anchor=south west, font=\tiny, text=oiBlue, inner sep=1pt] at ([xshift=-1.5mm]r1.north) {traits $a_1{=}(1,0,1)$};
-\node[depot=oiOrange] (dB) at (0.4,2.7) {};
-\node[robot=oiOrange] (r2) at (0.95,2.7) {};
-\node[anchor=north west, font=\tiny, text=oiOrange!80!black, inner sep=1pt] at ([xshift=-1.5mm]r2.south)
-  {traits $a_2{=}(0,1,1)$};
-\node[task] (t1) at (2.75,3.5) {1};
-\node[note, align=left] at ([xshift=0.4mm]t1.east) {needs\\$r_1{=}(1,1,0)$};
-\node[task] (t2) at (4.7,4.5) {2};
-\node[task] (t3) at (4.7,2.55) {3};
-\draw[->, dashed, oiBlue, line width=0.5pt] (r1) to[bend left=10] (t1);
-\draw[->, dashed, oiOrange!85!black, line width=0.5pt] (r2) to[bend right=10] (t1);
-\draw[->, dashed, oiBlue, line width=0.5pt] (t1) to[bend left=12] (t2);
-\draw[->, dashed, oiOrange!85!black, line width=0.5pt] (t1) to[bend right=12] (t3);
-\node[depot=black!45] at (0.35,2.05) {};
-\node[note] at (0.45,2.05) {depot};
-\node[robot=black!45] at (1.25,2.05) {};
-\node[note] at (1.35,2.05) {robot};
-\node[task, minimum size=2.4mm] at (2.1,2.05) {};
-\node[note] at (2.2,2.05) {task};
-\node[note] at (2.9,2.05) {goal: min.\ makespan};
-% timeline of task 1
-\draw[->, black!70] (0.35,0.45) -- (5.1,0.45) node[anchor=north east, font=\tiny] {time};
-\node[anchor=east, font=\tiny, text=oiBlue] at (0.98,1.38) {robot 1};
-\node[anchor=east, font=\tiny, text=oiOrange!80!black] at (0.98,0.88) {robot 2};
-\draw[oiBlue, line width=0.5pt] (1.0,1.38) -- (1.7,1.38);
-\fill[oiBlue] (1.7,1.38) circle (0.6mm);
-\fill[pattern=north east lines, pattern color=oiBlue!70] (1.7,1.28) rectangle (2.75,1.48);
-\node[anchor=south, font=\tiny] at (2.22,1.48) {arrives, waits};
-\draw[oiOrange, line width=0.5pt] (1.0,0.88) -- (2.75,0.88);
-\fill[oiOrange] (2.75,0.88) circle (0.6mm);
-\fill[oiGreen!55] (2.75,0.78) rectangle (3.85,1.48);
-\node[font=\tiny, align=center] at (3.3,1.13) {task 1\\together};
-\draw[densely dotted] (2.75,0.45) -- (2.75,1.62);
-\draw[densely dotted] (3.85,0.45) -- (3.85,1.62);
-\node[anchor=north, font=\tiny] at (2.75,0.45) {$s_1$};
-\node[anchor=north, font=\tiny] at (3.85,0.45) {$f_1{=}s_1{+}d_1$};
-\node[note] at (3.92,1.13) {on to 2, 3};
-% ---------------------------------------------------------------------------------------------------------------
-% (b) Method
-\draw[panel=oiVerm] (5.45,0) rectangle (11.85,5.3);
-\node[head=oiVerm] at (5.5,5.25) {(b) ALNS over a deadlock-free plan};
-\node[note] at (5.55,4.68) {plan: a global task order $\pi$ and a minimal cover $C_j$ per task};
-\node[tbox] (p1) at (6.0,4.12) {1};
-\node[tbox] (p2) at (7.0,4.12) {3};
-\node[tbox] (p3) at (8.0,4.12) {2};
-\node[tbox] (p4) at (9.0,4.12) {$\cdots$};
-\draw[->] (p1) -- (p2); \draw[->] (p2) -- (p3); \draw[->] (p3) -- (p4);
-\node[robot=oiBlue, minimum size=1.8mm] at ([yshift=-3.3mm, xshift=-1.2mm]p1.south) {};
-\node[robot=oiOrange, minimum size=1.8mm] at ([yshift=-3.3mm, xshift=1.2mm]p1.south) {};
-\node[robot=oiOrange, minimum size=1.8mm] at ([yshift=-3.3mm]p2.south) {};
-\node[robot=oiBlue, minimum size=1.8mm] at ([yshift=-3.3mm]p3.south) {};
-\node[note, text width=22mm] at (9.45,4.0) {robots visit their tasks in the order $\pi$: no deadlock; forward pass = simulator};
-% ALNS loop
-\coordinate (c) at (7.05,1.95);
-\node[step=oiBlue] (d) at ($(c)+(0,0.95)$) {destroy\\$q$ tasks};
-\node[step=oiOrange] (r) at ($(c)+(1.0,0)$) {exact\\repair};
-\node[step=oiPink] (a) at ($(c)+(0,-0.95)$) {accept by\\annealing};
-\node[step=oiGreen] (w) at ($(c)+(-1.0,0)$) {adapt\\weights};
-\draw[->, line width=0.6pt] (d.east) to[bend left=35] (r.north);
-\draw[->, line width=0.6pt] (r.south) to[bend left=35] (a.east);
-\draw[->, line width=0.6pt] (a.west) to[bend left=35] (w.south);
-\draw[->, line width=0.6pt] (w.north) to[bend left=35] (d.west);
-\node[font=\footnotesize\bfseries] at (c) {ALNS};
-\node[font=\tiny] at (7.05,0.22) {$\times 8$ workers share their best plan every 1\,s};
-% exact insertion inset
-\draw[rounded corners=2pt, draw=black!60, fill=black!3] (8.7,0.15) rectangle (11.75,3.35);
-\node[anchor=north west, font=\tiny\bfseries] at (8.75,3.32) {exact insertion of task $j$ in $O(|C_j|)$};
-\node[tbox, minimum width=4.5mm] (q1) at (9.15,2.45) {$p$};
-\node[tbox, minimum width=4.5mm, draw=oiOrange, fill=oiOrange!15] (qj) at (10.0,2.45) {$j$};
-\node[tbox, minimum width=4.5mm] (qk) at (10.85,2.45) {$k_i$};
-\draw[->] (q1) -- (qj); \draw[->] (qj) -- (qk);
-\draw[->, black!45, densely dashed] (q1.north) to[bend left=28] (qk.north);
-\draw[decorate, decoration={brace, amplitude=2pt, mirror}] ([yshift=-1mm]qk.south west) --
-  ([yshift=-1mm, xshift=5mm]qk.south east) node[midway, below=1pt, font=\tiny] {tail $\theta_{k_i}$};
-\node[note, text width=29mm] at (8.8,1.62) {new makespan, exactly:};
-\node[note] at (8.8,1.18) {$M' = \max\!\big(M,\; s_j + d_j$\\[0.3ex]
-  $\qquad + \max_{i \in C_j} (\tau_{j k_i} + \theta_{k_i})\big)$};
-\node[note, text width=29mm] at (8.8,0.5) {scores every position without a forward pass; dashed: the arc that $p \to j \to k_i$ replaces};
-% ---------------------------------------------------------------------------------------------------------------
-% (c) Protocol
-\draw[panel=oiGreen] (12.05,0) rectangle (17.6,5.3);
-\node[head=oiGreen] at (12.1,5.25) {(c) Equal compute, pre-registered};
-\node[chev=oiBlue] (s1) at (12.68,4.4) {dev:\\tune all};
-\node[chev=oiOrange] (s2) at (13.98,4.4) {val:\\dry run};
-\node[chev=oiGreen] (s3) at (15.28,4.4) {freeze\\(git trees)};
-\node[chev=oiPink] (s4) at (16.58,4.4) {test:\\one run};
-\draw[->] (s1) -- (s2); \draw[->] (s2) -- (s3); \draw[->] (s3) -- (s4);
-\node[meth, draw=oiBlue, fill=oiBlue!12, line width=0.5pt] (m1) at (12.2,3.35) {\textbf{ALNS (ours)}};
-\foreach \m [count=\i from 2] in {RL(s.$N$) policy, CP-SAT LNS, parallel CP-SAT LNS, CP-SAT model, CTAS-D (MILP),
-                                 constructor restarts} {
-  \node[meth] (m\i) at (12.2,3.72-0.37*\i) {\m};
+% ==================================================================================================================
+% (a) Scenario
+\begin{scope}
+  \clip[rounded corners=3pt] (0,0) rectangle (7.9,6.0);
+  \fill[green!5!white] (0,0) rectangle (7.9,6.0);
+  \draw[oiSky!30, line width=7pt] (2.0,6.2) .. controls (1.5,4.6) and (2.3,3.7) .. (1.7,2.4)
+    .. controls (1.2,1.4) and (1.7,0.5) .. (1.4,-0.2);
+  \foreach \x/\y in {4.1/5.5, 5.2/4.3, 2.9/1.3, 6.4/2.3, 3.2/3.9, 0.35/2.0, 7.3/5.6, 6.6/3.9}
+    \fill[black!8, rounded corners=0.5pt] (\x-0.14,\y-0.1) rectangle (\x+0.14,\y+0.1);
+  \foreach \x/\y in {2.5/4.3, 4.6/5.0, 6.9/4.5, 3.6/0.5, 2.2/0.4, 7.5/2.3, 1.05/3.9, 5.9/2.0, 3.9/1.5}
+    \fill[green!28!white] (\x,\y) circle (0.09) (\x+0.14,\y-0.05) circle (0.07);
+\end{scope}
+\draw[black!60, line width=0.6pt, rounded corners=3pt] (0,0) rectangle (7.9,6.0);
+% stations (depots) with their robot type and its skills
+\node[stn=oiOrange] (D) at (0.72,4.95) {};
+\fill[oiOrange] (D.north west) -- ($(D.north)+(0,0.2)$) -- (D.north east) -- cycle;
+\pic[scale=0.62] at ($(D.center)+(0,0.08)$) {drone=oiOrange};
+\pic at ($(D.south)+(-0.08,0.13)$) {skills={oiOrange,oiPink}};
+\node[stn=oiBlue] (R) at (0.72,0.9) {};
+\fill[oiBlue] (R.north west) -- ($(R.north)+(0,0.2)$) -- (R.north east) -- cycle;
+\pic[scale=0.62] at ($(R.center)+(0,0.08)$) {rover=oiBlue};
+\pic at ($(R.south)+(-0.08,0.13)$) {skills={oiBlue,oiOrange}};
+\node[stn=oiGreen] (L) at (7.18,0.9) {};
+\fill[oiGreen] (L.north west) -- ($(L.north)+(0,0.2)$) -- (L.north east) -- cycle;
+\pic[scale=0.62] at ($(L.center)+(0,0.08)$) {legged=oiGreen};
+\pic at ($(L.south)+(-0.08,0.13)$) {skills={oiGreen,oiPink}};
+\pic[scale=0.95] at (0.45,3.0) {tower};
+\pic[scale=0.95] at (7.5,3.35) {tower};
+% task sites and the skills they need
+\node[card] (F) at (3.2,5.05) {};
+\pic[scale=0.8] at ($(F.center)+(0,0.1)$) {flame};
+\pic at ($(F.south)+(-0.08,0.12)$) {skills={oiOrange,oiPink}};
+\node[card] (B) at (6.2,5.05) {};
+\pic[scale=0.8] at ($(B.center)+(0,0.1)$) {building};
+\pic at ($(B.south)+(-0.08,0.12)$) {skills={oiBlue,oiPink}};
+\node[card] (U) at (2.45,2.35) {};
+\pic[scale=0.8] at ($(U.center)+(0,0.1)$) {rubble};
+\pic at ($(U.south)+(-0.08,0.12)$) {skills={oiBlue,oiOrange}};
+\node[card] (E) at (5.35,0.7) {};
+\pic[scale=0.8] at ($(E.center)+(0,0.1)$) {rubble};
+\pic at ($(E.south)+(-0.08,0.12)$) {skills={oiGreen,oiPink}};
+% the coalition task, magnified: a rover and a quadruped must both arrive before it starts
+\node[circle, draw=oiVerm, fill=white, line width=0.8pt, minimum size=25mm, inner sep=0pt] (C) at (4.75,2.95) {};
+\pic[scale=1.3] at ($(C.center)+(0,-0.55)$) {rubble};
+\pic[scale=0.95] at ($(C.center)+(-0.66,0.12)$) {rover=oiBlue};
+\pic[scale=0.95] at ($(C.center)+(0.6,0.14)$) {legged=oiGreen};
+\draw[->, oiBlue, line width=0.8pt] ($(C.center)+(-0.5,-0.18)$) -- ($(C.center)+(-0.3,-0.42)$);
+\draw[->, oiGreen, line width=0.8pt] ($(C.center)+(0.46,-0.2)$) -- ($(C.center)+(0.28,-0.42)$);
+\pic[scale=1.1] at ($(C.center)+(0,0.55)$) {hourglass};
+\pic at ($(C.center)+(-0.08,0.97)$) {skills={oiBlue,oiGreen}};
+\node[lab, anchor=north, fill=green!5!white, inner sep=0.5pt] at ($(C.south)+(-0.3,-0.04)$) {starts when both are there};
+% routes
+\draw[route=oiOrange] (D.east) to[bend left=10] (F.west);
+\draw[route=oiOrange] (F.east) to[bend left=12] (B.west);
+\draw[route=oiBlue] (R.north east) to[bend left=12] (U.south west);
+\draw[route=oiBlue] (U.east) to[bend left=10] (C.west);
+\draw[route=oiBlue] (C.north east) to[bend right=12] (B.south);
+\draw[route=oiGreen] (L.north west) to[bend right=10] (C.east);
+\draw[route=oiGreen] (C.south east) to[bend left=18] (E.north east);
+% radio links; two robots are out of range
+\draw[link] (D.south) -- (0.45,3.3);
+\draw[link] (0.45,2.7) -- (R.north);
+\draw[link] (0.6,3.05) -- (U.north west) coordinate[pos=0.55] (x1);
+\pic at (x1) {cut};
+\draw[link] (F.south west) -- (0.62,3.15);
+\draw[link] (7.4,3.65) -- (B.south east);
+\draw[link] (7.5,3.05) -- (L.north);
+\draw[link] (7.3,3.3) -- (C.north east) coordinate[pos=0.5] (x2);
+\pic at (x2) {cut};
+\node[lab, anchor=south west] at ($(x2)+(0.02,0.06)$) {out of range};
+% a drone in flight relays for the coalition: robot-to-robot link
+\pic[scale=0.55] (fly) at (4.72,5.5) {drone=oiOrange};
+\draw[link] (4.72,5.36) -- (C.north);
+\draw[link] (4.95,5.5) -- (B.west);
+\node[lab, anchor=north] at (0.45,2.68) {relay};
+\node[lab, anchor=north] at (R.south) {station};
+\node[title] at (0.08,5.94) {(a) Scenario};
+% ==================================================================================================================
+% (b) Our search
+\draw[black!60, line width=0.6pt, rounded corners=3pt] (8.05,0) rectangle (12.85,6.0);
+\node[title] at (8.13,5.94) {(b) Our search: ALNS};
+\node[card, minimum width=6.4mm, minimum height=6.8mm] (o1) at (8.5,4.72) {};
+\node[card, minimum width=6.4mm, minimum height=6.8mm] (o2) at (9.33,4.72) {};
+\node[card, minimum width=6.4mm, minimum height=6.8mm] (o3) at (10.16,4.72) {};
+\node[card, minimum width=6.4mm, minimum height=6.8mm] (o4) at (10.99,4.72) {};
+\node[card, minimum width=6.4mm, minimum height=6.8mm] (o5) at (11.82,4.72) {};
+\pic[scale=0.62] at ($(o1.center)+(0,0.08)$) {rubble};
+\pic[scale=0.62] at ($(o2.center)+(0,0.08)$) {flame};
+\pic[scale=0.62] at ($(o3.center)+(0,0.08)$) {rubble};
+\pic[scale=0.62] at ($(o4.center)+(0,0.08)$) {building};
+\pic[scale=0.62] at ($(o5.center)+(0,0.08)$) {rubble};
+\pic[scale=0.8] at ($(o1.south)+(-0.065,0.1)$) {skills={oiBlue,oiOrange}};
+\pic[scale=0.8] at ($(o2.south)+(-0.065,0.1)$) {skills={oiOrange,oiPink}};
+\pic[scale=0.8] at ($(o3.south)+(-0.065,0.1)$) {skills={oiBlue,oiGreen}};
+\pic[scale=0.8] at ($(o4.south)+(-0.065,0.1)$) {skills={oiBlue,oiPink}};
+\pic[scale=0.8] at ($(o5.south)+(-0.065,0.1)$) {skills={oiGreen,oiPink}};
+\draw[flow] (o1) -- (o2); \draw[flow] (o2) -- (o3); \draw[flow] (o3) -- (o4); \draw[flow] (o4) -- (o5);
+\draw[flow] (o5.east) -- ++(0.3,0);
+\node[lab, anchor=south west] at ($(o1.north west)+(-0.02,0.03)$) {one global task order};
+\pic[scale=0.4] at (8.5,3.95) {rover=oiBlue};
+\pic[scale=0.4] at (9.33,3.95) {drone=oiOrange};
+\pic[scale=0.36] at (10.16,4.1) {rover=oiBlue}; \pic[scale=0.36] at (10.16,3.78) {legged=oiGreen};
+\pic[scale=0.36] at (10.99,4.1) {rover=oiBlue}; \pic[scale=0.36] at (10.99,3.8) {drone=oiOrange};
+\pic[scale=0.4] at (11.82,3.95) {legged=oiGreen};
+\node[lab, anchor=north west] at (8.1,3.6) {a minimal coalition per task};
+% the search loop
+\coordinate (lc) at (9.78,1.72);
+\node[op=oiVerm] (rm) at ($(lc)+(0,0.98)$) {};
+\node[op=oiPink] (ins) at ($(lc)+(1.05,0)$) {};
+\node[op=oiOrange] (acc) at ($(lc)+(0,-0.98)$) {};
+\node[op=oiSky] (ada) at ($(lc)+(-1.05,0)$) {};
+\pic[scale=1.15] at (rm) {scissors=oiVerm};
+\pic[scale=1.15] at (ins) {insert=oiPink};
+\pic[scale=1.15] at (acc) {thermo=oiOrange};
+\pic[scale=1.15] at (ada) {sliders=oiSky};
+\draw[->, line width=0.7pt, black!70] (rm.east) to[bend left=35] (ins.north);
+\draw[->, line width=0.7pt, black!70] (ins.south) to[bend left=35] (acc.east);
+\draw[->, line width=0.7pt, black!70] (acc.west) to[bend left=35] (ada.south);
+\draw[->, line width=0.7pt, black!70] (ada.north) to[bend left=35] (rm.west);
+\node[lab, anchor=west] at ($(rm.east)+(0.03,0.12)$) {remove};
+\node[lab, anchor=north west, align=left] at ($(ins.south)+(0.0,-0.02)$) {re-insert\\exactly};
+\node[lab, anchor=west] at ($(acc.east)+(0.03,-0.12)$) {accept};
+\node[lab, anchor=north east] at ($(ada.south)+(-0.12,-0.02)$) {adapt};
+% eight parallel workers sharing their best plan
+\foreach \k in {0,...,3} {
+  \pic[scale=0.95] at (12.05,0.62+0.62*\k) {chip=};
+  \pic[scale=0.95] at (12.5,0.62+0.62*\k) {chip=};
 }
-\draw[decorate, decoration={brace, amplitude=3pt}] ([xshift=1mm]m1.north east) -- ([xshift=1mm]m7.south east)
-  node[midway, right=3pt, font=\tiny, align=left] {same 8 pinned\\cores and\\budget $B_1$;\\CPU use\\recorded};
-\node[rectangle, rounded corners=1pt, draw=black!60, fill=black!4, font=\tiny, align=center, text width=50mm,
-      inner sep=1.5pt] (sim) at (14.82,0.45)
-  {every plan scored by the benchmark's simulator;\\paired ratios, bootstrap CIs, Holm-corrected tests};
-\draw[->] ([yshift=-0.5mm]m7.south) -- (m7.south |- sim.north);
+\node[lab, anchor=south] at (12.28,2.98) {$\times 8$ workers};
+\draw[<->, black!60, line width=0.5pt] (11.3,2.38) -- (11.76,2.38);
+\node[lab, anchor=south, align=center] at (11.53,2.42) {share\\best};
+% ==================================================================================================================
+% (c) Fair test
+\draw[black!60, line width=0.6pt, rounded corners=3pt] (13.0,0) rectangle (17.6,6.0);
+\node[title] at (13.08,5.94) {(c) Fair test};
+\node[lab, align=center] at (14.4,5.12) {same\\8 cores};
+\node[lab, align=center] at (15.12,5.12) {same\\budget};
+\node[mbox=oiBlue, line width=0.9pt] (m1) at (13.5,4.5) {};
+\node[mbox=oiPink] (m2) at (13.5,3.62) {};
+\node[mbox=oiGreen] (m3) at (13.5,2.74) {};
+\node[mbox=oiOrange] (m4) at (13.5,1.86) {};
+\node[mbox=black] (m5) at (13.5,0.98) {};
+\pic[scale=0.95] at (m1) {magnifier=oiBlue};
+\pic[scale=0.95] at (m2) {neural=oiPink};
+\pic[scale=0.95] at (m3) {gear=oiGreen};
+\pic[scale=0.95] at (m4) {milp=oiOrange};
+\pic[scale=0.95] at (m5) {dice=black};
+\node[lab, anchor=north] at ($(m1.south)+(0,0.01)$) {ALNS};
+\node[lab, anchor=north] at ($(m2.south)+(0,0.01)$) {RL};
+\node[lab, anchor=north] at ($(m3.south)+(0,0.01)$) {CP-SAT};
+\node[lab, anchor=north] at ($(m4.south)+(0,0.01)$) {MILP};
+\node[lab, anchor=north] at ($(m5.south)+(0,0.01)$) {restarts};
+\foreach \y in {4.5,3.62,2.74,1.86,0.98} {
+  \pic[scale=0.95] at (14.4,\y) {chip=8};
+  \pic[scale=0.95] at (15.12,\y) {stopwatch};
+  \draw[flow] (13.88,\y) -- (14.1,\y);
+  \draw[flow] (14.68,\y) -- (14.87,\y);
+  \draw[flow] (15.37,\y) to[out=0, in=180] (16.08,3.02);
+}
+\pic[scale=1.2] at (16.57,4.95) {padlock=oiGreen};
+\pic[scale=1.2] at (17.07,4.95) {gitbranch};
+\node[lab, anchor=north] at (16.82,4.55) {pre-registered};
+\pic[scale=1.5] at (16.82,3.05) {monitor=oiGreen};
+\node[lab, anchor=north] at (16.82,2.56) {simulator};
+\draw[flow] (16.82,2.2) -- (16.82,1.75);
+\pic[scale=1.3] at (16.82,1.15) {podium=oiBlue};
+\node[lab, anchor=north] at (16.82,0.78) {paired tests};
 \end{tikzpicture}

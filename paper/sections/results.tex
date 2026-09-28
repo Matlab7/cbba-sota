@@ -67,5 +67,9 @@ them is on average \RefValFreelo--\RefValFreehi\% longer per setting, while ALNS
 ratios above do not depend on it.
 
 \paragraph{Execution.} All \RunsBone{} runs of the 8-core, $B_1$ cells were scored; \LateBone{} of them overran their
-budget and were scored at the budget as pre-registered. Rows with more than 40\% throttled CPU periods were re-run and
-left out; the per-row host conditions are in the supplement.
+budget by more than 10\% + 0.25\,s and were scored at the budget as pre-registered: \LateRL{} of RL(s.$N$), whose
+last batch of rollouts can end after the deadline and which keeps no intermediate plans, so that such a run counts as a
+failure, \LateALNS{} of ALNS and \LateOther{} of the other competitors. Scoring every late run by the final plan it
+returned instead (descriptive, not pre-registered), ALNS's plans are \Sensrlgainlo--\Sensrlgainhi\% shorter than
+RL(s.$N$)'s. Jobs with more than 40\% throttled CPU periods were re-run and left out; the per-row host conditions are
+in the supplement.

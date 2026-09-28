@@ -4,12 +4,14 @@
 \begin{figure*}[t]
 \centering
 \resizebox{\textwidth}{!}{\input{figures/overview}}
-\caption{Overview. (a) Robots with binary trait vectors must gather in coalitions that cover each task's requirement
-vector; a task starts when its last member arrives, so a late member delays the whole coalition and everything after
-it. (b) Our ALNS searches over a global task order with a minimal covering coalition per task, which cannot deadlock
-and is evaluated exactly; insertions are scored in time linear in the coalition size from longest-path tails
-(Eq.~\eqref{eq:insert}). (c) Every method runs on the same pinned cores for the same budget, under a pre-registration
-frozen before the single run on the test split.}
+\caption{Overview. (a) A heterogeneous team (drones, rovers, legged robots; coloured dots are skills) leaves its
+stations to serve tasks that need combined skills; a task starts only when its whole coalition has arrived, so the first
+member waits. Robots in range can talk directly or through relays, others cannot; the benchmark, and our study, plan
+centrally for a fully known instance. (b) ALNS keeps one global task order with a minimal coalition per task, which
+cannot deadlock, and repeatedly removes tasks, re-inserts them at exactly evaluated positions, accepts by annealing and
+adapts its operator weights, on 8 workers that share their best plan. (c) Every method gets the same 8 cores and the
+same budget, every plan is scored by the benchmark's simulator, and the whole protocol was frozen before the single
+test run.}
 \label{fig:overview}
 \end{figure*}
 
@@ -44,7 +46,7 @@ question on HeteroMRTA with a pre-registered, compute-matched study (Figure~\ref
 \begin{itemize}
 \item \textbf{An ALNS for coalition formation and scheduling with synchronisation} (Section~\ref{sec:method}). Plans
   are a global task order with one minimal covering coalition per task. This representation is deadlock-free by
-  construction, its forward pass reproduces the benchmark's own simulator bit for bit, and an insertion move is
+  construction, its forward pass reproduces the benchmark's own simulator exactly, and an insertion move is
   evaluated exactly in time linear in the coalition size from longest-path tails.
 \item \textbf{A compute-matched evaluation protocol} (Section~\ref{sec:setup}). All methods run in the same lanes of
   pinned physical cores at the benchmark's own budgets, with their CPU use recorded and host throttling monitored.

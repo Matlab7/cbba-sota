@@ -16,7 +16,7 @@ maximum and $f_j = s_j + d_j$. The representation has three properties.
 \begin{enumerate}
 \item \emph{Deadlock-free.} Every precedence between two tasks on a route follows $\pi$, so no cycle can form.
 \item \emph{Exact.} We compute travel times exactly as the benchmark's simulator does, so the forward pass reproduces
-  the simulator's makespan bit for bit; our tests check this by replaying plans in the simulator, and every reported
+  the simulator's makespans; our tests check this against the simulator on hundreds of plans, and every reported
   result is the simulator's own score.
 \item \emph{Minimal covers.} Since the simulator does not let an agent join a task that is already covered, every
   $C_j$ must be a minimal cover: no member can be left out without breaking coverage. The search keeps this invariant.
