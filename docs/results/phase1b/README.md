@@ -6,3 +6,6 @@
   - `bks_val_plans.json.gz`: the BKS plans (`routes`: per agent, 0-based task ids in visiting order; `routes_base` 0), makespans (env replay) and instance fingerprints. `TaskEnv.pre_set_route` takes 1-based ids (0 is the depot): add 1 to every id before replaying in the env. Rows of runs/alns (run_alns.py, alns_ablation.py, cpsat_lns_ref.py) store 1-based env routes (`routes_base` 1); runs/anytime, runs/bks, runs/compare_dev and runs/baselines store 0-based routes.
   - `anytime_val.txt`, `anytime_gaps_val.csv`, `anytime_ratios_val.csv`, `anytime_val.png`, `anytime_val.md`: gap to BKS of ALNS v2, ALNS v1, CP-SAT LNS, RL(s.N) and constructor restarts at 0.5 s to 2 x B1 on 1 and 8 cores; share of the constructor-to-BKS gap closed; paired ratios (bootstrap CI, wins-losses, Holm).
   - `anytime_val_all.txt`, `anytime_val_all.md`: the same report keeping the rows disturbed by host throttling (sensitivity check).
+- Since step 3.1 (2026-09-28, `docs/baselines-2026-09.md`), `bks.py collect` also reads runs/anytime_c1 and the
+  independent references, and `anytime.py report` scores late runs by the c1 rule only under `--grid c1`; running
+  `headroom.sh` now reports gaps against that extended best known. The tables here used the Phase 1b portfolio.

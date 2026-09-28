@@ -822,9 +822,9 @@ def plot(gaps: list[dict], png: Path) -> None:
     for ax, name in zip(axes.flat, names):
         for m in METHODS:
             for c, ls in ((1, "-"), (LANE, "--")):
-                pts = sorted((g["budget_s"], g["gap_pct"]) for g in gaps
+                pts = sorted((g["budget_s"], g["gap_pct"]) for g in gaps  # budgets where every run had a plan
                              if g["setting"] == name and g["method"] == m and g["cores"] == c
-                             and g["on_time"] == g["n"])
+                             and g["on_time"] == g["n"] and g["success"] == 1)
                 if pts:
                     ax.plot(*zip(*pts), ls, marker="o", ms=3, color=colors[m], label=f"{m}-{c}")
         ax.set_xscale("log")
