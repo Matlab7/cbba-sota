@@ -1,0 +1,143 @@
+== Ablation, 1 worker, B1 (ref v2): paired ratio [bootstrap 95% CI] wins-losses
+MA-AT-150-10-500
+  v2                     n=10 mean   36.338  /CPSAT-8 0.8729  it/s   4600  last 0.95
+  alt                    n=10 mean   36.427  /ref 1.0020 [0.9942, 1.0094]  4- 6  /CPSAT-8 0.8747  it/s   2727  last 0.92
+  v1                     n=10 mean   40.232  /ref 1.1066 [1.0939, 1.1205]  0-10  /CPSAT-8 0.9658  it/s   5218  last 0.97
+MA-AT-150-5-500
+  v2                     n=10 mean   45.510  /CPSAT-8 0.9086  it/s   4386  last 0.97
+  alt                    n=10 mean   45.581  /ref 1.0017 [0.9978, 1.0065]  5- 5  /CPSAT-8 0.9102  it/s   2558  last 0.93
+  v1                     n=10 mean   51.554  /ref 1.1208 [1.0923, 1.1482]  0-10  /CPSAT-8 1.0194  it/s   5012  last 1.00
+MA-AT-25-5-50
+  v2                     n=20 mean   35.934  /CPSAT-8 0.8996  it/s  10329  last 0.47
+  no-init                n=20 mean   35.854  /ref 0.9958 [0.9871, 1.0039] 11- 9  /CPSAT-8 0.8958  it/s  10102  last 0.50
+  no-resort              n=20 mean   36.181  /ref 1.0093 [1.0012, 1.0179]  6-14  /CPSAT-8 0.9076  it/s  10594  last 0.50
+  alt                    n=20 mean   36.003  /ref 1.0016 [0.9947, 1.0083]  9-11  /CPSAT-8 0.9009  it/s   5361  last 0.60
+  v1                     n=20 mean   36.176  /ref 1.0065 [0.9979, 1.0155]  9-11  /CPSAT-8 0.9053  it/s  10984  last 0.57
+  v1-p1                  n=20 mean   36.182  /ref 1.0089 [0.9983, 1.0194]  8-12  /CPSAT-8 0.9073  it/s   7392  last 0.63
+MA-AT-50-5-200
+  v2                     n=20 mean   51.694  /CPSAT-8 0.9075  it/s   8535  last 0.87
+  no-init                n=20 mean   53.728  /ref 1.0345 [1.0220, 1.0468]  3-17  /CPSAT-8 0.9389  it/s   8206  last 0.95
+  no-resort              n=20 mean   53.075  /ref 1.0288 [1.0218, 1.0365]  0-20  /CPSAT-8 0.9334  it/s   9239  last 0.92
+  alt                    n=20 mean   51.967  /ref 1.0060 [1.0017, 1.0101]  6-14  /CPSAT-8 0.9129  it/s   5103  last 0.85
+  v1                     n=20 mean   57.387  /ref 1.1064 [1.0903, 1.1229]  0-20  /CPSAT-8 1.0041  it/s   9487  last 0.97
+  v1-p1                  n=20 mean   58.869  /ref 1.1334 [1.1178, 1.1493]  0-20  /CPSAT-8 1.0286  it/s   4117  last 0.98
+MA-AT-50-5-50
+  v2                     n=20 mean   20.554  /CPSAT-8 0.9150  it/s   9505  last 0.53
+  no-init                n=20 mean   20.535  /ref 0.9993 [0.9924, 1.0064] 10-10  /CPSAT-8 0.9143  it/s   9183  last 0.64
+  no-resort              n=20 mean   20.775  /ref 1.0103 [1.0017, 1.0189]  4-15  /CPSAT-8 0.9244  it/s   9854  last 0.59
+  alt                    n=20 mean   20.485  /ref 0.9967 [0.9894, 1.0043] 11- 9  /CPSAT-8 0.9121  it/s   4414  last 0.52
+  v1                     n=20 mean   20.718  /ref 1.0083 [0.9992, 1.0177]  6-12  /CPSAT-8 0.9225  it/s   9953  last 0.80
+  v1-p1                  n=20 mean   20.769  /ref 1.0093 [1.0032, 1.0153]  5-14  /CPSAT-8 0.9236  it/s   6861  last 0.65
+SA-AT-50-5-50
+  v2                     n=20 mean   28.556  /CPSAT-8 0.9489  it/s   7970  last 0.75
+  no-init                n=20 mean   28.772  /ref 1.0069 [0.9965, 1.0176]  8-12  /CPSAT-8 0.9552  it/s   7542  last 0.75
+  no-resort              n=20 mean   29.001  /ref 1.0155 [1.0082, 1.0229]  3-17  /CPSAT-8 0.9635  it/s   8520  last 0.84
+  alt                    n=20 mean   28.381  /ref 0.9933 [0.9859, 1.0005] 13- 7  /CPSAT-8 0.9423  it/s   3626  last 0.72
+  v1                     n=20 mean   29.326  /ref 1.0267 [1.0174, 1.0357]  2-18  /CPSAT-8 0.9741  it/s   8662  last 0.89
+  v1-p1                  n=20 mean   29.746  /ref 1.0413 [1.0292, 1.0542]  2-18  /CPSAT-8 0.9879  it/s   4902  last 0.91
+SA-BT-25-5-50
+  v2                     n=20 mean   27.442  /CPSAT-8 0.9298  it/s  14520  last 0.50
+  no-init                n=20 mean   27.426  /ref 0.9995 [0.9898, 1.0097] 12- 8  /CPSAT-8 0.9292  it/s  14109  last 0.47
+  no-resort              n=20 mean   27.651  /ref 1.0072 [0.9979, 1.0160]  5-14  /CPSAT-8 0.9363  it/s  14616  last 0.60
+  alt                    n=20 mean   27.395  /ref 0.9980 [0.9876, 1.0089] 10-10  /CPSAT-8 0.9277  it/s   8028  last 0.59
+  v1                     n=20 mean   27.588  /ref 1.0052 [0.9975, 1.0127]  6-13  /CPSAT-8 0.9345  it/s  15409  last 0.64
+  v1-p1                  n=20 mean   27.596  /ref 1.0056 [0.9938, 1.0170]  8-12  /CPSAT-8 0.9348  it/s  10024  last 0.71
+SA-BT-50-5-50
+  v2                     n=20 mean   17.614  /CPSAT-8 0.9690  it/s  12985  last 0.34
+  no-init                n=20 mean   17.605  /ref 0.9994 [0.9952, 1.0041]  9- 5  /CPSAT-8 0.9684  it/s  12622  last 0.40
+  no-resort              n=20 mean   17.691  /ref 1.0042 [0.9990, 1.0094]  3-10  /CPSAT-8 0.9730  it/s  13109  last 0.50
+  alt                    n=20 mean   17.529  /ref 0.9951 [0.9879, 1.0021] 11- 6  /CPSAT-8 0.9642  it/s   6310  last 0.35
+  v1                     n=20 mean   17.748  /ref 1.0073 [1.0007, 1.0141]  6-12  /CPSAT-8 0.9760  it/s  13488  last 0.48
+  v1-p1                  n=20 mean   17.596  /ref 0.9986 [0.9937, 1.0041]  9- 7  /CPSAT-8 0.9676  it/s   9489  last 0.55
+
+== Ablation, 1 worker, 2 s (ref v2)
+MA-AT-150-10-500
+  v2                     n=20 mean   41.272  it/s   4038  last 0.94
+  no-init                n=20 mean   43.950  /ref 1.0619 [1.0494, 1.0769]  0-20  it/s   4083  last 0.96
+  no-resort              n=20 mean   42.187  /ref 1.0222 [1.0163, 1.0288]  0-20  it/s   4586  last 0.95
+  alt                    n=20 mean   41.058  /ref 0.9951 [0.9922, 0.9980] 16- 4  it/s   2380  last 0.89
+  v1                     n=20 mean   46.892  /ref 1.1331 [1.1198, 1.1491]  0-20  it/s   4800  last 0.88
+MA-AT-150-5-500
+  v2                     n=20 mean   49.767  it/s   3950  last 0.87
+  no-init                n=20 mean   54.155  /ref 1.0782 [1.0567, 1.0995]  1-19  it/s   3983  last 0.99
+  no-resort              n=20 mean   50.798  /ref 1.0219 [1.0171, 1.0266]  0-20  it/s   4451  last 0.93
+  alt                    n=20 mean   49.960  /ref 1.0032 [0.9996, 1.0071]  7-13  it/s   2348  last 0.87
+  v1                     n=20 mean   57.669  /ref 1.1485 [1.1230, 1.1732]  0-20  it/s   4567  last 0.92
+MA-AT-25-5-50
+  v2                     n=20 mean   36.682  it/s  10038  last 0.89
+  no-init                n=20 mean   36.857  /ref 1.0055 [0.9959, 1.0148]  9-11  it/s  10048  last 0.81
+  no-resort              n=20 mean   37.296  /ref 1.0187 [1.0079, 1.0311]  5-15  it/s  10465  last 0.82
+  alt                    n=20 mean   37.039  /ref 1.0108 [1.0049, 1.0171]  4-16  it/s   5217  last 0.78
+  v1                     n=20 mean   37.306  /ref 1.0185 [1.0082, 1.0293]  4-16  it/s  10841  last 0.75
+MA-AT-50-5-200
+  v2                     n=20 mean   54.380  it/s   8026  last 0.92
+  no-init                n=20 mean   59.483  /ref 1.0883 [1.0725, 1.1044]  0-20  it/s   7901  last 0.97
+  no-resort              n=20 mean   55.457  /ref 1.0187 [1.0123, 1.0250]  2-18  it/s   8749  last 0.87
+  alt                    n=20 mean   54.562  /ref 1.0029 [1.0002, 1.0058]  8-12  it/s   4879  last 0.83
+  v1                     n=20 mean   63.631  /ref 1.1661 [1.1483, 1.1847]  0-20  it/s   9006  last 0.96
+MA-AT-50-5-50
+  v2                     n=20 mean   21.187  it/s   9069  last 0.75
+  no-init                n=20 mean   21.423  /ref 1.0108 [1.0014, 1.0197]  7-13  it/s   9194  last 0.73
+  no-resort              n=20 mean   21.440  /ref 1.0114 [1.0039, 1.0195]  5-15  it/s   9697  last 0.76
+  alt                    n=20 mean   21.349  /ref 1.0073 [1.0020, 1.0132]  6-14  it/s   4375  last 0.78
+  v1                     n=20 mean   21.735  /ref 1.0250 [1.0168, 1.0331]  2-18  it/s   9669  last 0.77
+SA-AT-50-5-50
+  v2                     n=20 mean   29.734  it/s   7458  last 0.87
+  no-init                n=20 mean   30.443  /ref 1.0234 [1.0138, 1.0321]  2-18  it/s   7202  last 0.93
+  no-resort              n=20 mean   30.132  /ref 1.0134 [1.0066, 1.0204]  4-16  it/s   8056  last 0.79
+  alt                    n=20 mean   29.585  /ref 0.9948 [0.9892, 1.0001] 11- 9  it/s   3515  last 0.74
+  v1                     n=20 mean   31.500  /ref 1.0589 [1.0484, 1.0699]  0-20  it/s   8181  last 0.93
+SA-BT-25-5-50
+  v2                     n=20 mean   28.011  it/s  14296  last 0.78
+  no-init                n=20 mean   28.011  /ref 1.0007 [0.9921, 1.0095] 11- 9  it/s  14147  last 0.86
+  no-resort              n=20 mean   28.418  /ref 1.0144 [1.0074, 1.0213]  5-15  it/s  14452  last 0.81
+  alt                    n=20 mean   28.175  /ref 1.0060 [1.0025, 1.0098]  4-16  it/s   7757  last 0.72
+  v1                     n=20 mean   28.557  /ref 1.0198 [1.0111, 1.0280]  3-17  it/s  15088  last 0.81
+SA-BT-50-5-50
+  v2                     n=20 mean   17.904  it/s  12492  last 0.84
+  no-init                n=20 mean   17.838  /ref 0.9962 [0.9908, 1.0016] 12- 7  it/s  12592  last 0.75
+  no-resort              n=20 mean   18.062  /ref 1.0088 [1.0027, 1.0152]  6-13  it/s  12941  last 0.74
+  alt                    n=20 mean   17.892  /ref 0.9994 [0.9954, 1.0033] 11- 9  it/s   6266  last 0.60
+  v1                     n=20 mean   18.111  /ref 1.0116 [1.0050, 1.0187]  5-14  it/s  13231  last 0.66
+
+== Ablation, 8 workers, B1 (ref v2)
+MA-AT-150-10-500
+  v2                     n=10 mean   36.105  /CPSAT-8 0.8672  it/s  34279  last 0.96
+  alt                    n=10 mean   36.003  /ref 0.9976 [0.9899, 1.0052]  6- 4  /CPSAT-8 0.8651  it/s  20883  last 0.98
+MA-AT-150-5-500
+  v2                     n=10 mean   44.885  /CPSAT-8 0.8967  it/s  33017  last 0.97
+  alt                    n=10 mean   44.763  /ref 0.9976 [0.9942, 1.0009]  6- 4  /CPSAT-8 0.8945  it/s  19700  last 0.92
+MA-AT-25-5-50
+  v2                     n=10 mean   36.684  /CPSAT-8 0.8894  it/s  80866  last 0.35
+  no-init                n=10 mean   36.476  /ref 0.9952 [0.9899, 1.0004]  9- 1  /CPSAT-8 0.8851  it/s  80867  last 0.40
+  no-resort              n=10 mean   36.720  /ref 1.0002 [0.9914, 1.0091]  6- 4  /CPSAT-8 0.8896  it/s  83037  last 0.41
+  alt                    n=10 mean   36.450  /ref 0.9928 [0.9850, 0.9992]  7- 3  /CPSAT-8 0.8830  it/s  40881  last 0.41
+  v1                     n=10 mean   36.530  /ref 0.9960 [0.9885, 1.0033]  6- 4  /CPSAT-8 0.8858  it/s  83331  last 0.53
+MA-AT-50-5-200
+  v2                     n=10 mean   53.091  /CPSAT-8 0.8889  it/s  64997  last 0.73
+  no-init                n=10 mean   54.556  /ref 1.0243 [1.0086, 1.0377]  1- 9  /CPSAT-8 0.9106  it/s  63937  last 0.95
+  no-resort              n=10 mean   54.248  /ref 1.0242 [1.0157, 1.0350]  0-10  /CPSAT-8 0.9104  it/s  73104  last 0.88
+  alt                    n=10 mean   53.027  /ref 0.9997 [0.9936, 1.0073]  5- 5  /CPSAT-8 0.8887  it/s  39378  last 0.92
+  v1                     n=10 mean   57.067  /ref 1.0729 [1.0515, 1.0920]  0-10  /CPSAT-8 0.9538  it/s  71484  last 0.94
+MA-AT-50-5-50
+  v2                     n=10 mean   20.246  /CPSAT-8 0.9063  it/s  71212  last 0.45
+  no-init                n=10 mean   20.305  /ref 1.0045 [0.9951, 1.0140]  4- 6  /CPSAT-8 0.9103  it/s  72904  last 0.43
+  no-resort              n=10 mean   20.374  /ref 1.0064 [0.9987, 1.0140]  2- 8  /CPSAT-8 0.9120  it/s  76454  last 0.51
+  alt                    n=10 mean   20.239  /ref 1.0012 [0.9934, 1.0089]  4- 5  /CPSAT-8 0.9073  it/s  33910  last 0.33
+  v1                     n=10 mean   20.417  /ref 1.0100 [0.9969, 1.0226]  4- 6  /CPSAT-8 0.9152  it/s  77164  last 0.61
+SA-AT-50-5-50
+  v2                     n=10 mean   28.502  /CPSAT-8 0.9291  it/s  59908  last 0.77
+  no-init                n=10 mean   28.758  /ref 1.0088 [1.0006, 1.0181]  3- 7  /CPSAT-8 0.9373  it/s  59433  last 0.77
+  no-resort              n=10 mean   28.642  /ref 1.0049 [0.9984, 1.0110]  3- 7  /CPSAT-8 0.9336  it/s  67227  last 0.75
+  alt                    n=10 mean   28.466  /ref 0.9984 [0.9929, 1.0047]  6- 4  /CPSAT-8 0.9276  it/s  28249  last 0.75
+  v1                     n=10 mean   29.128  /ref 1.0214 [1.0143, 1.0308]  0-10  /CPSAT-8 0.9489  it/s  65870  last 0.85
+SA-BT-25-5-50
+  v2                     n=10 mean   27.253  /CPSAT-8 0.9109  it/s 105445  last 0.46
+  alt                    n=10 mean   27.246  /ref 0.9990 [0.9889, 1.0089]  6- 4  /CPSAT-8 0.9097  it/s  59225  last 0.50
+  v1                     n=10 mean   27.308  /ref 1.0022 [0.9949, 1.0121]  6- 3  /CPSAT-8 0.9126  it/s 114700  last 0.77
+SA-BT-50-5-50
+  v2                     n=10 mean   17.247  /CPSAT-8 0.9662  it/s 100802  last 0.27
+  no-init                n=10 mean   17.299  /ref 1.0030 [1.0002, 1.0064]  2- 4  /CPSAT-8 0.9691  it/s 100333  last 0.28
+  no-resort              n=10 mean   17.285  /ref 1.0022 [0.9995, 1.0055]  2- 4  /CPSAT-8 0.9684  it/s 105336  last 0.38
+  alt                    n=10 mean   17.249  /ref 1.0001 [0.9986, 1.0016]  3- 3  /CPSAT-8 0.9663  it/s  49320  last 0.30
+  v1                     n=10 mean   17.356  /ref 1.0062 [1.0016, 1.0120]  0- 6  /CPSAT-8 0.9721  it/s 103936  last 0.29

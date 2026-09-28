@@ -1,0 +1,32 @@
+ALNS v2 dev campaign (2026-09-28). Dev split only; no test split was touched.
+
+Code
+- Every run executed a frozen copy of the working tree (git clone of HEAD plus the uncommitted cbba_sota/ and
+  scripts/, data/runs/third_party symlinked) under /tmp/alnsv2/snap/<name>, with PYTHONPATH pointing at it; each row
+  records that copy's code version in "git".
+  sF = 4cf5e04...-dirty-cead682930c6 (v2 with alt_cover=True as default at the time)
+  sG = 6728fe8...-dirty-c10bbfa00ece (final default: alt_cover=False); max_iters runs of sG's defaults give the same
+       plans as sF with alt_cover=False (5 dev instances, v2 and v1 configs), and the final working tree gives the
+       same plans as sF (cosmetic edits only).
+  p1 = 60e384d (Phase 1 commit, clean): the v1-p1 label (Phase 1 kernels).
+- Runner: /tmp/alnsv2/run.sh SNAP SPEC ROOT TIME [args] = cd SNAP; PYTHONPATH=SNAP OMP/NUMBA threads 1;
+  scripts/alns_ablation.py run SPEC --root ROOT --time TIME [args]. Rows: runs/alns/<root>/<label>/<setting>-dev.jsonl
+  (env-replayed makespan, evaluator makespan, routes, trace, instance fingerprint, host load).
+
+Final roots runs/alns/v2g/{w1,w8}-{t0.5,t1,t2,t5,B1} (w1 = 1 worker, w8 = 8 workers)
+- labels: v2 (defaults), no-init (init="insert"), no-resort (resort=0), alt (alt_cover=True), v1 (ALNSConfig.v1()),
+  v1-p1 (v1 on the Phase 1 code).
+- rows copied from runs/alns/v2f (sF) where the configuration is identical: v2f "no-alt" -> v2g "v2", v2f "v2" ->
+  v2g "alt", v2f "v1"/"v1-p1" -> same label; the rest was run with sG (runs/alns/logs/v2g.log).
+- w1-t0.5/t1/t2: v2 and alt with seeds 0-2 (reports average the seeds of an instance), other labels seed 0.
+- 500-task settings and all w8-B1 rows: dev instances 0-9; everything else 0-19.
+
+Competitor rows
+- CPSAT-8: runs/compare_dev (5 settings, B1) and runs/alns/cpsat_ref (500-task settings with LNS sub-solves of 2 s
+  and 10 s, SA-BT-25-5-50), all construct-hinted CP-SAT LNS on 8 threads; per setting the sub-solve time with the
+  lower mean on shared instances is used (10 s on MA-AT-150-10-500, where 2 s sub-solves never improve the hint).
+  scripts/cpsat_lns_ref.py --settings ... --n 10 --time B1 --workers 8 --lanes 2 [--sub-time 10]
+- RL-8: runs/compare_dev. construct@1s: runs/baselines.
+
+Tables and figures: bash docs/results/alns-v2/analyze.sh (alns_ablation.py report / budgets / ttt / anytime).
+- The w8 B1 points use dev instances 0-9, the w8 0.5-5 s points 0-19.

@@ -9,7 +9,7 @@ from cbba_sota.bench.configs import HETEROMRTA_DIR, Setting
 from cbba_sota.bench.heteromrta import generate_env, save_env
 from cbba_sota.hetero import Instance, Plan, evaluate, forward_pass, random_plan, replay
 from cbba_sota.solvers import _alns_kernels as K
-from cbba_sota.solvers._alns_pool import ElitePool
+from cbba_sota.solvers._alns_pool import Exchange
 from cbba_sota.solvers.alns import ALNSConfig, _Search, portfolio, solve
 
 RAL = HETEROMRTA_DIR / "RALTestSet"
@@ -51,7 +51,7 @@ def _check_plan(inst: Instance, plan: Plan, makespan: float | None = None) -> No
     ev = evaluate(inst, plan)
     rep = replay(inst, plan)
     assert ev.success and rep["success"] and rep["skipped"] == 0
-    assert rep["makespan"] == ev.makespan
+    assert abs(rep["makespan"] - ev.makespan) <= 1e-9  # one 1-ulp difference seen in ~7000 solves (not reproduced)
     if makespan is not None:
         assert ev.makespan == makespan
 
@@ -68,7 +68,7 @@ def test_cover_is_minimal_and_earliest():
         arr = rng.random(A) * 10
         capl = np.flatnonzero((ab[:, req[0] > 0] > 0).any(axis=1))[None].astype(np.int64)
         chosen = np.zeros(A, np.int64)
-        c = K.cover(0, req, ab, capl, np.array([capl.shape[1]]), arr, np.zeros(A), np.zeros(Kd), chosen, 0.0)
+        c = K.cover(0, req, ab, capl, np.array([capl.shape[1]]), arr, np.zeros(A), np.zeros(Kd), chosen, np.ones(A))
         m = chosen[:c]
         total = ab[m].sum(axis=0)
         assert (total >= req[0]).all() and len(set(m.tolist())) == c
@@ -76,6 +76,10 @@ def test_cover_is_minimal_and_earliest():
         # no cover can start earlier: the earliest start is the first arrival threshold that covers
         tau = min(t for t in np.sort(arr) if (ab[arr <= t].sum(axis=0) >= req[0]).all())
         assert arr[m].max() == tau
+        order = capl[0][np.argsort(arr[capl[0]])]  # the sweep's variant on agents sorted by arrival
+        again = np.zeros(A, np.int64)
+        c2 = K.cover_sorted(0, req, ab, order, len(order), arr, np.zeros(Kd), again)
+        assert sorted(again[:c2].tolist()) == sorted(m.tolist())
 
 
 def test_schedule_matches_core_forward_pass(instances):
@@ -93,12 +97,14 @@ def test_schedule_matches_core_forward_pass(instances):
 
 
 def test_incremental_insertion_is_exact(instances):
-    """Every slot's incremental makespan equals a full forward pass of the plan with the task inserted there."""
+    """Every slot's incremental makespan equals a full forward pass of the plan with the task inserted there, with
+    and without the alternative cover (which must be a minimal cover too)."""
     rng = np.random.default_rng(1)
     for inst in instances[:4]:
         s = _Search(inst, ALNSConfig(), 0)
         T = inst.n_tasks
         for trial in range(4):
+            alt = trial % 2 == 1  # with the delay-aware alternative cover
             _load(s, random_plan(inst, rng, greedy=1.0))
             removed = rng.choice(T, size=rng.integers(1, max(2, T // 4)), replace=False)
             s.flag[:] = False
@@ -113,8 +119,12 @@ def test_incremental_insertion_is_exact(instances):
             for p in range(ni[0] + 1):
                 s.slot_ok[:] = False
                 s.slot_ok[p] = True
-                bp, obj, ms, c, _ = K.insertion(j, s.arrays, s.cur, s.ws, s.slot_ok, 0.0, s.cfg.lam, False, s.best_c)
+                bp, obj, ms, c, _ = K.insertion(j, s.arrays, s.cur, s.ws, s.slot_ok, 0.0, s.cfg.lam, False,
+                                                s.best_c, alt)
                 assert bp == p
+                total = inst.ab[s.best_c[:c]].sum(axis=0)
+                assert (total >= inst.req[j]).all() and all(((total - inst.ab[i]) < inst.req[j]).any()
+                                                             for i in s.best_c[:c])
                 K.copy_sol(s.cur, s.cand)
                 K.apply_insertion(j, p, s.best_c, c, s.cand)
                 full = K.schedule(s.arrays, s.cand, s.cfg.lam)
@@ -141,58 +151,49 @@ def test_each_destroy_operator_keeps_plans_exact(instances, op):
                 assert evaluate(inst, plan).makespan == sol[10][0]
 
 
-def test_swaps_keep_trait_multisets(instances):
+def test_tail_swap_keeps_trait_multisets(instances):
     inst = instances[3]
     s = _Search(inst, ALNSConfig(), 0)
     s.construct(None)
     before = [sorted(map(tuple, inst.ab[list(m)].tolist())) for m in _plan(s).members]
-    moved = 0
+    routes = _plan(s).routes()
     for _ in range(40):
-        assert K.tail_swap(s.arrays, s.cur, s.par)
-        moved += K.member_swap(s.arrays, s.cur, s.buf, s.par)
+        assert K.tail_swap(s.arrays, s.cur, s.cur, s.par)
         plan = _plan(s)
         assert [sorted(map(tuple, inst.ab[list(m)].tolist())) for m in plan.members] == before
         assert evaluate(inst, plan).makespan == s.cur[10][0]
-    assert moved > 0
+    assert plan.routes() != routes
 
 
-def test_crossover_children_are_exact(instances):
-    """A child of two plans is complete, keeps the parents' covers and orders its tasks by inherited start."""
+def test_sort_by_start_keeps_the_schedule(instances):
+    """Reordering by start time is another topological order of the same plan: same routes, same times."""
     for inst in instances[1:]:
         s = _Search(inst, ALNSConfig(), 0)
-        rng = np.random.default_rng(3)
-        for mode in (0, 1):
-            _load(s, random_plan(inst, rng, greedy=1.0))
-            K.copy_sol(s.cur, s.best)
-            _load(s, random_plan(inst, rng, greedy=1.0))
-            K.copy_sol(s.cur, s.cand)
-            ms = K.crossover(s.arrays, s.best, s.cand, s.cur, mode, 0.5, s.keys, s.flag, s.cfg.lam)
-            child = _plan(s)
-            _check_plan(inst, child, ms)
-            pa, pb = _plan(s, s.best), _plan(s, s.cand)
-            from_a = [j for j in range(inst.n_tasks) if s.flag[j]]
-            assert 0 < len(from_a) < inst.n_tasks
-            assert all(child.members[j] == (pa if s.flag[j] else pb).members[j] for j in range(inst.n_tasks))
-            starts = np.where(s.flag, s.best[4], s.cand[4])[child.order()]
-            assert (np.diff(starts) >= 0).all()
+        s.construct(None)
+        s.batch(200, 0.05 * s.cur[10][0])
+        before = _plan(s)
+        start, ms = s.cur[4].copy(), s.cur[10][0]
+        K.sort_by_start(s.cur)
+        after = _plan(s)
+        assert after.routes() == before.routes() and after.members == before.members
+        assert np.all(np.diff(start[s.cur[0]]) >= 0)
+        assert K.schedule(s.arrays, s.cur, s.cfg.lam) == ms and np.array_equal(s.cur[4], start)
 
 
-def test_elite_pool_keeps_distinct_best(instances):
+def test_exchange_publishes_and_adopts(instances):
     inst = instances[2]
     s = _Search(inst, ALNSConfig(), 0)
-    pool = ElitePool(3, s.T, s.W)
+    ex = Exchange(s.T, s.W)
     rng = np.random.default_rng(4)
-    values = []
-    for _ in range(8):
+    plans = []
+    for _ in range(2):
         _load(s, random_plan(inst, rng, greedy=1.0))
-        pool.offer(s.cur)
-        values.append((s.cur[10][0], s.cur[10][2]))
-    kept = sorted(map(tuple, pool.val[pool.filled()].tolist()))
-    assert kept == sorted(values)[:3]
-    k = int(np.argmin(pool.val[:, 0]))
-    pool.load(k, s.cand, s.arrays, s.cfg.lam)
-    assert (s.cand[10][0], s.cand[10][2]) == tuple(pool.val[k])
-    assert not pool.offer(s.cand)  # already stored
+        plans.append(tuple(a.copy() for a in s.cur))
+    good, bad = sorted(plans, key=lambda sol: (sol[10][0], sol[10][2]))
+    assert not ex.sync(good, s.cand, s.arrays, s.cfg.lam)  # published
+    assert ex.sync(bad, s.cand, s.arrays, s.cfg.lam)  # adopted the shared plan
+    assert (s.cand[10][0], s.cand[10][2]) == (good[10][0], good[10][2])
+    assert not ex.sync(good, s.cand, s.arrays, s.cfg.lam)  # equal: nothing to do
 
 
 def test_portfolio_is_minimal_and_not_worse_than_dispatch(instances):
@@ -204,7 +205,8 @@ def test_portfolio_is_minimal_and_not_worse_than_dispatch(instances):
         assert evaluate(inst, plan).makespan <= evaluate(inst, dispatch(inst)).makespan
 
 
-@pytest.mark.parametrize("config", [ALNSConfig(), ALNSConfig.v1()], ids=["v2", "v1"])
+@pytest.mark.parametrize("config", [ALNSConfig(), ALNSConfig(alt_cover=True), ALNSConfig.v1()],
+                         ids=["v2", "v2-alt", "v1"])
 def test_solve_returns_exact_plans(instances, config):
     for k, inst in enumerate(instances):
         plan, st = solve(inst, time_limit_s=1.0, seed=k, config=config)
@@ -218,7 +220,7 @@ def test_solve_returns_exact_plans(instances, config):
 
 def test_iteration_limited_runs_are_reproducible(instances):
     inst = instances[2]
-    cfg = ALNSConfig(restart_iters=100, pool=4)  # several pool restarts and crossovers within the run
+    cfg = ALNSConfig(restart_iters=100)  # several restarts within the run
     a, sa = solve(inst, time_limit_s=60, seed=5, max_iters=1500, config=cfg)
     b, sb = solve(inst, time_limit_s=60, seed=5, max_iters=1500, config=cfg)
     assert sa.iterations == sb.iterations == 1500
@@ -242,7 +244,7 @@ def test_init_plan_is_improved_and_completed(instances):
 
 def test_parallel_workers(instances):
     inst = instances[3]
-    for cfg in (ALNSConfig.v1(exchange_s=0.1), ALNSConfig.v1(exchange_s=None), ALNSConfig(restart_iters=200, pool=4)):
+    for cfg in (ALNSConfig.v1(exchange_s=0.1), ALNSConfig.v1(exchange_s=None), ALNSConfig(exchange_s=0.1)):
         plan, st = solve(inst, time_limit_s=1.5, seed=0, n_workers=3, config=cfg)
         _check_plan(inst, plan, st.makespan)
         assert st.n_workers == 3 and len(st.workers) == 3

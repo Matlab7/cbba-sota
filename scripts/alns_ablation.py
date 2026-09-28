@@ -2,17 +2,24 @@
 
 Usage:
   alns_ablation.py run SPEC.json --root v2abl/w1 [--settings ...] [--n 20] [--time B1] [--workers 1] [--procs 40]
+                       [--seed 0]
   alns_ablation.py report --root v2abl/w1 REF [LABEL ...] [--csv FILE]
   alns_ablation.py anytime --root v2abl/w1 LABEL [LABEL ...] [--cpsat] --png FILE
+  alns_ablation.py budgets --roots v2e/t1 v2e/t2 ... --labels v1 v2 [--ref CPSAT-8] [--ref-budget B1] [--csv FILE]
+                           [--png FILE]
+  alns_ablation.py ttt --root v2e/B1 LABEL [LABEL ...] [--ref CPSAT-8]
 
 SPEC maps a label to ALNSConfig overrides of the v2 defaults (``{"preset": "v1"}`` starts from the Phase 1
-configuration). ``run`` shuffles the jobs of all variants (seed 0) into one pool, so every variant sees the same
-host conditions, and writes run_alns rows (env-replayed makespans) to runs/alns/<root>/<label>/<setting>-dev.jsonl;
-it resumes. ``report`` prints, per setting, each variant's mean makespan, its paired ratio to REF with a bootstrap
-95% CI (10,000 resamples, seed 0) and wins/losses, and its paired ratio to CPSAT-8 at the same budget label from
-runs/compare_dev (B1/B2 runs only). A failed run counts as 200. ``anytime`` plots, per setting, the mean ratio of each
-variant's best-so-far makespan (from the stored traces) to CPSAT-8's final makespan against the share of the
-budget; ``--cpsat`` adds the CP-SAT LNS traces of runs/alns/cpsat_ref at the same budget.
+configuration). ``run`` shuffles the jobs of all variants into one pool, so every variant sees the same host
+conditions, and writes run_alns rows (env-replayed makespans) to runs/alns/<root>/<label>/<setting>-dev.jsonl; it
+resumes per (instance, seed), and reports average the seeds of an instance. ``report`` prints, per setting, each
+variant's mean makespan, its paired ratio to REF with a bootstrap 95% CI (10,000 resamples, seed 0) and
+wins/losses, and its paired ratio to CPSAT-8 at the same budget. A failed run counts as 200. ``anytime`` plots,
+per setting, the mean ratio of each variant's best-so-far makespan (from the stored traces) to CPSAT-8's final
+makespan against the share of the budget; ``--cpsat`` adds the CP-SAT LNS traces of runs/alns/cpsat_ref.
+``budgets`` compares runs at several budgets (one root per budget) with a competitor at one budget (default B1),
+per label and core count. ``ttt`` reads the time at which each run's best-so-far first reached that competitor's
+B1 makespan. Competitor rows come from runs/compare_dev, runs/alns/cpsat_ref and runs/baselines (``_reference``).
 """
 from __future__ import annotations
 
@@ -36,9 +43,24 @@ from cbba_sota.bench.configs import MAX_TIME, RUNS_DIR
 SETTINGS = ("MA-AT-25-5-50", "SA-AT-50-5-50", "MA-AT-50-5-50", "SA-BT-50-5-50", "MA-AT-50-5-200", "SA-BT-25-5-50")
 
 
+def _runs(path: Path) -> dict[int, dict[int, dict]]:
+    """Rows by instance index and seed, only those computed on the current instance (the last one wins)."""
+    out: dict[int, dict[int, dict]] = {}
+    for r in runtime.read_rows(path):
+        if runtime.is_current(r):
+            out.setdefault(r["index"], {})[r["seed"]] = r
+    return out
+
+
 def _rows(path: Path) -> dict[int, dict]:
-    """Rows by instance index, only those computed on the current instance (the last one wins)."""
-    return {r["index"]: r for r in runtime.read_rows(path) if runtime.is_current(r)}
+    """One row per instance: that of the lowest seed, with ``makespan`` replaced by the mean score over its seeds
+    (``seeds`` counts them) and ``success`` by all of them succeeding."""
+    out = {}
+    for i, by_seed in _runs(path).items():
+        rows = [by_seed[k] for k in sorted(by_seed)]
+        out[i] = rows[0] | {"makespan": float(np.mean([_score(r) for r in rows])), "seeds": len(rows),
+                            "success": all(r["success"] for r in rows)}
+    return out
 
 
 def run(args) -> None:
@@ -53,7 +75,7 @@ def run(args) -> None:
         for name in args.settings:
             s = configs.get(name)
             out = RUNS_DIR / "alns" / args.root / label / f"{name}-{args.split}.jsonl"
-            done = _rows(out)
+            done = {i for i, by_seed in _runs(out).items() if args.seed in by_seed}
             n = min(args.n or s.n_instances(args.split), s.n_instances(args.split))
             jobs += [(out, {"setting": name, "split": args.split, "index": i, "name": f"{name}/{args.split}/{i}",
                             "label": label}, s.instance_path(args.split, i), run_alns.budget(s, args.time),
@@ -82,13 +104,33 @@ def _boot(x: np.ndarray, reps: int = 10_000) -> tuple[float, float]:
     return float(np.quantile(means, 0.025)), float(np.quantile(means, 0.975))
 
 
-def _cpsat(budget_s: float) -> dict[tuple[str, int], float]:
-    """CPSAT-8 of runs/compare_dev at the budget label (B1 or B2) whose seconds equal ``budget_s``."""
+def _reference(budget_s: float, method: str = "CPSAT-8") -> dict[tuple[str, int], float]:
+    """Scores of a competitor per (setting, instance) at ``budget_s`` seconds: ``method`` rows of runs/compare_dev,
+    then (CPSAT-8 only) the CP-SAT LNS rows of runs/alns/cpsat_ref (per setting the sub-solve time with the best
+    mean), then ``method`` rows of runs/baselines (e.g. ``construct`` at 1 s) where the earlier sources have none.
+    Stale rows are dropped."""
     out = {}
     for path in (RUNS_DIR / "compare_dev").glob("*.jsonl"):
-        for r in map(json.loads, path.read_text().splitlines()):
-            if r["method"] == "CPSAT-8" and abs(r["budget_s"] - budget_s) < 1e-6:
+        for r in runtime.read_rows(path):
+            if r["method"] == method and abs(r["budget_s"] - budget_s) < 1e-6 and not runtime.is_stale(r):
                 out[r["setting"], r["instance"]] = _score(r)
+    if method == "CPSAT-8":  # per setting, the LNS sub-solve time with the best mean (the best variant on dev)
+        variants: dict[tuple[str, float], dict[int, float]] = {}
+        for path in (RUNS_DIR / "alns" / "cpsat_ref").glob("*-dev.jsonl"):
+            for r in runtime.read_rows(path):
+                if r["workers"] == 8 and abs(r["budget_s"] - budget_s) < 1e-6 and runtime.is_current(r):
+                    variants.setdefault((r["setting"], r.get("sub_time", 2.0)), {})[r["index"]] = _score(r)
+        for setting in {s for s, _ in variants}:
+            runs = [scores for (s, _), scores in sorted(variants.items()) if s == setting]
+            common = set.intersection(*(set(scores) for scores in runs))  # compare the variants on shared instances
+            best = min(runs, key=lambda scores: (np.mean([scores[i] for i in common]) if common else 0.0, -len(scores)))
+            for i, v in best.items():
+                out.setdefault((setting, i), v)
+    for path in (RUNS_DIR / "baselines").glob("*/dev.jsonl"):
+        for r in runtime.read_rows(path):
+            if (r["method"] == method and r.get("budget_s") is not None and abs(r["budget_s"] - budget_s) < 1e-6
+                    and not runtime.is_stale(r)):
+                out.setdefault((r["setting"], r["instance"]), _score(r))
     return out
 
 
@@ -115,7 +157,7 @@ def report(args) -> None:
                 ratio_ref, (lo, hi) = r.mean(), _boot(r)
                 wins, losses = int((r < 1 - 1e-9).sum()), int((r > 1 + 1e-9).sum())
                 text += f"  /ref {ratio_ref:.4f} [{lo:.4f}, {hi:.4f}] {wins:2d}-{losses:2d}"
-            cp = _cpsat(rows[idx[0]]["time_limit"])
+            cp = _reference(rows[idx[0]]["time_limit"])
             cc = [i for i in idx if (setting, i) in cp]
             ratio_cp = np.mean([_score(rows[i]) / cp[setting, i] for i in cc]) if cc else np.nan
             if cc:
@@ -156,7 +198,7 @@ def anytime(args) -> None:
             curves["CP-SAT LNS x8"] = {i: r | {"time_limit": r["budget_s"]} for i, r in ref.items()
                                        if r["workers"] == 8 and abs(r["budget_s"] - limit) < 1e-6}
         limit = next(iter(next(iter(curves.values())).values()))["time_limit"]
-        cp = _cpsat(limit)
+        cp = _reference(limit)
         for lab, rows in curves.items():
             idx = [i for i in sorted(rows) if (setting, i) in cp]
             if not idx:
@@ -173,6 +215,95 @@ def anytime(args) -> None:
     fig.tight_layout()
     fig.savefig(args.png, dpi=120)
     print(f"wrote {args.png}")
+
+
+def budgets(args) -> None:
+    """Quality against the budget: per setting, label and core count, the mean paired ratio of each budget's runs to
+    ``args.ref`` at ``args.ref_budget`` (bootstrap 95% CI, wins), optionally plotted against seconds."""
+    rows: dict[tuple, dict[int, dict]] = {}
+    for root in args.roots:
+        for lab in args.labels:
+            for path in sorted((RUNS_DIR / "alns" / root / lab).glob("*-dev.jsonl")):
+                for i, r in _rows(path).items():
+                    rows.setdefault((r["setting"], lab, r["workers"], r["time_limit"]), {})[i] = r
+    b1 = {s: run_alns.budget(configs.get(s), args.ref_budget) for s in {k[0] for k in rows}}
+    lines = ["setting,label,workers,budget_s,n,mean,ratio,ci_lo,ci_hi,wins,losses"]
+    curves: dict[tuple, list] = {}
+    for key in sorted(rows):
+        setting, lab, workers, limit = key
+        ref = _reference(b1[setting], args.ref)
+        idx = [i for i in sorted(rows[key]) if (setting, i) in ref]
+        ms = np.array([_score(rows[key][i]) for i in sorted(rows[key])])
+        text = f"{setting:18s} {lab:14s} x{workers} {limit:7.2f}s n={len(ms):2d} mean {ms.mean():8.3f}"
+        ratio = lo = hi = np.nan
+        wins = losses = 0
+        if idx:
+            r = np.array([_score(rows[key][i]) / ref[setting, i] for i in idx])
+            ratio, (lo, hi) = r.mean(), _boot(r)
+            wins, losses = int((r < 1 - 1e-9).sum()), int((r > 1 + 1e-9).sum())
+            text += (f"  /{args.ref}@{args.ref_budget} {ratio:.4f} [{lo:.4f}, {hi:.4f}] {wins:2d}-{losses:2d} "
+                     f"(n={len(idx)})")
+            curves.setdefault((setting, lab, workers), []).append((limit, ratio, lo, hi))
+        print(text)
+        lines.append(f"{setting},{lab},{workers},{limit},{len(ms)},{ms.mean():.4f},{ratio:.4f},{lo:.4f},{hi:.4f},"
+                     f"{wins},{losses}")
+    if args.csv:
+        Path(args.csv).write_text("\n".join(lines) + "\n")
+    if args.png:
+        import matplotlib
+
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+
+        settings = sorted({k[0] for k in curves})
+        cols = min(4, len(settings))
+        rows = -(-len(settings) // cols)
+        fig, axes = plt.subplots(rows, cols, figsize=(3.8 * cols, 3.2 * rows), squeeze=False)
+        for ax in axes.flat[len(settings):]:
+            ax.axis("off")
+        colors = {key: f"C{k}" for k, key in enumerate(sorted({(lab, w) for _, lab, w in curves}))}
+        for ax, setting in zip(axes.flat, settings):
+            for (s, lab, workers), pts in sorted(curves.items()):
+                if s == setting:
+                    x, y, lo, hi = map(np.array, zip(*sorted(pts)))
+                    c = colors[lab, workers]
+                    ax.plot(x, y, marker="o", ms=3, color=c, label=f"{lab} x{workers}")
+                    ax.fill_between(x, lo, hi, color=c, alpha=0.15)
+            ax.axhline(1.0, color="grey", lw=0.8, ls=":")
+            ax.axvline(b1[setting], color="grey", lw=0.8, ls="--")
+            ax.set_xscale("log")
+            ax.set_title(setting, fontsize=9)
+            ax.set_xlabel("budget (s)")
+        for row in axes:
+            row[0].set_ylabel(f"makespan / {args.ref} at {args.ref_budget}")
+        handles = [plt.Line2D([], [], color=c, marker="o", ms=3, label=f"{lab} x{w}") for (lab, w), c in colors.items()]
+        axes.flat[len(settings) - 1].legend(handles=handles, fontsize=7)
+        fig.tight_layout()
+        fig.savefig(args.png, dpi=120)
+        print(f"wrote {args.png}")
+
+
+def ttt(args) -> None:
+    """Time to target: per setting and label, the seconds until the best-so-far makespan (run trace) first reaches
+    ``args.ref``'s makespan at B1 on the same instance (median over instances, unreached counted as never)."""
+    for lab in args.labels:
+        for path in sorted((RUNS_DIR / "alns" / args.root / lab).glob("*-dev.jsonl")):
+            rows = _rows(path)
+            if not rows:
+                continue
+            setting = next(iter(rows.values()))["setting"]
+            ref = _reference(run_alns.budget(configs.get(setting), "B1"), args.ref)
+            times = []
+            for i, r in rows.items():
+                if (setting, i) in ref:
+                    hit = [t for t, ms in r["trace"] if ms <= ref[setting, i] + 1e-9]
+                    times.append(hit[0] if hit else np.inf)
+            if times:
+                t = np.array(times)
+                limit = next(iter(rows.values()))["time_limit"]
+                print(f"{setting:18s} {lab:14s} x{next(iter(rows.values()))['workers']} budget {limit:7.2f}s  "
+                      f"reached {np.isfinite(t).sum():2d}/{len(t)}  median {np.median(t):7.2f}s  "
+                      f"q25 {np.quantile(t, 0.25):7.2f}s  q75 {np.quantile(t, 0.75):7.2f}s")
 
 
 def main() -> None:
@@ -198,8 +329,23 @@ def main() -> None:
     a.add_argument("labels", nargs="+")
     a.add_argument("--cpsat", action="store_true")
     a.add_argument("--png", required=True)
+    b = sub.add_parser("budgets")
+    b.add_argument("--roots", nargs="+", required=True)
+    b.add_argument("--labels", nargs="+", required=True)
+    b.add_argument("--ref", default="CPSAT-8")
+    b.add_argument("--ref-budget", default="B1", help="budget of the reference rows: B1 or seconds")
+    b.add_argument("--csv")
+    b.add_argument("--png")
+    t = sub.add_parser("ttt")
+    t.add_argument("--root", required=True)
+    t.add_argument("labels", nargs="+")
+    t.add_argument("--ref", default="CPSAT-8")
     args = ap.parse_args()
-    if args.cmd == "anytime":
+    if args.cmd == "ttt":
+        ttt(args)
+    elif args.cmd == "budgets":
+        budgets(args)
+    elif args.cmd == "anytime":
         anytime(args)
     elif args.cmd == "run":
         if args.split == "test":

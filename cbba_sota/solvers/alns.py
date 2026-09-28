@@ -3,16 +3,22 @@
 A plan is a global task order plus one minimal-cover coalition per task; every agent visits its tasks in that
 order, so plans are deadlock-free and the forward pass equals the env replay (``cbba_sota.hetero``). Each
 iteration removes a few tasks (random, Shaw-related, longest-waiting, critical chain, route segment) and reinserts
-them at their best slot with a greedy minimal cover by earliest arrival (random / noisy / largest-first / regret-2
-order), or moves visits between identical agents (route tails, single visits). Moves are accepted by simulated
-annealing on ``makespan + lam * mean finish time``; operator weights adapt by segment scores (Ropke & Pisinger
-2006). The best plan is kept by (makespan, objective).
+them at their best slot (random / noisy / largest-first / regret-2 order), or exchanges route tails between
+identical agents. Moves are accepted by simulated annealing on ``makespan + lam * mean finish time``, cooled
+geometrically over the budget; operator weights adapt by segment scores (Ropke & Pisinger 2006). The best plan is
+kept by (makespan, objective).
 
-v2 (the default) starts from a constructor portfolio run for a share of the budget and restarts stagnating
-searches from an elite pool shared by all workers, half of the time from a crossover child of two elites. v1
-(``ALNSConfig.v1()``) starts from its own insertion, restarts from its best plan and lets forked workers share
-their incumbent. Settings were tuned on dev instances only. Kernels compile on first use (~30 s, cached on disk by
-numba).
+v2 (the default) differs from Phase 1 (``ALNSConfig.v1()``, kept for ablations) in
+- construction: the best of randomized dispatch and insertion constructions run for ``init_share`` of the budget
+  (``portfolio``), instead of one own random-order insertion;
+- order: after an accepted move the tasks are re-sorted by start time with probability ``resort`` (same plan,
+  insertion slots on a time line);
+- kernels: an exact per-slot makespan from longest-path tails, identical slots skipped, covers from agents kept
+  sorted by arrival, no plan copy per iteration.
+A delay-aware alternative cover per slot (``alt_cover``) is optional: it finds better single insertions but halves
+the iteration rate, and on dev it helped only SA-AT-50-5-50 and MA-AT-150-10-500. Elite pools with crossover,
+restarts from kicked elites, growing removal sizes, member swaps and per-worker settings were tried and not kept.
+Settings were tuned on dev instances only. Kernels compile on first use (~30 s, cached on disk by numba).
 """
 from __future__ import annotations
 
@@ -27,7 +33,7 @@ import numpy as np
 from cbba_sota.hetero import Instance, Plan, evaluate
 from cbba_sota.solvers import _alns_kernels as K
 from cbba_sota.solvers import greedy
-from cbba_sota.solvers._alns_pool import ElitePool, Exchange
+from cbba_sota.solvers._alns_pool import Exchange
 
 __all__ = ["ALNSConfig", "ALNSStats", "portfolio", "solve"]
 
@@ -50,25 +56,21 @@ class ALNSConfig:
     t_start: float | None = None  # SA start temperature relative to the initial objective (None: ``t_start_rule``)
     t_end_ratio: float = 0.02  # end temperature / start temperature (geometric cooling over the budget)
     batch_s: float = 0.02  # wall time between returns to Python (deadline and trace resolution)
-    exchange_s: float | None = 1.0  # incumbent exchange period between workers without a pool (None: independent)
+    exchange_s: float | None = 1.0  # incumbent exchange period between workers (None: independent workers)
     verify: bool = True  # check the returned plan (minimal covers, evaluator == search objective)
+    ops_off: tuple[str, ...] = ()  # destroy operators never used
     # v2
     init: str = "portfolio"  # "insert": own random-order best insertion (v1); "portfolio": see ``portfolio``
     init_share: float = 0.05  # budget share of the portfolio construction (at least one dispatch runs)
     init_noise: tuple[float, ...] = (0.01, 0.03, 0.1, 0.3)  # noise levels of the randomized dispatches
-    ops_off: tuple[str, ...] = ("member_swap",)  # destroy operators never used
-    q_stag: int = 0  # grow the removal cap by one every q_stag iterations without improvement (0: off)
-    q_big: int = 12  # limit of that growth
-    pool: int = 0  # elite pool size (0: restart from the best plan, v1)
-    xover: float = 0.5  # share of pool restarts from a crossover child (else from a random elite)
-    xover_frac: tuple[float, float] = (0.3, 0.7)  # range of the share of tasks inherited from the first parent
-    kick_q: int = 0  # tasks removed and reinserted when restarting from an elite
-    worker_temp: tuple[float, ...] = (1.0,)  # start temperature factor of worker k: worker_temp[k % len]
+    resort: float = 0.1  # probability of reordering the tasks by start time after an accepted move
+    alt_cover: bool = False  # also try a delay-aware cover where the earliest one delays other tasks (``insertion``)
 
     @classmethod
     def v1(cls, **changes) -> ALNSConfig:
         """The Phase 1 configuration (for ablations)."""
-        return dataclasses.replace(cls(init="insert", ops_off=("member_swap",), q_stag=0, pool=0), **changes)
+        v1 = cls(init="insert", resort=0.0)
+        return dataclasses.replace(v1, **changes)
 
 
 @dataclass
@@ -86,7 +88,6 @@ class ALNSStats:
     improvements: int = 0
     accepted: int = 0
     restarts: int = 0
-    crossovers: int = 0
     destroy_weights: dict[str, float] = field(default_factory=dict)
     repair_weights: dict[str, float] = field(default_factory=dict)
     n_workers: int = 1
@@ -179,10 +180,10 @@ def _new_sol(T: int, A: int, W: int) -> tuple:
 
 class _Search:
     """One worker: numba state plus the Python batch loop. ``best`` is the best plan of the current cycle (since
-    the last restart), ``gbest`` the worker's best overall."""
+    the last restart to it), ``gbest`` the worker's best overall."""
 
-    def __init__(self, inst: Instance, cfg: ALNSConfig, seed: int, rank: int = 0):
-        self.inst, self.cfg, self.seed, self.rank = inst, cfg, seed, rank
+    def __init__(self, inst: Instance, cfg: ALNSConfig, seed: int):
+        self.inst, self.cfg, self.seed = inst, cfg, seed
         T, A = inst.n_tasks, inst.n_agents
         self.T, self.A, self.W = T, A, _width(inst)
         self.arrays = _inst_arrays(inst)
@@ -191,14 +192,15 @@ class _Search:
         self.ws = (np.zeros(A), np.zeros(A), np.zeros(inst.n_traits), np.zeros(A, np.int64),  # arr key need chosen
                    np.zeros(A, np.int64), np.zeros(A), np.full(A, -1, np.int64),  # overlay: stamp free last
                    np.zeros(len(K.COUNTERS), np.int64),
-                   np.zeros(T + 1, np.int64), np.zeros(T + 1), np.zeros(T + 1), np.zeros(T + 1),  # slot p f bound ms
-                   np.zeros(T + 1, np.int64), np.zeros((T + 1, W), np.int64),  # slot cover
-                   np.full(A, -1, np.int64), np.zeros(A, np.int64), np.zeros(A, np.int64))  # route position
+                   np.zeros(2 * T + 2, np.int64), np.zeros(2 * T + 2), np.zeros(2 * T + 2),  # candidate slot p f bound
+                   np.zeros(2 * T + 2), np.zeros(2 * T + 2, np.int64), np.zeros((2 * T + 2, W), np.int64),  # ms cover
+                   np.full(A, -1, np.int64), np.zeros(A, np.int64), np.zeros(A, np.int64),  # route position
+                   np.zeros(A),  # arrival keys of the alternative cover
+                   np.zeros(A, np.int64), np.zeros(A, np.int64), np.zeros(A), np.zeros(A))  # order rank key noise
         self.slot_ok = np.zeros(T + 1, np.bool_)
         self.posn = np.full(T, -1, np.int64)
         self.best_c, self.regret_c = np.zeros(A, np.int64), np.zeros(A, np.int64)
         self.removed, self.flag, self.buf = np.zeros(T, np.int64), np.zeros(T, np.bool_), np.zeros(T, np.int64)
-        self.keys = np.zeros(T)
         nd, nr = len(K.DESTROY), len(K.REPAIR)
         self.wd = np.array([0.0 if op in cfg.ops_off else 1.0 for op in K.DESTROY])
         self.wr = np.ones(nr)
@@ -207,12 +209,11 @@ class _Search:
         q_hi = max(1, min(q_hi, T))
         q_lo = max(1, min(q_lo, q_hi))
         self.par = np.array([cfg.lam, cfg.noise, q_lo, q_hi, cfg.max_slots, cfg.shaw_p, cfg.worst_p,
-                             cfg.regret_max_q, cfg.rho, cfg.seg_len, *cfg.sigma, cfg.restart_iters, cfg.q_stag,
-                             max(q_hi, min(cfg.q_big, T)), cfg.pool > 0], float)
+                             cfg.regret_max_q, cfg.rho, cfg.seg_len, *cfg.sigma, cfg.restart_iters, cfg.alt_cover,
+                             cfg.resort], float)
         assert len(self.par) == len(K.PARAMS)
         self.stats = np.zeros(len(K.STATS), np.int64)
         self.rng = np.random.default_rng(seed)
-        self.crossovers = 0
         K.seed(seed)
 
     def construct(self, init: Plan | None, until: float = -np.inf, builds: int | None = None) -> None:
@@ -239,7 +240,7 @@ class _Search:
         todo = todo[np.random.default_rng(self.seed).permutation(len(todo))].astype(np.int64)
         K.schedule(self.arrays, cur, cfg.lam)
         K.construct(todo, self.arrays, cur, self.ws, self.slot_ok, self.posn, self.best_c, 0.0, cfg.lam,
-                    cfg.max_slots)
+                    cfg.max_slots, bool(cfg.alt_cover))  # one type: no recompilation
         K.copy_sol(cur, self.best)
         K.copy_sol(cur, self.gbest)
         self.counters0 = self.ws[7].copy()  # search counters exclude the construction
@@ -261,34 +262,10 @@ class _Search:
             return True
         return False
 
-    def restart(self, pool: ElitePool) -> None:
-        """End the cycle: offer its best plan to the pool and continue from a crossover child of two elites or from
-        a random elite (perturbed by ``kick_q`` removals)."""
-        cfg = self.cfg
-        pool.offer(self.best)
-        elites = pool.filled()
-        if len(elites) >= 2 and self.rng.random() < cfg.xover:
-            a, b = self.rng.choice(elites, 2, replace=False)
-            pool.load(a, self.best, self.arrays, cfg.lam)  # the parents go through best and cand
-            pool.load(b, self.cand, self.arrays, cfg.lam)
-            K.crossover(self.arrays, self.best, self.cand, self.cur, int(self.rng.integers(2)),
-                        self.rng.uniform(*cfg.xover_frac), self.keys, self.flag, cfg.lam)
-            self.crossovers += 1
-        else:
-            pool.load(int(self.rng.choice(elites)), self.cur, self.arrays, cfg.lam)
-            if cfg.kick_q > 0:
-                K.kick(self.arrays, self.cur, min(cfg.kick_q, self.T), self.ws, self.slot_ok, self.posn, self.best_c,
-                       self.regret_c, self.removed, self.flag, self.buf, self.par)
-        K.copy_sol(self.cur, self.best)
-        self.stats[K.S_SINCE] = 0
-        self.stats[K.S_RESTART] += 1
-
-    def run(self, t0: float, deadline: float, max_iters: int | None, exchange: Exchange | None,
-            pool: ElitePool | None) -> dict:
+    def run(self, t0: float, deadline: float, max_iters: int | None, exchange: Exchange | None) -> dict:
         cfg = self.cfg
         obj0 = float(self.cur[10][2])
         temp0 = (cfg.t_start if cfg.t_start is not None else t_start_rule(self.T)) * obj0
-        temp0 *= cfg.worker_temp[self.rank % len(cfg.worker_temp)]
         temp1 = cfg.t_end_ratio * temp0
         init_ms = self.best_ms
         trace = [(time.monotonic() - t0, init_ms)]
@@ -318,16 +295,12 @@ class _Search:
             per_it = max((end - now) / max(int(self.stats[K.S_IT]) - done, 1), 1e-7)
             if improved and self._new_best():
                 trace.append((end - t0, self.best_ms))
-            if pool is not None and self.stats[K.S_SINCE] >= cfg.restart_iters:
-                self.restart(pool)
             if exchange is not None and end >= next_exchange:
                 if exchange.sync(self.gbest, self.cur, self.arrays, cfg.lam):
                     K.copy_sol(self.cur, self.best)
                     K.copy_sol(self.cur, self.gbest)
                     trace.append((time.monotonic() - t0, self.best_ms))
                 next_exchange = time.monotonic() + cfg.exchange_s
-        if pool is not None:
-            pool.offer(self.best)
         search_s = time.monotonic() - s0
         it = int(self.stats[K.S_IT])
         counters = dict(zip(K.COUNTERS, (self.ws[7] - self.counters0).tolist()))
@@ -336,15 +309,15 @@ class _Search:
                 "search_s": search_s, "it_per_s": it / max(search_s, 1e-9),
                 "init_makespan": init_ms, "makespan": self.best_ms, "trace": trace,
                 "improvements": int(self.stats[K.S_IMP]), "accepted": int(self.stats[K.S_ACC]),
-                "restarts": int(self.stats[K.S_RESTART]), "crossovers": self.crossovers,
+                "restarts": int(self.stats[K.S_RESTART]),
                 "destroy_weights": dict(zip(K.DESTROY, self.wd.round(3).tolist())),
                 "repair_weights": dict(zip(K.REPAIR, self.wr.round(3).tolist()))}
 
 
-def _worker(inst, cfg, seed, rank, t0, deadline, max_iters, init, exchange, pool, queue) -> None:
-    s = _Search(inst, cfg, seed, rank)
+def _worker(inst, cfg, seed, t0, deadline, max_iters, init, exchange, queue) -> None:
+    s = _Search(inst, cfg, seed)
     s.construct(init, t0 + cfg.init_share * (deadline - t0), None if max_iters is None else INIT_BUILDS)
-    out = s.run(t0, deadline, max_iters, exchange, pool)
+    out = s.run(t0, deadline, max_iters, exchange)
     queue.put((seed, s.gbest[0].copy(), s.gbest[1].copy(), s.gbest[2].copy(), out))
 
 
@@ -360,11 +333,10 @@ def _warmup() -> None:
     rng = np.random.default_rng(0)
     toy = Instance(req=rng.integers(0, 2, (6, 2)) + np.eye(2)[[0, 1, 0, 1, 0, 1]], loc=rng.random((6, 2)),
                    dur=rng.random(6), ab=np.eye(2)[[0, 0, 1, 1]], depot=np.zeros((4, 2)), species=[0, 0, 1, 1])
-    cfg = ALNSConfig(init="insert", ops_off=(), pool=2, kick_q=2, restart_iters=5, q_stag=2)
+    cfg = ALNSConfig(init="insert", restart_iters=5)
     s = _Search(toy, cfg, 0)
     s.construct(None)
-    pool = ElitePool(2, s.T, s.W)
-    s.run(time.monotonic(), time.monotonic() + 1.0, 60, Exchange(s.T, s.W), pool)
+    s.run(time.monotonic(), time.monotonic() + 1.0, 60, Exchange(s.T, s.W))
     s.par[K.P_REGQ] = 0
     s.batch(5, 0.1)
     for inst in (toy, pickle.loads(pickle.dumps(toy))):  # fresh arrays are read-only, unpickled ones writable
@@ -378,27 +350,27 @@ def solve(instance: Instance, time_limit_s: float = 10.0, seed: int = 0, n_worke
     """Best plan found within ``time_limit_s`` wall seconds (setup and construction included).
 
     ``max_iters`` (per worker) additionally stops each worker after that many iterations and fixes the portfolio
-    construction to ``INIT_BUILDS`` builds, which makes single-worker runs reproducible for a given ``seed``. ``n_workers > 1`` forks worker processes with seeds ``seed + k``;
-    kernels are compiled first in the calling process so the workers inherit them.
+    construction to ``INIT_BUILDS`` builds, which makes single-worker runs reproducible for a given ``seed``.
+    ``n_workers > 1`` forks worker processes with seeds ``seed + k``. The kernels are compiled (or loaded from the
+    numba cache) once per process before the clock starts, so forked workers inherit them.
     """
     cfg = config or ALNSConfig()
+    _warmup()  # once per process: compiling (or loading) the kernels is not part of any budget
     t0 = time.monotonic()
     deadline = t0 + time_limit_s
     instance.tt, instance.da  # noqa: B018  (cached before any fork)
     W = _width(instance)
-    pool = ElitePool(cfg.pool, instance.n_tasks, W) if cfg.pool > 0 else None
     if n_workers <= 1:
         s = _Search(instance, cfg, seed)
         s.construct(init_plan, t0 + cfg.init_share * time_limit_s, None if max_iters is None else INIT_BUILDS)
-        runs = [s.run(t0, deadline, max_iters, None, pool)]
+        runs = [s.run(t0, deadline, max_iters, None)]
         best = s.gbest[:3]
     else:
-        _warmup()
         ctx = mp.get_context("fork")
         queue = ctx.Queue()
-        exchange = Exchange(instance.n_tasks, W) if cfg.exchange_s and pool is None else None
-        procs = [ctx.Process(target=_worker, args=(instance, cfg, seed + k, k, t0, deadline, max_iters, init_plan,
-                                                   exchange, pool, queue), daemon=True) for k in range(n_workers)]
+        exchange = Exchange(instance.n_tasks, W) if cfg.exchange_s else None
+        procs = [ctx.Process(target=_worker, args=(instance, cfg, seed + k, t0, deadline, max_iters, init_plan,
+                                                   exchange, queue), daemon=True) for k in range(n_workers)]
         for p in procs:
             p.start()
         results = sorted((queue.get(timeout=time_limit_s + 600) for _ in procs), key=lambda r: r[0])
@@ -418,7 +390,7 @@ def solve(instance: Instance, time_limit_s: float = 10.0, seed: int = 0, n_worke
     trace = _merge_traces([r["trace"] for r in runs])
     lead = runs[min(range(len(runs)), key=lambda k: (runs[k]["makespan"], k))]
     total = {key: sum(r[key] for r in runs) for key in ("iterations", "improvements", "accepted", "restarts",
-                                                         "crossovers", "insertions", "candidate_slots",
+                                                         "insertions", "candidate_slots",
                                                          "exact_evals")}
     stats = ALNSStats(time_s=time.monotonic() - t0, search_s=max(r["search_s"] for r in runs),
                       it_per_s=sum(r["it_per_s"] for r in runs), init_makespan=min(r["init_makespan"] for r in runs),

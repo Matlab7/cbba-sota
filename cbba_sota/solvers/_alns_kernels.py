@@ -8,7 +8,9 @@ env and deadlock-free. ``schedule`` also fills ``tail[t]``, the longest path fro
 (its duration, then the members' travel to their next tasks and those tasks' tails, or home).
 
 Insertion (``insertion``) sweeps the slots of ``seq`` once with incrementally updated arrivals and picks a greedy
-minimal cover by (noisy) earliest arrival for each candidate slot. Its makespan follows in O(cover) from the tails:
+minimal cover by (noisy) earliest arrival for each candidate slot (skipping slots where no capable agent's arrival
+changed, and keeping the agents sorted by arrival when most slots are candidates); a slot whose cover delays other
+tasks also gets a delay-aware alternative cover. Each candidate's makespan follows in O(cover) from the tails:
 the schedule is a longest-path problem, and inserting ``j`` only adds paths through ``j`` (a replaced edge
 ``prev -> next`` is never longer than ``prev -> j -> next``, by the triangle inequality), so the new makespan is
 ``max(old makespan, start_j + dur_j + max over members of travel to their next task + its tail, or home)``. With
@@ -30,17 +32,17 @@ SOL = ("seq", "mem", "cnt", "ni", "start", "finish", "barr", "pred", "ret", "las
        "tail")
 N_FL = 3  # fl = [makespan, sum of finish times, objective]
 
-# Destroy operators (the last two are moves without repair) and repair operators.
-DESTROY = ("random", "shaw", "worst_wait", "critical", "route_segment", "tail_swap", "member_swap")
+# Destroy operators (the last one is a move without repair) and repair operators.
+DESTROY = ("random", "shaw", "worst_wait", "critical", "route_segment", "tail_swap")
 REPAIR = ("random", "random_noisy", "largest_first", "regret2")
-D_SWAP, D_MSWAP = 5, 6
+D_SWAP = 5
 R_NOISY, R_LARGEST, R_REGRET = 1, 2, 3
 
 # Parameter vector layout (float64).
 PARAMS = ("lam", "noise", "q_lo", "q_hi", "max_slots", "shaw_p", "worst_p", "regret_max_q", "rho", "seg_len",
-          "sigma_best", "sigma_better", "sigma_accept", "restart_iters", "q_stag", "q_big", "stop_on_stag")
-(P_LAM, P_NOISE, P_QLO, P_QHI, P_SLOTS, P_SHAW, P_WORST, P_REGQ, P_RHO, P_SEG, P_S1, P_S2, P_S3, P_RESTART, P_QSTAG,
- P_QBIG, P_STOP) = range(17)
+          "sigma_best", "sigma_better", "sigma_accept", "restart_iters", "alt_cover", "resort")
+(P_LAM, P_NOISE, P_QLO, P_QHI, P_SLOTS, P_SHAW, P_WORST, P_REGQ, P_RHO, P_SEG, P_S1, P_S2, P_S3, P_RESTART, P_ALT,
+ P_RESORT) = range(16)
 
 # Insertion counters (ws[7], int64): stamp id, exact slot evaluations, suffix steps, insertions, candidate slots.
 COUNTERS = ("stamp", "exact_evals", "suffix_steps", "insertions", "candidate_slots")
@@ -129,11 +131,22 @@ def copy_sol(src, dst):
 
 
 @njit(cache=True)
-def cover(j, req, ab, capl, ncap, arr, key, need, chosen, noise):
-    """Greedy minimal cover of task ``j`` by (noisy) earliest arrival ``arr``; members in ``chosen[:c]``.
+def copy_plan(src, dst):
+    """Order and coalitions only; ``dst``'s schedule is stale until ``schedule`` runs."""
+    n = src[3][0]
+    dst[0][:n] = src[0][:n]
+    dst[1][...] = src[1]
+    dst[2][:] = src[2]
+    dst[3][0] = n
+
+
+@njit(cache=True)
+def cover(j, req, ab, capl, ncap, arr, key, need, chosen, fac):
+    """Greedy minimal cover of task ``j`` by earliest key ``arr * fac`` (``fac``: noise factor per agent); members
+    in ``chosen[:c]``.
 
     Adds contributing agents in key order until the requirement is met, then drops redundant members, latest
-    arrival first (one pass suffices since dropping only shrinks the surplus). Returns ``c`` (-1 if infeasible).
+    arrival first (``_prune``). Returns ``c`` (-1 if infeasible).
     """
     K = req.shape[1]
     for k in range(K):
@@ -141,7 +154,7 @@ def cover(j, req, ab, capl, ncap, arr, key, need, chosen, noise):
     nc = ncap[j]
     for x in range(nc):
         i = capl[j, x]
-        key[x] = arr[i] * (1.0 + noise * np.random.random()) if noise > 0 else arr[i]
+        key[x] = arr[i] * fac[i]
     c = 0
     while True:
         done = True
@@ -174,6 +187,14 @@ def cover(j, req, ab, capl, ncap, arr, key, need, chosen, noise):
         c += 1
         for k in range(K):
             need[k] -= ab[i, k]
+    return _prune(chosen, c, arr, ab, need)
+
+
+@njit(cache=True)
+def _prune(chosen, c, arr, ab, need):
+    """Drop redundant members of ``chosen[:c]`` (surplus in ``need`` <= 0), latest arrival first (one pass suffices
+    since dropping only shrinks the surplus); returns the size of the minimal cover left in ``chosen``."""
+    K = ab.shape[1]
     for a in range(1, c):  # sort by arrival, latest first
         v = chosen[a]
         b = a - 1
@@ -199,65 +220,153 @@ def cover(j, req, ab, capl, ncap, arr, key, need, chosen, noise):
 
 
 @njit(cache=True)
-def insertion(j, inst, sol, ws, slot_ok, noise, lam, need_second, best_c):
+def cover_sorted(j, req, ab, order, nc, arr, need, chosen):
+    """``cover`` for agents already sorted by key (``order[:nc]``): takes each contributing agent in turn."""
+    K = req.shape[1]
+    left = 0
+    for k in range(K):
+        need[k] = req[j, k]
+        left += need[k] > 0
+    c = 0
+    for x in range(nc):
+        if left == 0:
+            break
+        i = order[x]
+        useful = False
+        for k in range(K):
+            if need[k] > 0 and ab[i, k] > 0:
+                useful = True
+                break
+        if useful:
+            chosen[c] = i
+            c += 1
+            for k in range(K):
+                if need[k] > 0 and need[k] - ab[i, k] <= 0:
+                    left -= 1
+                need[k] -= ab[i, k]
+    if left > 0:
+        return -1
+    return _prune(chosen, c, arr, ab, need)
+
+
+@njit(cache=True)
+def _same_set(a, na, b, nb):
+    """``a[:na]`` and ``b[:nb]`` hold the same agents."""
+    if na != nb:
+        return False
+    for x in range(na):
+        hit = False
+        for y in range(nb):
+            hit = hit or a[x] == b[y]
+        if not hit:
+            return False
+    return True
+
+
+@njit(cache=True)
+def _add_slot(j, p, chosen, c, arr, inst, sol, ws, nc, base_ms, base_sum, scale):
+    """Store slot ``p`` with cover ``chosen[:c]`` as candidate ``nc``: its finish, exact new makespan and a lower
+    bound on its objective from the first-order delays of the members' next tasks. Returns the summed delay plus the
+    makespan increase (0 when ``j`` fits without pushing anything)."""
+    dur, tt, da = inst[2], inst[3], inst[4]
+    start, succ, first, tail = sol[4], sol[11], sol[12], sol[14]
+    cp, cf, clb, cms, ccnt, cmem, lastp, lastkp, nxt = ws[8:17]
+    s = -INF
+    for a in range(c):
+        s = max(s, arr[chosen[a]])
+    f = s + dur[j]
+    lb = base_ms  # the new makespan, exact up to rounding
+    for a in range(c):
+        i = chosen[a]
+        t = first[i] if lastp[i] < 0 else succ[lastp[i], lastkp[i]]
+        nxt[a] = t
+        lb = max(lb, f + (da[i, j] if t < 0 else tt[j, t] + tail[t]))
+    delay = 0.0
+    for a in range(c):
+        t = nxt[a]
+        if t < 0:
+            continue
+        dup = False
+        for b in range(a):
+            if nxt[b] == t:
+                dup = True
+        if dup:
+            continue
+        d = 0.0
+        for b in range(a, c):
+            if nxt[b] == t:
+                d = max(d, f + tt[j, t] - start[t])
+        delay += d
+    cp[nc], cf[nc], cms[nc], ccnt[nc] = p, f, lb, c
+    clb[nc] = lb + scale * (base_sum + f + delay)
+    cmem[nc, :c] = chosen[:c]
+    return delay + (lb - base_ms)
+
+
+@njit(cache=True)
+def insertion(j, inst, sol, ws, slot_ok, noise, lam, need_second, best_c, alt):
     """Best slot and coalition for removed task ``j`` in ``sol`` (whose schedule must be current).
 
     Phase 1 sweeps the order once, updating the agents' arrivals at ``j`` incrementally, and builds each marked
     slot's cover and a lower bound on its objective from the delays the cover causes at its members' next tasks.
-    Phase 2 evaluates the slots best-first by that bound with the incremental suffix pass and stops once the bound
-    reaches the incumbent (the second best for regret). Ranking by the bound alone and evaluating only the top few
-    was tried and is much worse: early slots have small bounds but long delay cascades.
+    With ``alt``, a slot whose cover delays other tasks also gets the cover by arrival plus the delay each agent
+    would cause at its next task (or at its return beyond the makespan) if ``j`` started with the earliest cover.
+    Phase 2 evaluates the candidates best-first by that bound with the incremental suffix pass and stops once the
+    bound reaches the incumbent (the second best for regret). Ranking by the bound alone and evaluating only the top
+    few was tried and is much worse: early slots have small bounds but long delay cascades.
     Returns ``(p, obj, ms, c, second_obj)``: insert before ``seq[p]`` with members ``best_c[:c]``.
     """
     req, ab, dur, tt, da, capl, ncap, capf = inst[0], inst[1], inst[2], inst[3], inst[4], inst[5], inst[6], inst[11]
-    seq, mem, cnt, ni, start, finish, barr, ret, fl, succ, first, tail = (sol[0], sol[1], sol[2], sol[3], sol[4],
-                                                                           sol[5], sol[6], sol[8], sol[10], sol[11],
-                                                                           sol[12], sol[14])
-    arr, key, need, chosen, stamp, ofree, olast, ctr, cp, cf, clb, cms, ccnt, cmem, lastp, lastkp, nxt = ws
+    seq, mem, cnt, ni, start, finish, barr, ret, fl, succ, first = (sol[0], sol[1], sol[2], sol[3], sol[4], sol[5],
+                                                                     sol[6], sol[8], sol[10], sol[11], sol[12])
+    (arr, key, need, chosen, stamp, ofree, olast, ctr, cp, cf, clb, cms, ccnt, cmem, lastp, lastkp, _, arr2, order,
+     rank, skey, fac) = ws
     T, A = dur.shape[0], da.shape[0]
     n = ni[0]
     base_ms, base_sum = fl[0], fl[1]
     scale = lam / T
-    for x in range(ncap[j]):
+    nca = ncap[j]
+    for x in range(nca):  # key of an agent: arrival x a noise factor drawn once per call
         i = capl[j, x]
         arr[i] = da[i, j]
         lastp[i] = -1
+        fac[i] = 1.0 + noise * np.random.random() if noise > 0 else 1.0
+    marked = 0
+    for p in range(n + 1):
+        marked += slot_ok[p]
+    dense = 2 * marked > n + 1  # then keep the capable agents sorted by key in the sweep
+    if dense:
+        for x in range(nca):
+            i = capl[j, x]
+            skey[i] = arr[i] * fac[i]
+            key[x] = skey[i]
+        o = np.argsort(key[:nca], kind="mergesort")
+        for x in range(nca):
+            order[x] = capl[j, o[x]]
+            rank[order[x]] = x
     ctr[3] += 1  # insertions
     nc = 0
+    fresh = True  # arrivals changed since the last candidate slot (else that slot's plan is the same)
     for p in range(n + 1):
-        if slot_ok[p]:
-            c = cover(j, req, ab, capl, ncap, arr, key, need, chosen, noise)
-            if c > 0:
-                s = -INF
-                for a in range(c):
-                    s = max(s, arr[chosen[a]])
-                f = s + dur[j]
-                lb = base_ms  # the new makespan, exact up to rounding
-                for a in range(c):
-                    i = chosen[a]
+        if slot_ok[p] and fresh:
+            fresh = False
+            if dense:
+                c = cover_sorted(j, req, ab, order, nca, arr, need, chosen)
+            else:
+                c = cover(j, req, ab, capl, ncap, arr, key, need, chosen, fac)
+            cost = _add_slot(j, p, chosen, c, arr, inst, sol, ws, nc, base_ms, base_sum, scale) if c > 0 else 0.0
+            nc += c > 0
+            if alt and cost > 0:
+                s1 = cf[nc - 1] - dur[j]  # start with the earliest cover
+                for x in range(nca):
+                    i = capl[j, x]
                     t = first[i] if lastp[i] < 0 else succ[lastp[i], lastkp[i]]
-                    nxt[a] = t
-                    lb = max(lb, f + (da[i, j] if t < 0 else tt[j, t] + tail[t]))
-                delay = 0.0
-                for a in range(c):
-                    t = nxt[a]
-                    if t < 0:
-                        continue
-                    dup = False
-                    for b in range(a):
-                        if nxt[b] == t:
-                            dup = True
-                    if dup:
-                        continue
-                    d = 0.0
-                    for b in range(a, c):
-                        if nxt[b] == t:
-                            d = max(d, f + tt[j, t] - start[t])
-                    delay += d
-                cp[nc], cf[nc], cms[nc], ccnt[nc] = p, f, lb, c
-                clb[nc] = lb + scale * (base_sum + f + delay)
-                cmem[nc, :c] = chosen[:c]
-                nc += 1
+                    late = max(arr[i], s1) + dur[j] + (tt[j, t] - start[t] if t >= 0 else da[i, j] - base_ms)
+                    arr2[i] = arr[i] + max(late, 0.0)
+                c2 = cover(j, req, ab, capl, ncap, arr2, key, need, chosen, fac)
+                if c2 > 0 and not _same_set(chosen, c2, cmem[nc - 1], c):
+                    _add_slot(j, p, chosen, c2, arr, inst, sol, ws, nc, base_ms, base_sum, scale)
+                    nc += 1
         if p < n:
             t = seq[p]
             for k in range(cnt[t]):
@@ -266,6 +375,21 @@ def insertion(j, inst, sol, ws, slot_ok, noise, lam, need_second, best_c):
                     arr[i] = finish[t] + tt[t, j]
                     lastp[i] = t
                     lastkp[i] = k
+                    fresh = True
+                    if not dense:
+                        continue
+                    skey[i] = arr[i] * fac[i]  # arrivals grow along the order (triangle inequality): move i back
+                    x = rank[i]
+                    while x + 1 < nca and skey[order[x + 1]] < skey[i]:
+                        order[x] = order[x + 1]
+                        rank[order[x]] = x
+                        x += 1
+                    while x > 0 and skey[order[x - 1]] > skey[i]:  # rounding
+                        order[x] = order[x - 1]
+                        rank[order[x]] = x
+                        x -= 1
+                    order[x] = i
+                    rank[i] = x
     ctr[4] += nc  # candidate slots
     best_obj = INF
     second = INF
@@ -383,9 +507,9 @@ def mark_slots(j, inst, sol, slot_ok, posn, max_slots):
 
 
 @njit(cache=True)
-def insert_one(j, inst, sol, ws, slot_ok, posn, best_c, noise, lam, max_slots):
+def insert_one(j, inst, sol, ws, slot_ok, posn, best_c, noise, lam, max_slots, alt):
     mark_slots(j, inst, sol, slot_ok, posn, max_slots)
-    p, _, _, c, _ = insertion(j, inst, sol, ws, slot_ok, noise, lam, False, best_c)
+    p, _, _, c, _ = insertion(j, inst, sol, ws, slot_ok, noise, lam, False, best_c, alt)
     apply_insertion(j, p, best_c, c, sol)
     schedule(inst, sol, lam)
 
@@ -394,7 +518,7 @@ def insert_one(j, inst, sol, ws, slot_ok, posn, best_c, noise, lam, max_slots):
 def repair(op, removed, nrem, inst, sol, ws, slot_ok, posn, best_c, regret_c, par):
     """Reinsert ``removed[:nrem]`` (``sol`` schedule current, removed tasks absent)."""
     req = inst[0]
-    lam, max_slots = par[P_LAM], int(par[P_SLOTS])
+    lam, max_slots, alt = par[P_LAM], int(par[P_SLOTS]), par[P_ALT] > 0
     noise = par[P_NOISE] if op == R_NOISY else 0.0
     if op == R_REGRET and nrem <= par[P_REGQ]:
         left = nrem
@@ -404,7 +528,7 @@ def repair(op, removed, nrem, inst, sol, ws, slot_ok, posn, best_c, regret_c, pa
             for x in range(left):
                 j = removed[x]
                 mark_slots(j, inst, sol, slot_ok, posn, max_slots)
-                p, obj, _, c, second = insertion(j, inst, sol, ws, slot_ok, 0.0, lam, True, regret_c)
+                p, obj, _, c, second = insertion(j, inst, sol, ws, slot_ok, 0.0, lam, True, regret_c, alt)
                 reg = second - obj
                 if reg > breg or (reg == breg and obj < bobj):
                     bx, breg, bobj, bp, bc = x, reg, obj, p, c
@@ -422,7 +546,7 @@ def repair(op, removed, nrem, inst, sol, ws, slot_ok, posn, best_c, regret_c, pa
     else:
         order = removed[:nrem][np.random.permutation(nrem)]
     for x in range(nrem):
-        insert_one(order[x], inst, sol, ws, slot_ok, posn, best_c, noise, lam, max_slots)
+        insert_one(order[x], inst, sol, ws, slot_ok, posn, best_c, noise, lam, max_slots, alt)
 
 
 @njit(cache=True)
@@ -443,12 +567,14 @@ def _pick_ranked(score, n_pick, power, out):
 
 
 @njit(cache=True)
-def destroy(op, q, inst, sol, removed, flag, buf, par):
-    """Choose up to ``q`` present tasks with operator ``op``, take them out of ``sol`` and reschedule.
+def destroy(op, q, inst, src, sol, removed, flag, buf, par):
+    """Choose up to ``q`` present tasks with operator ``op``, take them out of ``sol`` and reschedule it.
 
-    ``sol``'s schedule must be current on entry. Returns the number of removed tasks."""
+    ``sol`` holds the plan of ``src`` (it may be ``src`` itself), whose schedule must be current. Returns the number
+    of removed tasks."""
     req, tt, near = inst[0], inst[3], inst[7]
-    seq, mem, cnt, ni, start, _, barr, pred, ret, last, fl = sol[:11]
+    seq, mem, cnt, ni = sol[:4]
+    start, barr, ret, fl = src[4], src[6], src[8], src[10]
     n = ni[0]
     q = min(q, n)
     flag[:] = False
@@ -463,7 +589,9 @@ def destroy(op, q, inst, sol, removed, flag, buf, par):
         r = seq[np.random.randint(0, n)]
         w_d, w_t, w_r = np.random.random(), np.random.random(), np.random.random()
         span = max(fl[0], EPS)
-        tmax = max(tt.max(), EPS)
+        tmax = EPS
+        for t in range(near.shape[0] if near.shape[1] > 0 else 0):  # tt.max() from each farthest neighbour
+            tmax = max(tmax, tt[t, near[t, near.shape[1] - 1]])
         score = np.empty(n)
         for x in range(n):
             t = seq[x]
@@ -488,17 +616,7 @@ def destroy(op, q, inst, sol, removed, flag, buf, par):
             removed[x] = seq[buf[x]]
             flag[removed[x]] = True
     elif op == 3:  # critical chain behind the makespan, padded with its spatial neighbours
-        a = np.argmax(ret)
-        t = last[a]
-        L = 0
-        while t >= 0:
-            buf[L] = t
-            L += 1
-            kb = 0
-            for k in range(1, cnt[t]):
-                if barr[t, k] > barr[t, kb]:
-                    kb = k
-            t = pred[t, kb]
+        L = _critical_chain(src, buf)
         chain = buf[:L][np.random.permutation(L)]
         for x in range(min(q, L)):
             removed[got] = chain[x]
@@ -544,12 +662,13 @@ def destroy(op, q, inst, sol, removed, flag, buf, par):
 
 
 @njit(cache=True)
-def tail_swap(inst, sol, par):
-    """Exchange the route tails (from a random cut in the global order) of two agents with identical traits.
+def tail_swap(inst, src, sol, par):
+    """Exchange the route tails (from a random cut in the global order) of two agents with identical traits in
+    ``sol``, which holds the plan of ``src`` (schedule current).
 
     Coalitions keep their trait multisets, so covers stay minimal. Returns False when no partner exists."""
     partners, pstart, group = inst[8], inst[9], inst[10]
-    seq, mem, cnt, ni, ret = sol[0], sol[1], sol[2], sol[3], sol[8]
+    seq, mem, cnt, ni, ret = sol[0], sol[1], sol[2], sol[3], src[8]
     A = ret.shape[0]
     a1 = np.argmax(ret) if np.random.random() < 0.5 else np.random.randint(0, A)
     g = group[a1]
@@ -596,88 +715,14 @@ def _critical_chain(sol, buf):
 
 
 @njit(cache=True)
-def member_swap(inst, sol, buf, par):
-    """Hand one visit of agent ``a1`` (on the critical chain half of the time) to an identical agent ``a2`` that is
-    not in that coalition or, with probability 1/2, exchange it for a visit of ``a2`` to a task without ``a1``.
-    Coalitions keep their trait multisets, so covers stay minimal. Returns False when no such move exists."""
-    partners, pstart, group = inst[8], inst[9], inst[10]
-    seq, mem, cnt, ni = sol[0], sol[1], sol[2], sol[3]
-    n = ni[0]
-    if np.random.random() < 0.5:
-        t = buf[np.random.randint(0, _critical_chain(sol, buf))]
-    else:
-        t = seq[np.random.randint(0, n)]
-    k1 = np.random.randint(0, cnt[t])
-    a1 = mem[t, k1]
-    g = group[a1]
-    size = pstart[g + 1] - pstart[g]
-    if size < 2:
-        return False
-    a2 = partners[pstart[g] + np.random.randint(0, size - 1)]
-    if a2 == a1:
-        a2 = partners[pstart[g + 1] - 1]
-    for k in range(cnt[t]):
-        if mem[t, k] == a2:
-            return False
-    if np.random.random() < 0.5:
-        seen, t2, k2 = 0, -1, -1
-        for p in range(n):
-            u = seq[p]
-            ka, kb = -1, -1
-            for k in range(cnt[u]):
-                if mem[u, k] == a1:
-                    ka = k
-                elif mem[u, k] == a2:
-                    kb = k
-            if kb >= 0 and ka < 0:
-                seen += 1
-                if np.random.random() * seen < 1.0:  # reservoir sampling
-                    t2, k2 = u, kb
-        if t2 >= 0:
-            mem[t2, k2] = a1
-    mem[t, k1] = a2
-    schedule(inst, sol, par[P_LAM])
-    return True
-
-
-@njit(cache=True)
-def crossover(inst, pa, pb, child, mode, frac, keys, flag, lam):
-    """Child of two complete plans (schedules current): the tasks of a stretch of ``pa``'s order (mode 0) or the
-    tasks nearest a random task (mode 1), a share ``frac`` of all, keep their coalition and start time from ``pa``;
-    the other tasks take them from ``pb``; the child runs its tasks in order of those start times. Covers stay
-    minimal and the order stays global, so the child is a valid plan."""
-    near = inst[7]
-    T = keys.shape[0]
-    m = max(1, min(T - 1, int(frac * T + 0.5)))
-    flag[:] = False
-    if mode == 0:
-        s0 = np.random.randint(0, T - m + 1)
-        for x in range(s0, s0 + m):
-            flag[pa[0][x]] = True
-    else:
-        j0 = np.random.randint(0, T)
-        flag[j0] = True
-        for x in range(m - 1):
-            flag[near[j0, x]] = True
-    mem, cnt = child[1], child[2]
-    for j in range(T):
-        src = pa if flag[j] else pb
-        c = src[2][j]
-        mem[j, :c] = src[1][j, :c]
-        cnt[j] = c
-        keys[j] = src[4][j]
-    child[0][:] = np.argsort(keys, kind="mergesort")
-    child[3][0] = T
-    return schedule(inst, child, lam)
-
-
-@njit(cache=True)
-def kick(inst, sol, q, ws, slot_ok, posn, best_c, regret_c, removed, flag, buf, par):
-    """Perturbation: remove ``q`` tasks (random, related or critical, at random) and repair (random or regret)."""
-    d = (0, 1, 3)[np.random.randint(0, 3)]
-    r = (0, R_REGRET)[np.random.randint(0, 2)]
-    nrem = destroy(d, q, inst, sol, removed, flag, buf, par)
-    repair(r, removed, nrem, inst, sol, ws, slot_ok, posn, best_c, regret_c, par)
+def sort_by_start(sol):
+    """Reorder ``seq`` by start time (stable): another topological order of the same plan, so the schedule is
+    unchanged but later insertions see the slots of a time line."""
+    seq, n, start = sol[0], sol[3][0], sol[4]
+    keys = np.empty(n)
+    for p in range(n):
+        keys[p] = start[seq[p]]
+    seq[:n] = seq[:n][np.argsort(keys, kind="mergesort")]
 
 
 @njit(cache=True)
@@ -704,32 +749,34 @@ def run_batch(n_iter, temp_a, temp_b, inst, cur, cand, best, ws, slot_ok, posn, 
     ``temp_a`` to ``temp_b`` over the batch. Returns the number of improvements of ``best``."""
     improved = 0
     q_lo, q_hi = int(par[P_QLO]), int(par[P_QHI])
-    q_stag, q_big = int(par[P_QSTAG]), int(par[P_QBIG])
+    a, b = cur, cand  # current and candidate plan; an accepted candidate swaps them instead of being copied
+    swapped = False
     for it in range(n_iter):
         temp = temp_a * (temp_b / temp_a) ** (it / n_iter) if temp_a > 0 else 0.0
-        copy_sol(cur, cand)
+        copy_plan(a, b)
         d = _roulette(wd)
         r = -1
-        if (d == D_SWAP and not tail_swap(inst, cand, par)) or (d == D_MSWAP and not member_swap(inst, cand, buf,
-                                                                                                    par)):
+        if d == D_SWAP and not tail_swap(inst, a, b, par):
             d = 0
-        if d != D_SWAP and d != D_MSWAP:
+        if d != D_SWAP:
             r = _roulette(wr)
-            qh = q_hi if q_stag <= 0 else max(q_hi, min(q_big, q_hi + stats[S_SINCE] // q_stag))
-            q = np.random.randint(q_lo, qh + 1)
-            nrem = destroy(d, q, inst, cand, removed, flag, buf, par)
-            repair(r, removed, nrem, inst, cand, ws, slot_ok, posn, best_c, regret_c, par)
+            q = np.random.randint(q_lo, q_hi + 1)
+            nrem = destroy(d, q, inst, a, b, removed, flag, buf, par)
+            repair(r, removed, nrem, inst, b, ws, slot_ok, posn, best_c, regret_c, par)
         stats[S_IT] += 1
         stats[S_SINCE] += 1
-        delta = cand[10][2] - cur[10][2]
+        delta = b[10][2] - a[10][2]
         score = 0.0
         accept = delta <= EPS or (temp > 0 and np.random.random() < np.exp(-delta / temp))
         if accept:  # equal-objective moves (often no-ops) earn nothing
             score = par[P_S2] if delta < -EPS else (par[P_S3] if delta > EPS else 0.0)
-            copy_sol(cand, cur)
+            a, b = b, a
+            swapped = not swapped
+            if par[P_RESORT] > 0 and np.random.random() < par[P_RESORT]:
+                sort_by_start(a)
             stats[S_ACC] += 1
-            if better(cur[10][0], cur[10][2], best[10][0], best[10][2]):
-                copy_sol(cur, best)
+            if better(a[10][0], a[10][2], best[10][0], best[10][2]):
+                copy_sol(a, best)
                 score = par[P_S1]
                 improved += 1
                 stats[S_IMP] += 1
@@ -753,17 +800,17 @@ def run_batch(n_iter, temp_a, temp_b, inst, cur, cand, best, ws, slot_ok, posn, 
             ud[:] = 0
             ur[:] = 0
             stats[S_SEG] = 0
-        if stats[S_SINCE] >= par[P_RESTART]:
-            if par[P_STOP] > 0:  # the driver restarts (elite pool)
-                return improved
-            copy_sol(best, cur)  # a large random kick of the best plan here did not help (dev, v1)
+        if stats[S_SINCE] >= par[P_RESTART]:  # restart from the cycle's best (kicks, elite pools and crossover
+            copy_sol(best, a)                   # children instead did not help on dev)
             stats[S_SINCE] = 0
             stats[S_RESTART] += 1
+    if swapped:
+        copy_sol(a, cur)
     return improved
 
 
 @njit(cache=True)
-def construct(order, inst, sol, ws, slot_ok, posn, best_c, noise, lam, max_slots):
+def construct(order, inst, sol, ws, slot_ok, posn, best_c, noise, lam, max_slots, alt):
     """Sequential best insertion of ``order`` into ``sol`` (which holds the other tasks, schedule current)."""
     for x in range(order.shape[0]):
-        insert_one(order[x], inst, sol, ws, slot_ok, posn, best_c, noise, lam, max_slots)
+        insert_one(order[x], inst, sol, ws, slot_ok, posn, best_c, noise, lam, max_slots, alt)

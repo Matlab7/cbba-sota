@@ -1,0 +1,33 @@
+== Time until the run's best reaches CP-SAT-LNS (8 threads) at B1
+/home/jovyan/dev/cbba-sota/.venv/lib/python3.12/site-packages/numpy/lib/_function_base_impl.py:4608: RuntimeWarning: invalid value encountered in scalar subtract
+  diff_b_a = b - a
+MA-AT-150-10-500   v2             x1 budget  560.20s  reached 10/10  median   28.10s  q25   28.07s  q75   28.17s
+MA-AT-150-5-500    v2             x1 budget  560.50s  reached 10/10  median   28.25s  q25   28.13s  q75   28.29s
+MA-AT-25-5-50      v2             x1 budget   16.34s  reached 20/20  median    0.82s  q25    0.82s  q75    0.83s
+MA-AT-50-5-200     v2             x1 budget   75.20s  reached 20/20  median    3.77s  q25    3.77s  q75    3.78s
+MA-AT-50-5-50      v2             x1 budget   23.43s  reached 20/20  median    1.27s  q25    1.20s  q75    1.64s
+SA-AT-50-5-50      v2             x1 budget   29.80s  reached 20/20  median    1.71s  q25    1.49s  q75    4.18s
+SA-BT-25-5-50      v2             x1 budget   13.45s  reached 20/20  median    0.77s  q25    0.68s  q75    1.21s
+SA-BT-50-5-50      v2             x1 budget   19.14s  reached 20/20  median    1.85s  q25    1.50s  q75    2.88s
+MA-AT-150-10-500   v1             x1 budget  560.20s  reached  9/10  median  262.16s  q25  127.30s  q75  296.30s
+MA-AT-150-5-500    v1             x1 budget  560.50s  reached  4/10  median     infs  q25  282.59s  q75     nans
+MA-AT-25-5-50      v1             x1 budget   16.34s  reached 20/20  median    0.72s  q25    0.30s  q75    1.31s
+MA-AT-50-5-200     v1             x1 budget   75.20s  reached 10/20  median     infs  q25   29.43s  q75     nans
+MA-AT-50-5-50      v1             x1 budget   23.43s  reached 20/20  median    1.43s  q25    0.62s  q75    2.06s
+SA-AT-50-5-50      v1             x1 budget   29.80s  reached 17/20  median   15.17s  q25   11.14s  q75   20.42s
+SA-BT-25-5-50      v1             x1 budget   13.45s  reached 20/20  median    1.90s  q25    1.59s  q75    2.20s
+SA-BT-50-5-50      v1             x1 budget   19.14s  reached 19/20  median    2.83s  q25    1.43s  q75    5.77s
+MA-AT-150-10-500   v2             x8 budget  560.20s  reached 10/10  median   28.06s  q25   28.04s  q75   28.08s
+MA-AT-150-5-500    v2             x8 budget  560.50s  reached 10/10  median   28.07s  q25   28.05s  q75   28.14s
+MA-AT-25-5-50      v2             x8 budget   16.34s  reached 10/10  median    0.82s  q25    0.82s  q75    0.82s
+MA-AT-50-5-200     v2             x8 budget   75.20s  reached 10/10  median    3.76s  q25    3.76s  q75    3.77s
+MA-AT-50-5-50      v2             x8 budget   23.43s  reached 10/10  median    1.19s  q25    1.18s  q75    1.22s
+SA-AT-50-5-50      v2             x8 budget   29.80s  reached 10/10  median    1.49s  q25    1.49s  q75    1.85s
+SA-BT-25-5-50      v2             x8 budget   13.45s  reached 10/10  median    0.67s  q25    0.67s  q75    0.68s
+SA-BT-50-5-50      v2             x8 budget   19.14s  reached 10/10  median    1.56s  q25    1.22s  q75    1.95s
+MA-AT-25-5-50      v1             x8 budget   16.34s  reached 10/10  median    0.12s  q25    0.10s  q75    0.31s
+MA-AT-50-5-200     v1             x8 budget   75.20s  reached 10/10  median   23.90s  q25    7.50s  q75   42.91s
+MA-AT-50-5-50      v1             x8 budget   23.43s  reached 10/10  median    0.80s  q25    0.40s  q75    0.92s
+SA-AT-50-5-50      v1             x8 budget   29.80s  reached 10/10  median    7.43s  q25    5.32s  q75    9.77s
+SA-BT-25-5-50      v1             x8 budget   13.45s  reached 10/10  median    0.77s  q25    0.32s  q75    1.28s
+SA-BT-50-5-50      v1             x8 budget   19.14s  reached 10/10  median    1.43s  q25    1.15s  q75    1.90s
