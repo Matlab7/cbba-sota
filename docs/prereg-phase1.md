@@ -16,10 +16,12 @@ and robust on degraded networks", with effect sizes reported, not a minimum marg
   them optimal; there is no headroom).
 - **C2 (low compute).** Anytime curves at 0.5, 1, 2, 5 s and B1 on 1 and 8 cores; primary summary: ALNS on 1 core at
   2 s versus each competitor at B1 on 8 cores, and ALNS time-to-reach each competitor's B1 quality.
-- **C3 (robust on degraded networks).** Defined in `docs/trackD-spec.md` once Track D is designed: on the prespecified
-  degraded-network conditions, the proposed decentralized method is no worse than (TOST margin TBD) or better than
-  a central rolling re-solve with local fallback and a replicated solver with event gossip, degrades less relative
-  to its ideal-network score, and uses fewer messages.
+- **C3 (robust on degraded networks, conditional).** Defined in `docs/trackD-spec.md` (Sections 2 and 9.4): on a
+  prespecified connectivity grid, SPARC's worst-case regret is lower than that of every fixed architecture sharing its
+  planner and of a deployment-time switch. Confirmatory only if the Track D dev gates K5 and K6 pass; otherwise
+  descriptive. No message-count claim.
+- **C1-dyn / C2-dyn.** Defined in `docs/trackD-spec.md` Section 2: SPARC vs online competitors under release, noise
+  and failures at equal per-event budget, and light-budget saturation.
 - The shipped RALTestSet is **not blind**: pilots, the red team and ALNS development all ran on it. Its results are
   descriptive only.
 
