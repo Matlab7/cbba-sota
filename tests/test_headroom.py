@@ -79,6 +79,28 @@ def test_cpfull_bound_is_below_every_replayed_plan():
     assert full["makespan"] <= alns["makespan"] + 1e-9  # hinted with the ALNS plan
 
 
+def test_independent_references_use_no_alns_plan(tmp_path, monkeypatch):
+    """PLNS and CPFULLc start from constructions only; they enter the BKS and are reported on their own."""
+    bks = _script("bks")
+    name = "SA-BT-25-5-20"
+    _need(name, "val")
+    plns = bks.run_job(name, "val", 0, "PLNS", 2, 2.0)
+    full = bks.run_job(name, "val", 0, "CPFULLc", 2, 4.0)
+    for row in (plns, full):
+        assert row["success"] and row["makespan"] == row["eval_makespan"] and row["routes_base"] == 0
+    assert plns["makespan"] <= plns["init_makespan"] + 1e-9 and full["makespan"] <= full["hint_makespan"] + 1e-9
+    assert full["lb"] <= min(plns["makespan"], full["makespan"]) + 1e-9
+    fp = runtime.instance_fingerprint(name, "val", 0)
+    rows = [{"setting": name, "split": "val", "instance": 0, "kind": k, "workers": 2, "time_s": 2.0} | r
+            | {"fingerprint": fp} for k, r in (("PLNS", plns), ("CPFULLc", full))]
+    rows.append(rows[0] | {"kind": "ALNS2", "makespan": plns["makespan"] + 1.0})
+    monkeypatch.setattr(bks, "OUT", tmp_path)
+    monkeypatch.setattr(bks, "ANYTIME", ())
+    (tmp_path / f"{name}.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
+    best = bks.best_known(bks.rows_of(name))[0]
+    assert best["bks"] == min(plns["makespan"], full["makespan"]) and best["row"]["kind"] in bks.INDEPENDENT
+
+
 def test_anytime_grid():
     at = _script("anytime")
     small, mid, large = (at.grid(get(n)) for n in ("SA-AT-25-5-20", "MA-AT-50-5-200", "MA-AT-150-5-500"))
@@ -104,6 +126,7 @@ def test_c1_grid_and_tune_variants():
     for jobs in (mid, later, large):
         assert {(m, 8, "B1") for m in ("ALNS2", "CPSAT", "PCPSAT", "CPFULL", "RL")} <= set(jobs)
         assert ("CONSTRUCT", 8, "stream") in jobs and {("ALNS2", 1, b) for b in ("0.5", "1", "2", "B1")} <= set(jobs)
+    assert ("CTAS", 8, "B1") in mid and ("CTAS", 8, "B1") not in large  # CTAS-D fails at 500 tasks (dev pilot)
     assert set(later) < set(mid) and ("PCPSAT", 8, "2B1") in later and ("RL", 8, "1") in mid
     assert at.grid_c1(get("SA-AT-25-5-20")) == [] and {b for _, c, b in large if c == 8} == {"B1", "stream"}
     assert at.parse_variant("PCPSAT:sub_time=0.5,q0=8") == ("PCPSAT", "sub_time=0.5,q0=8", {"sub_time": 0.5, "q0": 8})

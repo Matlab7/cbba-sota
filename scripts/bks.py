@@ -14,15 +14,24 @@ Kinds (each job uses ``--width`` CPUs, one job per lane at a time):
   far for the instance (``collect`` rows), until proven optimal or T seconds. Its integer model rounds each of the
   at most T + 1 arc weights on a critical chain up by at most 1 / SCALE, so ``bound - (n_tasks + 1) / SCALE`` is a
   certified lower bound on the true optimal makespan (``lb``).
+- Independent references (``INDEPENDENT``; no ALNS component and no ALNS plan as a hint):
+  - PLNS: parallel CP-SAT LNS (``cpsat.solve_lns_parallel``, ``width`` single-thread workers, seeds 3000 + k) from
+    the best of their ``greedy.construct`` restart streams built in min(10% of T, 3 s), sub-solves of
+    ``pcpsat_sub_time`` seconds;
+  - CPFULLc: the full CP-SAT model (all arcs, ``width`` threads, seed 4000) hinted with the best of ``width``
+    ``greedy.construct`` restart streams built in min(10% of T, 3 s); certified lower bound as for CPFULL.
+  They enter the BKS like every other run; ``collect`` also reports, per instance, the best independent plan next
+  to the best plan of the other runs (mostly ALNS), so that "gap to the BKS" has a reference that ALNS did not
+  produce.
 T (``--seconds``, default ``SECONDS`` by task count) is wall time from after instance loading, construction
-included. Every makespan is the env replay of the returned plan. Rows go to runs/bks/<setting>.jsonl with routes,
-the best-so-far trace, the instance fingerprint, the code version and host conditions; resumable per
+included. Every makespan is the env replay of the returned plan. Rows go to runs/bks/<setting>.jsonl with 0-based
+routes, the best-so-far trace, the instance fingerprint, the code version and host conditions; resumable per
 (instance, kind, width, T).
 
 ``--check`` marks runs that test the BKS budget (e.g. the plan's 10 min x 16 cores on a subset): they are compared
 with the BKS and left out of it, so every instance's BKS comes from the same portfolio. ``collect`` takes, per
 instance, the best successful env-replayed plan over runs/bks and runs/anytime (current fingerprints only) as the
-BKS, with the best certified lower bound, and writes runs/bks/<split>_bks.json (routes
+BKS, with the best certified lower bound, and writes runs/bks/<split>_bks.json (0-based routes
 included) and a CSV summary. Budgets are cut from the Phase 1b plan (>= 10 min x 16 cores) to fit the 6-hour
 compute window; see docs/headroom-2026-09.md.
 """
@@ -50,17 +59,36 @@ from cbba_sota.bench.configs import RUNS_DIR
 from cbba_sota.hetero.replay import succeeded
 
 OUT = RUNS_DIR / "bks"
-ANYTIME = RUNS_DIR / "anytime"
+ANYTIME = (RUNS_DIR / "anytime", RUNS_DIR / "anytime_c1")  # timed campaigns of the first and the second host
 SPLIT = "val"
 SETTINGS = ("SA-BT-25-5-20", "SA-AT-25-5-20", "MA-AT-25-5-20", *cd.SETTINGS)
 SECONDS = {20: 30.0, 50: 90.0, 200: 240.0, 500: 600.0}  # T per task count (see the module docstring)
 SUB_TIME = {"MA-AT-150-10-500": 10.0}  # CP-SAT LNS seconds per sub-solve (default 2 s; dev choice)
-SEEDS = {"ALNS2": 1000, "ALNS2i": 2000, "CPLNS": 1, "CPFULL": 0}
+SEEDS = {"ALNS2": 1000, "ALNS2i": 2000, "CPLNS": 1, "CPFULL": 0, "PLNS": 3000, "CPFULLc": 4000}
 CHECKS = ("ALNS2i",)  # run on a subset only: compared with the BKS, not part of it
+INDEPENDENT = ("PLNS", "CPFULLc")  # no ALNS component: their best is also reported on its own
+# Dev choices of ``anytime.py tune`` (2026-09-28, 8 cores at B1, dev 0-9, 500 tasks dev 0-2): per setting the variant
+# with the lowest mean makespan (docs/results/val-c1/tune_dev.txt). Parallel CP-SAT LNS sub-solve seconds (default 2 s):
+PCPSAT_SUB_TIME: dict[str, float] = {"SA-BT-25-5-50": 0.5, "SA-BT-50-5-50": 5.0, "SA-AT-50-5-50": 0.5,
+                                     "MA-AT-25-5-50": 0.5, "MA-AT-50-5-50": 0.5, "MA-AT-50-5-200": 2.0,
+                                     "MA-AT-150-10-500": 5.0, "MA-AT-150-5-500": 2.0}
+# Full CP-SAT model: arcs to the k nearest candidate tasks (0: all arcs):
+CPFULL_KNN: dict[str, int] = {"SA-BT-25-5-50": 0, "SA-BT-50-5-50": 10, "SA-AT-50-5-50": 0, "MA-AT-25-5-50": 0,
+                              "MA-AT-50-5-50": 10, "MA-AT-50-5-200": 20, "MA-AT-150-10-500": 10,
+                              "MA-AT-150-5-500": 5}
 
 
 def sub_time(name: str) -> float:
     return SUB_TIME.get(name, 2.0)
+
+
+def pcpsat_sub_time(name: str) -> float:
+    return PCPSAT_SUB_TIME.get(name, 2.0)
+
+
+def cpfull_knn(name: str) -> int:
+    """Nearest candidate tasks per task in the full CP-SAT model of the CPFULL competitor (0: all arcs)."""
+    return CPFULL_KNN.get(name, 0 if configs.get(name).n_tasks <= 50 else 10)
 
 
 # --- jobs (run in the lane process) ----------------------------------------------------------------------------
@@ -105,6 +133,19 @@ def run_job(name: str, split: str, i: int, kind: str, width: int, seconds: float
         return _row(inst, res.plan, t0, c0, k0) | {
             "trace": [(t, ms) for t, ms, _ in res.trajectory], "status": res.status, "bound": res.bound,
             "objective": res.objective, "lb": lb, "hint_makespan": evaluate(inst, hint).makespan, "fingerprint": fp}
+    if kind == "PLNS":
+        res = cpsat.solve_lns_parallel(inst, seconds, workers=width, init_time=min(0.1 * seconds, 3.0),
+                                       seed=SEEDS[kind], sub_time=pcpsat_sub_time(name), t0=t0)
+        return _row(inst, res.plan, t0, c0, k0) | {
+            "trace": [(t, ms) for t, ms, _ in res.trajectory], "iterations": res.iterations,
+            "init_makespan": res.init_makespan, "sub_time": pcpsat_sub_time(name), "fingerprint": fp}
+    if kind == "CPFULLc":
+        hint = cpsat.construct_parallel(inst, width, t0 + min(0.1 * seconds, 3.0), seed=SEEDS[kind])
+        res = cpsat.solve_full(inst, seconds, workers=width, hint=hint, seed=SEEDS[kind], t0=t0)
+        lb = res.bound - (inst.n_tasks + 1) / cpsat.SCALE if res.bound == res.bound else None
+        return _row(inst, res.plan, t0, c0, k0) | {
+            "trace": [(t, ms) for t, ms, _ in res.trajectory], "status": res.status, "bound": res.bound,
+            "objective": res.objective, "lb": lb, "hint_makespan": evaluate(inst, hint).makespan, "fingerprint": fp}
     raise ValueError(kind)
 
 
@@ -112,9 +153,10 @@ def run_job(name: str, split: str, i: int, kind: str, width: int, seconds: float
 
 
 def rows_of(name: str, split: str = SPLIT) -> list[dict]:
-    """Current-fingerprint rows of an instance set from runs/bks and runs/anytime (``source`` names the file)."""
+    """Current-fingerprint rows of an instance set from runs/bks and the timed campaigns (``source`` names the
+    directory)."""
     out = []
-    for root in (OUT, ANYTIME):
+    for root in (OUT, *ANYTIME):
         path = root / f"{name}.jsonl"
         out += [r | {"source": root.name} for r in runtime.read_rows(path)
                 if r.get("split", split) == split and runtime.is_current(r)]
@@ -173,7 +215,7 @@ def diagnostics(name: str, rows: list[dict], best: dict[int, dict]) -> list[dict
         d = {"setting": name, "run": lab, "n": len(by_i), "gap_to_bks_pct": float(np.mean(gaps)),
              "found_bks": sum(label(best[i]["row"]) == lab for i in ok),
              "second_half_gain_pct": float(np.mean(half)) if half else None}
-        if lab.startswith("CPFULL"):
+        if lab.startswith("CPFULL"):  # CPFULL and CPFULLc
             d["proven_optimal"] = sum(r["status"] == "OPTIMAL" for r in by_i.values())
             lbs = [100 * (best[i]["bks"] - best[i]["lb"]) / best[i]["bks"] for i in ok if best[i]["lb"] is not None]
             d["bks_to_lb_pct"] = float(np.mean(lbs)) if lbs else None
@@ -188,16 +230,29 @@ def collect(args) -> None:
         best = best_known(rows)
         if not best:
             continue
+        indep = best_known([r for r in rows if r.get("kind") in INDEPENDENT])
+        own = best_known([r for r in rows if r.get("kind") not in INDEPENDENT])
         out[name] = {}
         for i in sorted(best):
             e = best[i]
             if e["bks"] is None:
                 continue
             r, lb = e["row"], e["lb"]
+            ind = indep.get(i, {}).get("bks")
             out[name][i] = {"bks": e["bks"], "routes": r["routes"], "routes_base": 0, "found_by": label(r),
                             "file": r["source"], "fingerprint": r["fingerprint"], "lb": lb}
             table.append({"setting": name, "instance": i, "bks": e["bks"], "found_by": label(r), "lb": lb,
-                          "gap_to_lb_pct": None if lb is None else 100 * (e["bks"] - lb) / e["bks"]})
+                          "gap_to_lb_pct": None if lb is None else 100 * (e["bks"] - lb) / e["bks"],
+                          "own_bks": own.get(i, {}).get("bks"), "independent_best": ind,
+                          "independent_by": None if ind is None else label(indep[i]["row"])})
+        both = [i for i in out[name] if indep.get(i, {}).get("bks") is not None
+                and own.get(i, {}).get("bks") is not None]
+        if both:
+            rel = np.array([100 * (own[i]["bks"] - indep[i]["bks"]) / indep[i]["bks"] for i in both])
+            print(f"\n{name}: independent references on {len(both)} instances: best of the other runs "
+                  f"{np.mean([own[i]['bks'] for i in both]):.3f} vs best independent "
+                  f"{np.mean([indep[i]['bks'] for i in both]):.3f}, i.e. {rel.mean():+.2f}% (min {rel.min():+.2f}%, "
+                  f"max {rel.max():+.2f}%); independent better on {int((rel > 1e-7).sum())}")
         d = diagnostics(name, rows, best)
         diag += d
         found = {}

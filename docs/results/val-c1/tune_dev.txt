@@ -1,0 +1,76 @@
+
+MA-AT-150-10-500  (dev, B1 = 560.2 s, 8 cores)
+  PCPSAT:sub_time=5            n= 3 mean   42.819  / best 1.000 [1.000, 1.000] 0-0  CPU share 1.00  late 0  <- best
+  PCPSAT:sub_time=10           n= 3 mean   43.172  / best 1.008 [1.000, 1.015] 0-3  CPU share 1.00  late 0
+  PCPSAT:sub_time=2            n= 3 mean   43.675  / best 1.020 [1.002, 1.033] 0-3  CPU share 1.00  late 0
+  PCPSAT:sub_time=0.5          n= 3 mean   44.610  / best 1.042 [1.038, 1.047] 0-3  CPU share 1.00  late 0
+  CPFULL:knn=10                n= 3 mean   44.545  / best 1.000 [1.000, 1.000] 0-0  CPU share 0.87  late 0  <- best
+  CPFULL:knn=5                 n= 3 mean   44.610  / best 1.001 [1.000, 1.004] 0-1  CPU share 0.76  late 0
+
+MA-AT-150-5-500  (dev, B1 = 560.5 s, 8 cores)
+  PCPSAT:sub_time=2            n= 3 mean   45.472  / best 1.000 [1.000, 1.000] 0-0  CPU share 1.00  late 0  <- best
+  PCPSAT:sub_time=5            n= 3 mean   45.900  / best 1.011 [1.004, 1.019] 0-3  CPU share 1.00  late 0
+  PCPSAT:sub_time=10           n= 3 mean   46.017  / best 1.014 [1.006, 1.024] 0-3  CPU share 1.00  late 0
+  PCPSAT:sub_time=0.5          n= 3 mean   46.817  / best 1.031 [1.022, 1.037] 0-3  CPU share 1.00  late 0
+  CPFULL:knn=5                 n= 3 mean   46.785  / best 1.000 [1.000, 1.000] 0-0  CPU share 0.91  late 0  <- best
+  CPFULL:knn=10                n= 3 mean   46.817  / best 1.001 [1.000, 1.002] 0-1  CPU share 0.82  late 0
+
+MA-AT-25-5-50  (dev, B1 = 16.34 s, 8 cores)
+  CPFULL:knn=0                 n=10 mean   40.849  / best 1.000 [1.000, 1.000] 0-0  CPU share 0.53  late 0  <- best
+  CPFULL:knn=10                n=10 mean   40.877  / best 1.001 [0.996, 1.006] 1-4  CPU share 0.89  late 0
+  PCPSAT:sub_time=0.5          n=10 mean   40.467  / best 1.000 [1.000, 1.000] 0-0  CPU share 1.00  late 0  <- best
+  PCPSAT:sub_time=2            n=10 mean   40.816  / best 1.012 [1.003, 1.022] 2-7  CPU share 1.00  late 0
+  PCPSAT:sub_time=5            n=10 mean   41.067  / best 1.017 [1.007, 1.027] 1-8  CPU share 1.00  late 0
+  PCPSAT:sub_time=0.2          n=10 mean   41.122  / best 1.018 [1.009, 1.028] 0-9  CPU share 1.00  late 0
+  CPSAT                        n=10 mean   41.259  / best 1.000 [1.000, 1.000] 0-0  CPU share 0.76  late 0  <- best
+  ALNS2                        n=10 mean   36.307  / best 1.000 [1.000, 1.000] 0-0  CPU share 1.00  late 0  <- best
+
+MA-AT-50-5-200  (dev, B1 = 75.2 s, 8 cores)
+  CPSAT                        n=10 mean   59.645  / best 1.000 [1.000, 1.000] 0-0  CPU share 0.66  late 0  <- best
+  PCPSAT:sub_time=2            n=10 mean   59.575  / best 1.000 [1.000, 1.000] 0-0  CPU share 1.00  late 0  <- best
+  PCPSAT:sub_time=5            n=10 mean   59.830  / best 1.004 [1.002, 1.007] 3-7  CPU share 1.00  late 0
+  PCPSAT:sub_time=0.2          n=10 mean   60.455  / best 1.015 [1.010, 1.022] 0-10  CPU share 1.00  late 0
+  PCPSAT:sub_time=0.5          n=10 mean   60.455  / best 1.015 [1.010, 1.022] 0-10  CPU share 1.00  late 0
+  ALNS2                        n=10 mean   53.003  / best 1.000 [1.000, 1.000] 0-0  CPU share 1.00  late 0  <- best
+  CPFULL:knn=20                n=10 mean   60.420  / best 1.000 [1.000, 1.000] 0-0  CPU share 0.78  late 0  <- best
+  CPFULL:knn=10                n=10 mean   60.455  / best 1.001 [1.000, 1.002] 0-1  CPU share 0.86  late 0
+
+MA-AT-50-5-50  (dev, B1 = 23.43 s, 8 cores)
+  PCPSAT:sub_time=0.5          n=10 mean   21.864  / best 1.000 [1.000, 1.000] 0-0  CPU share 1.00  late 0  <- best
+  PCPSAT:sub_time=2            n=10 mean   21.978  / best 1.007 [0.999, 1.014] 2-7  CPU share 1.00  late 0
+  PCPSAT:sub_time=5            n=10 mean   22.237  / best 1.017 [1.012, 1.022] 0-9  CPU share 1.00  late 0
+  PCPSAT:sub_time=0.2          n=10 mean   22.624  / best 1.035 [1.027, 1.043] 0-10  CPU share 1.00  late 0
+  CPSAT                        n=10 mean   22.250  / best 1.000 [1.000, 1.000] 0-0  CPU share 0.66  late 0  <- best
+  CPFULL:knn=10                n=10 mean   22.376  / best 1.000 [1.000, 1.000] 0-0  CPU share 0.76  late 0  <- best
+  CPFULL:knn=0                 n=10 mean   22.573  / best 1.009 [1.003, 1.016] 0-7  CPU share 0.34  late 0
+  ALNS2                        n=10 mean   20.158  / best 1.000 [1.000, 1.000] 0-0  CPU share 1.00  late 0  <- best
+
+SA-AT-50-5-50  (dev, B1 = 29.8 s, 8 cores)
+  PCPSAT:sub_time=0.5          n=10 mean   30.097  / best 1.000 [1.000, 1.000] 0-0  CPU share 1.00  late 0  <- best
+  PCPSAT:sub_time=5            n=10 mean   30.300  / best 1.007 [0.999, 1.017] 2-5  CPU share 1.00  late 0
+  PCPSAT:sub_time=2            n=10 mean   30.397  / best 1.010 [1.003, 1.018] 1-7  CPU share 1.00  late 0
+  PCPSAT:sub_time=0.2          n=10 mean   30.476  / best 1.012 [1.005, 1.021] 0-8  CPU share 1.00  late 0
+  ALNS2                        n=10 mean   28.533  / best 1.000 [1.000, 1.000] 0-0  CPU share 1.00  late 0  <- best
+  CPFULL:knn=0                 n=10 mean   30.505  / best 1.000 [1.000, 1.000] 0-0  CPU share 0.72  late 0  <- best
+  CPFULL:knn=10                n=10 mean   30.695  / best 1.006 [0.999, 1.014] 3-5  CPU share 0.88  late 0
+  CPSAT                        n=10 mean   30.771  / best 1.000 [1.000, 1.000] 0-0  CPU share 0.72  late 0  <- best
+
+SA-BT-25-5-50  (dev, B1 = 13.45 s, 8 cores)
+  ALNS2                        n=10 mean   27.311  / best 1.000 [1.000, 1.000] 0-0  CPU share 1.00  late 0  <- best
+  PCPSAT:sub_time=0.5          n=10 mean   29.093  / best 1.000 [1.000, 1.000] 0-0  CPU share 1.00  late 0  <- best
+  PCPSAT:sub_time=0.2          n=10 mean   29.300  / best 1.008 [1.002, 1.014] 3-7  CPU share 1.00  late 0
+  PCPSAT:sub_time=2            n=10 mean   29.614  / best 1.018 [1.011, 1.024] 0-9  CPU share 1.00  late 0
+  PCPSAT:sub_time=5            n=10 mean   29.741  / best 1.022 [1.016, 1.028] 0-10  CPU share 1.00  late 0
+  CPSAT                        n=10 mean   29.937  / best 1.000 [1.000, 1.000] 0-0  CPU share 0.80  late 0  <- best
+  CPFULL:knn=0                 n=10 mean   29.433  / best 1.000 [1.000, 1.000] 0-0  CPU share 0.74  late 0  <- best
+  CPFULL:knn=10                n=10 mean   29.463  / best 1.001 [0.996, 1.006] 4-5  CPU share 0.92  late 0
+
+SA-BT-50-5-50  (dev, B1 = 19.14 s, 8 cores)
+  ALNS2                        n=10 mean   17.342  / best 1.000 [1.000, 1.000] 0-0  CPU share 1.00  late 0  <- best
+  CPFULL:knn=10                n=10 mean   18.220  / best 1.000 [1.000, 1.000] 0-0  CPU share 0.83  late 0  <- best
+  CPFULL:knn=0                 n=10 mean   18.421  / best 1.012 [0.998, 1.028] 5-4  CPU share 0.59  late 0
+  PCPSAT:sub_time=5            n=10 mean   17.938  / best 1.000 [1.000, 1.000] 0-0  CPU share 1.00  late 0  <- best
+  PCPSAT:sub_time=2            n=10 mean   17.940  / best 1.000 [0.983, 1.012] 3-5  CPU share 1.00  late 0
+  PCPSAT:sub_time=0.5          n=10 mean   17.951  / best 1.001 [0.995, 1.006] 3-5  CPU share 1.00  late 0
+  PCPSAT:sub_time=0.2          n=10 mean   18.175  / best 1.013 [1.006, 1.020] 1-9  CPU share 1.00  late 0
+  CPSAT                        n=10 mean   17.979  / best 1.000 [1.000, 1.000] 0-0  CPU share 0.58  late 0  <- best

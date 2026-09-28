@@ -21,17 +21,22 @@ paper's RL(s.10) time of the setting):
   best over the 8 streams (the first plan if none finished by b; ``t_found`` says when it did).
 - PCPSAT: parallel CP-SAT LNS (``cpsat.solve_lns_parallel``): 1 or 8 forked processes with one CP-SAT thread each
   improving one shared incumbent, started from the best of their ``greedy.construct`` restart streams built in
-  min(10% of the budget, 3 s); sub-solves of at most ``PCPSAT_SUB_TIME`` seconds (the dev choice, ``tune``).
+  min(10% of the budget, 3 s); sub-solves of at most ``bks.pcpsat_sub_time`` seconds (the dev choice, ``tune``).
 - CPFULL: the monolithic CP-SAT model (``cpsat.solve_full``, CP-SAT's own portfolio of search and LNS workers) on 1
   or 8 threads, hinted with the best of 1 or 8 forked ``greedy.construct`` restart streams built in min(10% of the
-  budget, 3 s); arcs to the ``CPFULL_KNN`` nearest candidate tasks only on large instances (the dev choice).
+  budget, 3 s); arcs to the ``bks.cpfull_knn`` nearest candidate tasks only on large instances (the dev choice).
+- CTAS: CTAS-D, the benchmark paper's exact MILP (``cbba_sota.solvers.ctas``, verified against its shipped Gurobi
+  runs), solved by CP-SAT as a MIP backend on 1 or 8 threads within the budget (model building included), no warm
+  start. A budget without a converted plan is a failure (makespan 200).
 Rows of the multi-process methods (ALNS2/ALNS1 with 8 workers, PCPSAT, CPFULL, RL, CONSTRUCT) record the CPU
 seconds of all their processes and threads (``cpu_s``; CONSTRUCT: ``stream_cpu_s``).
 Grid ``c1`` (the same-host C1/C2 campaign of 2026-09-28 on the second server): on every instance ALNS2 on 1 core at
-0.5, 1, 2 s and B1; ALNS2, CPSAT, PCPSAT, CPFULL and RL on 8 cores at B1 and the 8 restart streams; ALNS2, PCPSAT and
-CPFULL on 8 cores at 2B1; on instances 0-4 also ALNS2 on 1 core at 5 and 10 s and ALNS2, PCPSAT, CPFULL and RL on 8
-cores at 0.5-10 s. 500 tasks: ALNS2 on 1 core at 0.5-10 s and B1, the 8-core B1 points and the 8 restart streams up
-to B1. 20-task settings are not in this grid.
+0.5, 1, 2 s and B1; ALNS2, CPSAT, PCPSAT, CPFULL, CTAS and RL on 8 cores at B1 and the 8 restart streams; ALNS2,
+PCPSAT and CPFULL on 8 cores at 2B1; on instances 0-4 also ALNS2 on 1 core at 5 and 10 s and ALNS2, PCPSAT, CPFULL and
+RL on 8 cores at 0.5-10 s. 500 tasks: ALNS2 on 1 core at 0.5-10 s and B1, the 8-core B1 points except CTAS, and the 8
+restart streams up to B1. CTAS-D found no incumbent within B1 on either 500-task dev pilot instance and its solver
+held 55-87 GB each (docs/results/ctas/ctas500_dev_pilot.jsonl, scripts/ctas500_pilot.py), so several such jobs at once
+would exceed the container's 330 GB; it counts as failed there. 20-task settings are not in this grid.
 Grid ``phase1b`` (``grid``; cut to the 6-hour compute window on a shared host, see docs/headroom-2026-09.md): on
 instances 0-4
 every method at every budget on 1 core, and ALNS2, CPSAT and RL at 0.5-10 s on 8 cores; on every instance ALNS2,
@@ -93,10 +98,8 @@ OUT = RUNS_DIR / "anytime"
 SPLIT = "val"
 LANE = cd.LANE
 LOW = (0.5, 1.0, 2.0, 5.0, 10.0)
-METHODS = ("ALNS2", "ALNS1", "CPSAT", "PCPSAT", "CPFULL", "RL", "CONSTRUCT")
-COMPETITORS = ("CPSAT", "PCPSAT", "CPFULL", "RL", "CONSTRUCT")
-PCPSAT_SUB_TIME: dict[str, float] = {}  # per setting (default 2 s): the dev choice of ``tune``
-CPFULL_KNN: dict[str, int | None] = {}  # per setting (default: full arcs up to 50 tasks, else 10): the dev choice
+METHODS = ("ALNS2", "ALNS1", "CPSAT", "PCPSAT", "CPFULL", "CTAS", "RL", "CONSTRUCT")
+COMPETITORS = ("CPSAT", "PCPSAT", "CPFULL", "CTAS", "RL", "CONSTRUCT")
 EXTENDED = 5  # instances below this get the full budget grid (see ``grid``)
 FAIL = cd.FAIL
 QUIET = 0.4  # a lane starts a unit only when at most this share of the cgroup's CPU periods was throttled
@@ -133,9 +136,10 @@ def grid(setting, i: int = 0) -> list[tuple[str, int, str]]:
 def grid_c1(setting, i: int = 0) -> list[tuple[str, int, str]]:
     """(method, cores, budget label) of instance ``i`` in the same-host C1/C2 campaign (see the module docstring)."""
     labels = list(budgets(setting))
-    eight = [(m, LANE, "B1") for m in ("ALNS2", "CPSAT", "PCPSAT", "CPFULL", "RL")] + [("CONSTRUCT", LANE, "stream")]
-    if setting.n_tasks >= 500:
-        return [("ALNS2", 1, b) for b in (*labels[:5], "B1")] + eight
+    eight = [(m, LANE, "B1") for m in ("ALNS2", "CPSAT", "PCPSAT", "CPFULL", "CTAS", "RL")]
+    eight.append(("CONSTRUCT", LANE, "stream"))
+    if setting.n_tasks >= 500:  # CTAS-D: no incumbent within B1, 55-87 GB per solve (module docstring)
+        return [("ALNS2", 1, b) for b in (*labels[:5], "B1")] + [job for job in eight if job[0] != "CTAS"]
     if setting.n_tasks <= 20:
         return []
     jobs = [("ALNS2", 1, b) for b in ("0.5", "1", "2", "B1")] + eight + [(m, LANE, "2B1")
@@ -191,7 +195,7 @@ def run_pcpsat(name: str, split: str, i: int, budget: float, workers: int, sub_t
     from cbba_sota.solvers import cpsat
 
     inst, _, fp = cd._load(name, split, i)
-    sub_time = PCPSAT_SUB_TIME.get(name, 2.0) if sub_time is None else sub_time
+    sub_time = bks.pcpsat_sub_time(name) if sub_time is None else sub_time
     t0 = time.perf_counter()
     res = cpsat.solve_lns_parallel(inst, budget, workers=workers, init_time=min(0.1 * budget, 3.0),
                                    sub_time=sub_time, t0=t0)
@@ -205,8 +209,7 @@ def run_cpfull(name: str, split: str, i: int, budget: float, workers: int, knn: 
     from cbba_sota.solvers import cpsat
 
     inst, _, fp = cd._load(name, split, i)
-    if knn is None:
-        knn = CPFULL_KNN.get(name, 0 if inst.n_tasks <= 50 else 10)
+    knn = bks.cpfull_knn(name) if knn is None else knn
     t0, c0, k0 = time.perf_counter(), time.process_time(), cd._children_cpu()
     hint = cpsat.construct_parallel(inst, workers, t0 + min(0.1 * budget, 3.0))
     res = cpsat.solve_full(inst, budget, workers=workers, hint=hint, knn=knn or None, t0=t0)
@@ -214,6 +217,21 @@ def run_cpfull(name: str, split: str, i: int, budget: float, workers: int, knn: 
     return cd._plan_row(inst, res.plan, wall, cpu) | {
         "status": res.status, "bound": res.bound, "knn": knn, "init_makespan": evaluate(inst, hint).makespan,
         "trace": [(t, ms) for t, ms, _ in res.trajectory], "fingerprint": fp}
+
+
+def run_ctas(name: str, split: str, i: int, budget: float, workers: int) -> dict:
+    from cbba_sota.solvers import ctas
+
+    inst, _, fp = cd._load(name, split, i)
+    t0 = time.perf_counter()
+    res = ctas.solve(inst, budget, backend="CP_SAT", threads=workers, t0=t0)
+    wall = time.perf_counter() - t0
+    extra = {"status": res.status, "objective": res.objective, "bound": res.bound, "qmax": res.qmax,
+             "build_s": res.build_s, "fingerprint": fp}
+    if res.plan is None:
+        return {"makespan": FAIL, "success": False, "env_finished": False, "eval_makespan": None, "skipped": None,
+                "wall_s": wall, "cpu_s": res.cpu_s, "routes": None, "routes_base": 0} | extra
+    return cd._plan_row(inst, res.plan, wall, res.cpu_s) | extra
 
 
 def run_stream(name: str, split: str, i: int, seed: int, checkpoints: list[float]) -> dict:
@@ -285,6 +303,8 @@ def _run_job(ex, job: dict) -> list[dict]:
         return [ex.submit(run_pcpsat, name, SPLIT, i, budget, cores, **params).result()]
     if method == "CPFULL":
         return [ex.submit(run_cpfull, name, SPLIT, i, budget, cores, **params).result()]
+    if method == "CTAS":
+        return [ex.submit(run_ctas, name, SPLIT, i, budget, cores).result()]
     if method == "RL":
         first = 1 if budget <= RL_FIRST_ONE else 4
         parts = [f.result() for f in [ex.submit(cd.run_rl, name, SPLIT, i, p, cores, budget, first=first)
@@ -486,7 +506,8 @@ def gap_table(name: str, rows, bks_of: dict[int, float]) -> list[dict]:
                     "gap_sd": float(gaps.std(ddof=1)) if len(gaps) > 1 else 0.0,
                     "mean_makespan": float(np.mean([score(r) for r in ok.values()])),
                     "success": float(np.mean([succeeded(r["success"], r["makespan"]) for r in ok.values()])),
-                    "wall_s": float(np.mean([r["wall_s"] for r in by_i.values()])), "closed": closed})
+                    "wall_s": float(np.mean([r["wall_s"] for r in by_i.values()])), "closed": closed,
+                    "cpu_share": float(np.mean([cpu_s(r) / (labels[label] * cores) for r in ok.values()]))})
     return sorted(out, key=lambda g: (METHODS.index(g["method"]), g["cores"], g["budget_s"]))
 
 
@@ -507,6 +528,7 @@ def ratios(name: str, rows) -> list[dict]:
         for other in COMPETITORS:  # (competitors without rows in this campaign are skipped)
             pair(("ALNS2", LANE, label), (other, LANE, label), f"C1 8 cores {label}")
         pair(("ALNS2", LANE, label), ("ALNS1", LANE, label), f"ablation v2/v1 8 cores {label}")
+    pair(("ALNS2", LANE, "B1"), ("ALNS2", 1, "B1"), "ablation 8 workers / 1 worker B1")
     for label in ("0.5", "1", "2"):
         for other in COMPETITORS:
             pair(("ALNS2", 1, label), (other, LANE, "B1"), f"C2 1 core {label} s vs 8 cores B1")
@@ -590,12 +612,53 @@ def report(args) -> None:
         print(f"\nwrote {args.csv_dir}/anytime_gaps_val.csv and anytime_ratios_val.csv")
     if args.png:
         plot(curves, args.png)
+    if args.compare:
+        compare(args)
+
+
+def compare(args) -> None:
+    """Cells (method, cores, budget) of this campaign that another campaign (``--compare DIR``, e.g. the first host's
+    runs/anytime) also ran: paired mean makespans over the instances both ran on time, ratio this / other."""
+    global OUT
+    here = OUT
+    print(f"\nSame cells in {args.compare} (paired over instances on time in both; ratio {here.name} / "
+          f"{args.compare.name})")
+    for name in args.settings:
+        OUT = here
+        mine = load_rows(name)
+        OUT = args.compare
+        other = _load_any(name)
+        for cell in sorted(set(mine) & set(other), key=lambda c: (METHODS.index(c[0]), c[1], budgets(
+                configs.get(name))[c[2]])):
+            a, b = mine[cell], other[cell]
+            common = sorted(i for i in set(a) & set(b) if not late(a[i]) and not late(b[i]))
+            if len(common) < 2:
+                continue
+            res = cd._ratio(np.array([score(a[i]) for i in common]), np.array([score(b[i]) for i in common]))
+            print(f"  {name:17s} {cell[0]}-{cell[1]}@{cell[2]:4s} n={len(common):2d} "
+                  f"{np.mean([score(a[i]) for i in common]):8.3f} vs {np.mean([score(b[i]) for i in common]):8.3f}"
+                  f"  ratio {res['ratio']:.3f} [{res['lo']:.3f}, {res['hi']:.3f}] {res['wins']}-{res['losses']}")
+    OUT = here
+
+
+def _load_any(name: str) -> dict[tuple[str, int, str], dict[int, dict]]:
+    """``load_rows`` under whichever grid planned the rows of ``OUT``."""
+    global GRID
+    keep, out = GRID, {}
+    for g in GRIDS.values():
+        GRID = g
+        for cell, by_i in load_rows(name).items():
+            out.setdefault(cell, {}).update(by_i)
+    GRID = keep
+    return out
 
 
 def cpu_s(r: dict) -> float:
-    """CPU seconds of all processes and threads of a row's job (CONSTRUCT: of the streams it takes the best of, up to
-    the end of the longest one)."""
-    return r.get("stream_cpu_s", r.get("cpu_s", 0.0))
+    """CPU seconds of all processes and threads of a row's job. CONSTRUCT rows are read off restart streams that run
+    on to the largest budget: their streams' CPU pro rata up to the row's budget."""
+    if "stream_cpu_s" in r:
+        return r["stream_cpu_s"] * min(1.0, r["budget_s"] / stream_budget(configs.get(r["setting"])))
+    return r.get("cpu_s", 0.0)
 
 
 def markdown_c1(gaps: list[dict], rats: list[dict], bks_all: dict) -> str:
@@ -611,7 +674,8 @@ def markdown_c1(gaps: list[dict], rats: list[dict], bks_all: dict) -> str:
         x = g.get((name, m, c, b))
         if x is None:
             return "-"
-        return f"{x['gap_pct']:.2f}" + ("" if x["on_time"] == x["planned"] else f" ({x['on_time']}/{x['planned']})")
+        return (f"{x['gap_pct']:.2f}" + ("" if x["on_time"] == x["planned"] else f" ({x['on_time']}/{x['planned']})")
+                + ("" if x["success"] == 1 else f" [solved {100 * x['success']:.0f}%]"))
 
     def ratio(name, ours, other):
         x = r.get((name, ours, other))
@@ -619,11 +683,19 @@ def markdown_c1(gaps: list[dict], rats: list[dict], bks_all: dict) -> str:
             return "-"
         return f"{x['ratio']:.3f} [{x['lo']:.3f}, {x['hi']:.3f}] {x['wins']}-{x['losses']}"
 
+    def cpu(name, m):
+        x = g.get((name, m, LANE, "B1"))
+        return "-" if x is None else f"{x['cpu_share']:.2f}"
+
     out = ["**C1, 8 cores at B1.** Mean gap to the best of our own runs (%).", "",
            "| Setting | n | " + " | ".join(methods) + " |", "|" + " --- |" * (len(methods) + 2)]
     for name in names:
         out.append(f"| {name} | {len(bks_all.get(name, {}))} | "
                    + " | ".join(gap(name, m, LANE, "B1") for m in methods) + " |")
+    out += ["", "**CPU used, 8 cores at B1.** CPU seconds of all processes and threads / (B1 x 8), mean over runs.",
+            "", "| Setting | " + " | ".join(methods) + " |", "|" + " --- |" * (len(methods) + 1)]
+    for name in names:
+        out.append(f"| {name} | " + " | ".join(cpu(name, m) for m in methods) + " |")
     for label in ("B1", "2B1"):
         cols = [m for m in others if any(k[0] == name and k[2] == f"{m}-8@{label}" for k in r for name in names)]
         if not cols:
@@ -712,7 +784,7 @@ def plot(gaps: list[dict], png: Path) -> None:
     cols = 4
     fig, axes = plt.subplots((len(names) + cols - 1) // cols, cols, figsize=(4 * cols, 3.2 * ((len(names) + 3) // 4)),
                              squeeze=False)
-    colors = dict(zip(METHODS, ("C0", "C1", "C2", "C4", "C5", "C3", "C7")))
+    colors = dict(zip(METHODS, ("C0", "C1", "C2", "C4", "C5", "C6", "C3", "C7")))
     for ax, name in zip(axes.flat, names):
         for m in METHODS:
             for c, ls in ((1, "-"), (LANE, "--")):
@@ -807,6 +879,7 @@ def main() -> None:
     ap.add_argument("--png", type=Path, default=None)
     ap.add_argument("--md", type=Path, default=None, help="report: compact markdown tables")
     ap.add_argument("--keep-disturbed", action="store_true", help="report: sensitivity run keeping disturbed rows")
+    ap.add_argument("--compare", type=Path, default=None, help="report: rows of another campaign to compare cells")
     ap.add_argument("--out", type=Path, default=None, help="rows (default runs/anytime; tune: runs/tune_dev)")
     ap.add_argument("--allow-dirty", action="store_true", help="run on uncommitted source (smoke tests only)")
     args = ap.parse_args()

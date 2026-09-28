@@ -1,0 +1,2 @@
+{"setting": "MA-AT-150-5-500", "status": "NOT_SOLVED", "makespan": Infinity, "wall_s": 583.6274723429233, "cpu_s": 2336.756512632, "build_s": 18.999163845088333, "qmax": NaN, "objective": NaN, "bound": NaN, "maxrss_gb": 54.531104}
+{"setting": "MA-AT-150-10-500", "status": "NOT_SOLVED", "makespan": Infinity, "wall_s": 602.6768847010098, "cpu_s": 1989.218272589, "build_s": 36.014076836872846, "qmax": NaN, "objective": NaN, "bound": NaN, "maxrss_gb": 87.151576}
