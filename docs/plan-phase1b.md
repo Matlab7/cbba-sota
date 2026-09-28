@@ -21,3 +21,13 @@ The draft gate (≤ 0.92 vs the best competitor at matched budget) is now agains
 4. **Best-known solutions (BKS)** on the validation split: portfolio of ALNS v2 and CP-SAT-LNS, long runs (≥10 min × 16 cores) per instance; report every method's gap to BKS and the share of the constructor-to-BKS gap it closes.
 5. **Anytime curves** (0.1–100 s, 1 and 8 cores) for ALNS v2, CP-SAT-LNS, constructor restarts, RL(s.N) GPU lockstep; quality vs wall-clock and vs CPU-seconds.
 6. Decide the gate with the user from 4–5; then freeze the prereg, commit, and run the test split once on a quiet, pinned host.
+
+## Before freezing the static claims (Track S review, 2026-09-28)
+
+Source: `docs/research/trackS-2026-09-28.json` (key `review`). Must-do before the prereg freeze:
+
+1. **Stronger, properly parallel competitor.** CP-SAT-LNS used about 53% of its 8 cores (13-36% on 500 tasks). Add a parallel CP-SAT-LNS (8 concurrent single-thread sub-solves or CP-SAT's own LNS workers on the full model, hinted with the best of 8 constructions) and report CPU-seconds used. Add at least one established external method (CTAS-D with an open MIP solver, or a published VRP-with-synchronization / coalition metaheuristic).
+2. **Pinned runs everywhere.** run_alns, alns_ablation and cpsat_lns_ref do not pin; all ALNS v2 dev rows are unpinned. Run the two 500-task settings through the pinned anytime harness on val before any C1/C2 claim there.
+3. **Honest C2.** At 2 s on 1 core ALNS does not beat 8-core constructor restarts on SA-AT-50-5-50 (1.015 [1.001, 1.028]); reported in docs/headroom-2026-09.md.
+4. **No self-referential headline.** "Gap to BKS" is "gap to the best of our own runs"; add an independent reference on 50-task instances (hinted CP-SAT full model with bound, or another algorithm family).
+5. Minor: routes base convention in stored plans; RL first batch of 1 at low budgets; refuse timed campaigns on a dirty tree; disclose that constructor rows on the test split were seen before the freeze; report that 8 workers add only 0.6-2.1% over 1 worker.
