@@ -155,6 +155,8 @@ def summarize(root: Path, settings: list[str], split: str, instances: int | None
             continue
         rows: dict[tuple, dict[int, dict]] = {}
         for row in runtime.read_rows(path):
+            if runtime.is_stale(row):
+                continue
             if ((instances is None or row["instance"] < instances) and (methods is None or row["method"] in methods)
                     and (budgets is None or row["budget_s"] is None or row["budget_s"] in budgets)):
                 rows.setdefault((row["method"], row["budget_s"]), {})[row["instance"]] = row

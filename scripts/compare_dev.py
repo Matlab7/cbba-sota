@@ -124,13 +124,15 @@ def _plan_row(inst, plan, wall: float, cpu: float) -> dict:
 
 def run_alns(name: str, i: int, workers: int, deadline: float | None = None, budget: float | None = None,
              init=None) -> dict:
-    """ALNS until ``deadline`` (monotonic) or for ``budget`` seconds; ``init``: warm-start plan."""
+    """ALNS until ``deadline`` (monotonic) or for ``budget`` seconds; ``init``: warm-start plan. A deadline is
+    moved by the time this process spends loading the instance (outside every budget)."""
     from cbba_sota.solvers import alns
 
+    loading = time.monotonic()
     inst, _, fp = _load(name, i)
     c0, k0 = time.process_time(), _children_cpu()
     t0 = time.monotonic()
-    limit = budget if deadline is None else deadline - t0
+    limit = budget if deadline is None else deadline - loading  # = time left + loading time
     plan, st = alns.solve(inst, limit, seed=0, n_workers=workers, init_plan=init)
     end = time.monotonic()
     wall = end - t0
@@ -366,17 +368,23 @@ def run(args) -> None:
 
 
 def _load_rows(out: Path) -> dict[tuple[str, str], dict[str, dict[int, dict]]]:
-    """(setting, budget label) -> method -> instance -> row (budget-free greedy rows are copied to every budget)."""
+    """(setting, budget label) -> method -> instance -> row (budget-free greedy rows are copied to every budget).
+    Only rows computed on the current instances (matching fingerprint) enter."""
     from cbba_sota.bench import configs
 
     rows: dict[tuple[str, str], dict[str, dict[int, dict]]] = {}
     for path in sorted(out.glob("*.jsonl")):
         name = path.stem
         labels = list(budgets(configs.get(name)))
-        for line in path.read_text().splitlines():
-            r = json.loads(line)
+        stale = 0
+        for r in runtime.read_rows(path):
+            if not runtime.is_current(r):
+                stale += 1
+                continue
             for label in labels if r["budget"] == "none" else [r["budget"]]:
                 rows.setdefault((name, label), {}).setdefault(r["method"], {})[r["instance"]] = r
+        if stale:
+            print(f"{path.name}: {stale} rows skipped (no fingerprint, or not the current instance's)")
     return rows
 
 

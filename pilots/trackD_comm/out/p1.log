@@ -1,0 +1,14 @@
+1980 jobs, 1980 to run
+  100/1980  24s
+  200/1980  37s
+  300/1980  49s
+  400/1980  62s
+  500/1980  81s
+  600/1980  97s
+  700/1980  116s
+  800/1980  147s
+  900/1980  182s
+  1000/1980  224s
+  1100/1980  245s
+/usr/lib/python3.12/multiprocessing/resource_tracker.py:254: UserWarning: resource_tracker: There appear to be 6 leaked semaphore objects to clean up at shutdown
+  warnings.warn('resource_tracker: There appear to be %d '

@@ -1,0 +1,7 @@
+1520 jobs
+0/1520 20s
+50/1520 66s
+100/1520 148s
+150/1520 241s
+/usr/lib/python3.12/multiprocessing/resource_tracker.py:254: UserWarning: resource_tracker: There appear to be 6 leaked semaphore objects to clean up at shutdown
+  warnings.warn('resource_tracker: There appear to be %d '

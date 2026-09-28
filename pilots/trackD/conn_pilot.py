@@ -44,6 +44,7 @@ def trajectories(inst: Instance, plan: Plan):
     pos = np.empty((len(ticks), A, 2))
     lead = []  # (start - departure) of every visit
     nxt = np.full((len(ticks), A), -1)  # task the agent is heading to / at (-1 depot)
+    nxt2 = np.full((len(ticks), A), -1)  # the task after it (first task a repair may still change)
     for i in range(A):
         pts_t, pts_x = [0.0], [inst.depot[i]]
         free, here = 0.0, inst.depot[i]
@@ -62,9 +63,11 @@ def trajectories(inst: Instance, plan: Plan):
         pts_x = np.array(pts_x)
         pos[:, i, 0] = np.interp(ticks, pts_t, pts_x[:, 0])
         pos[:, i, 1] = np.interp(ticks, pts_t, pts_x[:, 1])
-        for a, b, j in seg_task:
-            nxt[(ticks >= a) & (ticks < b), i] = j
-    return ticks, pos, nxt, sch, routes, np.array(lead)
+        for k, (a, b, j) in enumerate(seg_task):
+            m = (ticks >= a) & (ticks < b)
+            nxt[m, i] = j
+            nxt2[m, i] = seg_task[k + 1][2] if k + 1 < len(seg_task) else -1
+    return ticks, pos, nxt, nxt2, sch, routes, np.array(lead)
 
 
 def components(p: np.ndarray, R: float) -> np.ndarray:
@@ -75,7 +78,7 @@ def components(p: np.ndarray, R: float) -> np.ndarray:
 
 
 def analyse(inst: Instance, plan: Plan, radii: list[float]) -> dict:
-    ticks, pos, nxt, sch, routes, lead = trajectories(inst, plan)
+    ticks, pos, nxt, nxt2, sch, routes, lead = trajectories(inst, plan)
     A = inst.n_agents
     members = plan.members
     out = {"lead": lead}
@@ -85,7 +88,7 @@ def analyse(inst: Instance, plan: Plan, radii: list[float]) -> dict:
         comp = np.array([np.bincount(l[:A], minlength=A + 1)[l[:A]].mean() / A for l in labs]).mean()
         # flooding from origins every 1.0 time unit
         o_ticks = np.arange(0, int(0.8 * len(ticks)), int(1.0 / DT))
-        up, down, partner, allr = [], [], [], []
+        up, down, partner, partner2, allr = [], [], [], [], []
         for k0 in o_ticks:
             N = A + 1
             inf = np.eye(N, dtype=bool)  # origin o = node o (agents and the station)
@@ -112,8 +115,13 @@ def analyse(inst: Instance, plan: Plan, radii: list[float]) -> dict:
                     others = [m for m in members[j] if m != i]
                     if others:
                         partner.append(t_reach[i, others].max())
+                j2 = nxt2[k0, i]
+                if j2 >= 0:
+                    others = [m for m in members[j2] if m != i]
+                    if others:
+                        partner2.append(t_reach[i, others].max())
         out[R] = dict(in_station=in_st, comp_frac=comp, up=np.array(up), down=np.array(down),
-                      partner=np.array(partner), all=np.array(allr))
+                      partner=np.array(partner), partner2=np.array(partner2), all=np.array(allr))
     return out
 
 
@@ -134,7 +142,7 @@ def main():
         A = int(setting.split("-")[2])
         rc = float(np.sqrt(np.log(A) / (np.pi * A)))
         radii = [0.5, 0.3, 0.2, 0.15, 0.1]
-        acc = {R: {k: [] for k in ("in_station", "comp_frac", "up", "down", "partner", "all")} for R in radii}
+        acc = {R: {k: [] for k in ("in_station", "comp_frac", "up", "down", "partner", "partner2", "all")} for R in radii}
         leads, mks, durs, legs = [], [], [], []
         for p in sorted(paths)[:10]:
             inst = Instance.from_pickle(p)
@@ -153,7 +161,7 @@ def main():
                      f"lead(dep->start) median {np.median(lead):.2f} p10 {np.quantile(lead, .1):.2f} "
                      f"p90 {np.quantile(lead, .9):.2f}")
         lines.append(f"  R     R/r_c  in_station  comp_frac | latency median/p90 (inf=never within episode): "
-                     f"uplink         downlink       ->partners     ->all")
+                     f"uplink         downlink       ->partners(cur) ->partners(next) ->all")
         for R in radii:
             a = {k: np.concatenate([np.atleast_1d(np.asarray(x, float)) for x in v]) for k, v in acc[R].items()}
             def f(k):
@@ -161,7 +169,7 @@ def main():
                 never = np.mean(~np.isfinite(x))
                 return f"{q(x, .5):5.2f}/{q(x, .9):5.2f} n{never:.2f}".replace("1000000000.00", "  inf")
             lines.append(f"  {R:4.2f}  {R / rc:5.2f}  {a['in_station'].mean():9.3f}  {a['comp_frac'].mean():9.3f} | "
-                         f"{f('up'):>14} {f('down'):>14} {f('partner'):>14} {f('all'):>14}")
+                         f"{f('up'):>14} {f('down'):>14} {f('partner'):>14} {f('partner2'):>14} {f('all'):>14}")
         print("\n".join(lines[-len(radii) - 2:]), flush=True)
     (HERE / "out" / "conn.txt").write_text("\n".join(lines) + "\n")
 

@@ -8,6 +8,7 @@ among robots plus a station at the square centre. Reported per range R:
   st_conn    mean fraction of robots in the station's component (multi-hop relay allowed)
   pair_conn  mean fraction of robot pairs that share a component (what gossip can reach eventually)
   deg        mean one-hop degree
+  lcc        mean fraction of robots in the largest component (CC-OPI reports 15% at its representative radius)
   coal_conn  for tasks with >= 2 members: fraction of member pairs connected at the first member's departure
   cov_rel    Poisson-release proxy: at 50 random times in [0, H], for a random task location, does the component
              of the nearest robot within R (discovery) cover the task's requirement? (0 if nobody is within R)
@@ -29,7 +30,7 @@ import numpy as np
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
-RADII = (0.05, 0.1, 0.15, 0.2, 0.3, 0.4)
+RADII = (0.02, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4)
 SETTINGS = ("MA-AT-25-5-50", "MA-AT-50-5-50", "SA-AT-50-5-50", "SA-BT-50-5-50")
 HORIZON = {"MA-AT-25-5-50": 25.0, "MA-AT-50-5-50": 15.0, "SA-AT-50-5-50": 20.0, "SA-BT-50-5-50": 12.0}
 STATION = np.array([0.5, 0.5])
@@ -81,7 +82,7 @@ def analyse(env, legs, makespan, horizon, rng):
     A = len(legs)
     ab = np.array([a["abilities"] for a in env.agent_dic.values()], float)
     ts = np.arange(0.0, makespan, 0.25)
-    res = {R: {"st_conn": [], "pair_conn": [], "deg": [], "coal_conn": [], "cov_rel": []} for R in RADII}
+    res = {R: {"st_conn": [], "pair_conn": [], "deg": [], "lcc": [], "coal_conn": [], "cov_rel": []} for R in RADII}
     for t in ts:
         P = positions(legs, t)
         Pst = np.vstack([P, STATION])
@@ -92,6 +93,7 @@ def analyse(env, legs, makespan, horizon, rng):
             same = (la[:, None] == la[None]).sum() - A
             res[R]["pair_conn"].append(same / (A * (A - 1)))
             res[R]["deg"].append(float(((D[:A, :A] <= R).sum() - A) / A))
+            res[R]["lcc"].append(float(np.bincount(la).max() / A))
     # coalition connectivity at the first member's departure towards the task
     for j, task in env.task_dic.items():
         mem = list(task["members"])
@@ -173,7 +175,7 @@ def main():
         for r in pool.imap_unordered(job, jobs):
             rows += r
     (HERE / "out" / "commfirst_exposure.jsonl").write_text("\n".join(json.dumps(r) for r in rows) + "\n")
-    keys = ("st_conn", "pair_conn", "deg", "coal_conn", "cov_rel")
+    keys = ("st_conn", "pair_conn", "deg", "lcc", "coal_conn", "cov_rel")
     for s in SETTINGS:
         for m in ("ALNS", "RL(g.)"):
             sub = [r for r in rows if r["setting"] == s and r["method"] == m]

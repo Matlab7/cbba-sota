@@ -1,7 +1,8 @@
 """Provenance and host conditions of campaign rows.
 
 - ``fingerprint``: sha1 of an instance's arrays. Every row stores it, and resumable campaigns only skip rows whose
-  fingerprint matches the current instance, so rows computed on a regenerated instance are recomputed.
+  fingerprint matches the current instance, so rows computed on a regenerated instance are recomputed; reports
+  drop rows whose fingerprint differs (``is_stale``).
 - ``code_version``: the git commit of the source, or ``<commit|nocommit>-dirty-<hash>`` when it has uncommitted
   changes.
 - CPU pinning: ``choose_cpus`` picks idle physical cores, ``pin`` restricts every thread of the calling process to
@@ -60,6 +61,13 @@ def is_current(row: dict) -> bool:
     except (KeyError, IndexError, TypeError):
         return False
     return fp is not None and row.get("fingerprint") == fp
+
+
+def is_stale(row: dict) -> bool:
+    """The row carries a fingerprint that is not the current one of its instance; reports drop such rows. Rows
+    written before fingerprints existed and never verified by scripts/check_rows.py have none and are not stale by
+    this test, but resuming (``is_current``) recomputes them."""
+    return "fingerprint" in row and not is_current(row)
 
 
 @cache

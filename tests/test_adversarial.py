@@ -285,12 +285,12 @@ def test_stored_rows_match_current_instances():
 
 
 def test_check_rows_flags_superseded_rows():
+    """Negative control: the baseline rows computed on the kb = 3 MA-AT-9-3-20 instances before their regeneration."""
     cr = _script("check_rows")
-    paths = sorted((RUNS_DIR / "_superseded").rglob("MA-AT-9-3-20/dev.jsonl"))
-    paths += sorted((RUNS_DIR / "baselines" / "_superseded" / "MA-AT-9-3-20").glob("dev.jsonl"))
-    if not paths:
+    path = RUNS_DIR / "baselines" / "_superseded" / "MA-AT-9-3-20" / "dev.jsonl"
+    if not path.exists():
         pytest.skip("no superseded rows")
-    _, groups = cr.scan(paths[:1])
+    _, groups = cr.scan([path])
     results = [r for key, rows in groups.items() if key[3] < 3 for r in cr.check_group(key, rows)]
     assert results and all(status == "stale" for _, _, status, _, _ in results)
 
@@ -329,6 +329,20 @@ def test_resume_keys_require_the_current_fingerprint(tmp_path):
     assert _script("run_baselines").done_keys(path) == {(0, "current", 1.0)}
     assert _script("run_rl").done_keys(path) == {(0, "current")}
     assert _script("compare_dev")._done(tmp_path) == {("RALTestSet", 0, "B1", "current")}
+
+
+def test_reports_drop_stale_rows(tmp_path):
+    """Reports drop rows whose fingerprint is not the current one; rows without one (never verified) stay."""
+    fp = runtime.instance_fingerprint("RALTestSet", "test", 0)
+    assert [runtime.is_stale(r) for r in _rows_with_fingerprints(fp)] == [False, True, False]
+    base = {"setting": "RALTestSet", "split": "test", "fingerprint": fp}
+    rows = [base | {"index": 0, "makespan": 1.0}, base | {"index": 0, "makespan": 2.0},  # a rerun: the last counts
+            base | {"index": 1, "makespan": 3.0}, base | {"index": 2, "makespan": 4.0}]
+    del rows[-1]["fingerprint"]
+    path = tmp_path / "rows.jsonl"
+    path.write_text("".join(json.dumps(r) + "\n" for r in rows))
+    kept = _script("alns_report")._rows(path)
+    assert sorted((r["index"], r["makespan"]) for r in kept) == [(0, 2.0), (2, 4.0)]
 
 
 def test_pinned_job_rows_carry_provenance():

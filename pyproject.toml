@@ -17,3 +17,6 @@ include = ["cbba_sota*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.ruff]
+extend-exclude = ["pilots", "third_party"]

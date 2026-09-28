@@ -60,9 +60,12 @@ def parse_overrides(items: list[str]) -> dict:
 
 
 def budget(setting, spec: str) -> float:
-    """Seconds for ``spec``: a number, or B1 / B2 (the paper's RL(s.10) time of ``setting``, times 1 / 2)."""
-    if spec.upper() in ("B1", "B2"):
-        return setting.paper["RL(s.10)"].time_s * (2 if spec.upper() == "B2" else 1)
+    """Seconds for ``spec``: a number, or B1 / B2 (the paper's RL(s.10) time of ``setting``, times 1 / 2), optionally
+    scaled (``0.5B1``, ``5B1``)."""
+    spec = spec.upper()
+    if spec.endswith(("B1", "B2")):
+        scale = float(spec[:-2] or 1) * (2 if spec.endswith("B2") else 1)
+        return setting.paper["RL(s.10)"].time_s * scale
     return float(spec)
 
 

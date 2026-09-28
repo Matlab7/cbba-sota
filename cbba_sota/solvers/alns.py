@@ -171,7 +171,7 @@ def _new_sol(T: int, A: int, W: int) -> tuple:
     return (np.zeros(T, np.int64), np.full((T, W), -1, np.int64), np.zeros(T, np.int64), np.zeros(1, np.int64),
             np.full(T, np.nan), np.full(T, np.nan), np.zeros((T, W)), np.full((T, W), -1, np.int64),
             np.zeros(A), np.full(A, -1, np.int64), np.zeros(K.N_FL), np.full((T, W), -1, np.int64),
-            np.full(A, -1, np.int64), np.zeros(A, np.int64))
+            np.full(A, -1, np.int64), np.zeros(A, np.int64), np.zeros(T))
 
 
 # --- one worker -------------------------------------------------------------------------------------------

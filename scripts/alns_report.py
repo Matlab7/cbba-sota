@@ -11,20 +11,24 @@ References (per instance), every one an env run or env replay:
   of runs/alns/rl_ref (scripts/alns_rl_reference.py) store only the replay of the best rollout's routes, which is not
   the RL score, so they are not used.
 A failed run (not every task finished, or makespan >= 200) counts as 200. Ratios are paired means of ALNS /
-reference with a bootstrap 95% CI (10,000 resamples, seed 0).
+reference with a bootstrap 95% CI (10,000 resamples, seed 0). Rows computed on a superseded instance (fingerprint
+differs from the current one) are dropped; of several rows for one instance the last counts.
 """
 from __future__ import annotations
 
 import json
 import re
 import sys
+from functools import cache
 
 import numpy as np
 
 from cbba_sota.bench.configs import HETEROMRTA_DIR, MAX_TIME, ROOT, RUNS_DIR
+from cbba_sota.bench.runtime import fingerprint, is_stale, read_rows
 from cbba_sota.hetero.replay import replay_routes, succeeded
 
 PILOT = ROOT / "pilots" / "heteromrta"
+sys.path.insert(0, str(ROOT / "scripts"))
 
 
 def _score(makespan: float, success: bool) -> float:
@@ -51,8 +55,26 @@ def _ral_refs() -> dict[str, dict[str, float]]:
     return out
 
 
+@cache
+def _json_fingerprints(stem: str) -> dict[str, str]:
+    """Fingerprints of the instances of a red-team JSON export (run_alns --json), by name."""
+    from run_alns import instances_from_json
+
+    return {name: fingerprint(inst) for name, inst in instances_from_json(PILOT / "redteam" / f"{stem}.json").items()}
+
+
+def _stale(row: dict) -> bool:
+    if row.get("split") != "json":
+        return is_stale(row)
+    return "fingerprint" in row and row["fingerprint"] != _json_fingerprints(row["setting"]).get(row["name"])
+
+
+def _rows(path) -> list[dict]:
+    """Rows of one ALNS output file on the current instances, the last one per instance."""
+    return list({(r["setting"], r["split"], r["index"]): r for r in read_rows(path) if not _stale(r)}.values())
+
+
 def _scale50_refs() -> dict[str, dict[str, float]]:
-    sys.path.insert(0, str(ROOT / "scripts"))
     from run_alns import instances_from_json
 
     rt = PILOT / "redteam"
@@ -73,8 +95,9 @@ def _rl_ref_refs() -> dict[str, dict[str, float]]:
     """The RL campaign's dev rows (runs/rl/<setting>/dev.jsonl), scored by the best rollout's own env run."""
     out: dict[str, dict[str, float]] = {}
     for path in (RUNS_DIR / "rl").glob("*/dev.jsonl"):
-        for line in path.read_text().splitlines():
-            r = json.loads(line)
+        for r in read_rows(path):
+            if is_stale(r):
+                continue
             name = f"{r['setting']}/dev/{r['instance']}"
             out.setdefault(name, {})[f"{r['method']} {r['workers']}cpu"] = _score(r["makespan"], r["success"])
     return out
@@ -90,7 +113,9 @@ def main() -> None:
     refs = {**_ral_refs(), **_scale50_refs(), **_rl_ref_refs()}
     for tag in sys.argv[1:]:
         for path in sorted((RUNS_DIR / "alns" / tag).glob("*.jsonl")):
-            rows = [json.loads(line) for line in path.read_text().splitlines()]
+            rows = _rows(path)
+            if not rows:
+                continue
             ms = np.array([_score(r["makespan"], r["success"]) for r in rows])
             exact = all(r["makespan"] == r["eval_makespan"] == r["search_makespan"] and r["skipped"] == 0
                         for r in rows)

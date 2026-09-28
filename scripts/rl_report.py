@@ -1,14 +1,14 @@
 """Reproduction gate: our RL(g.)/RL(s.10) on the test split vs the paper's Tables I-IV.
 
 Usage: rl_report.py [--split test] [--csv runs/rl/gate_test.csv]
-Means and SDs are over successful instances (as in the paper). ``d/SD`` = (ours - paper) / paper SD.
+Means and SDs are over successful instances (as in the paper; success = all tasks finished and makespan < 200, the
+best rollout's own env run). ``d/SD`` = (ours - paper) / paper SD.
 Flags: ``band`` = |d| > 2 * SD_paper / sqrt(50) (rough 2-SE band of the paper mean);
 ``z`` = d / sqrt(SD_paper^2 / 50 + SD_ours^2 / n_ours) (two independent samples of instances).
 """
 from __future__ import annotations
 
 import argparse
-import json
 import math
 from pathlib import Path
 
@@ -16,15 +16,16 @@ import numpy as np
 import pandas as pd
 
 from cbba_sota.bench import SETTINGS, configs
+from cbba_sota.bench.runtime import is_stale, read_rows
+from cbba_sota.hetero.replay import succeeded
 
 
 def load_rows(split: str, root: Path) -> pd.DataFrame:
-    rows = []
-    for s in SETTINGS:
-        path = root / s.name / f"{split}.jsonl"
-        if path.exists():
-            rows += [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
-    return pd.DataFrame(rows).drop(columns=["routes", "sample_makespans", "sample_success", "sample_s"])
+    """RL rows of every setting, without those computed on a superseded instance."""
+    rows = [r for s in SETTINGS for r in read_rows(root / s.name / f"{split}.jsonl") if not is_stale(r)]
+    df = pd.DataFrame(rows).drop(columns=["routes", "sample_makespans", "sample_success", "sample_s"])
+    df["success"] = [succeeded(ok, ms) for ok, ms in zip(df.success, df.makespan)]
+    return df
 
 
 def gate(df: pd.DataFrame) -> pd.DataFrame:
