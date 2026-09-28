@@ -1,0 +1,150 @@
+Track D C1-dyn pilot (dev split) -- scripts/trackD_c1dyn.py analyze
+env code hash 6fabb0570f; worlds: ['DynTaskEnvX[arrival,causal,L=200,det]@6fabb0570f', 'DynTaskEnvX[decision,causal,L=200,det]@6fabb0570f']
+git [('1f0f0462bafb', True)]; row status counts {'completed': 32234, 'excluded': 6}; errors 0
+excluded F3 realizations (all methods, paired): 2
+B4 levels (restarts per setting): {'MA-AT-25-5-50': {'B4-eq': 47, 'B4-2eq': 94, 'B4-4eq': 188, 'B4-impl': 17}, 'MA-AT-50-5-50': {'B4-eq': 44, 'B4-2eq': 88, 'B4-4eq': 176, 'B4-impl': 12}, 'SA-AT-50-5-50': {'B4-eq': 49, 'B4-2eq': 98, 'B4-4eq': 196, 'B4-impl': 18}, 'SA-BT-50-5-50': {'B4-eq': 39, 'B4-2eq': 78, 'B4-4eq': 156, 'B4-impl': 9}, 'MA-AT-50-5-200': {'B4-eq': 3, 'B4-2eq': 6, 'B4-4eq': 12, 'B4-impl': 2}}
+
+Episodes per method, F1-F3 pooled over the 4 primary settings (CPU = controller call per structural event, process time on the loaded shared host, descriptive only):
+  (B4-r<k> rows: per-setting restart counts, in methods.csv only; the first-event CPU max includes one-time numba cache loading in a fresh worker)
+  method           n      succ  mean mk  replans versions  wasted  cpu p50     p95 ep-p95 med      max cpu/ep s
+  SPARC-L       1120 1120/1120    40.41     28.1    334.5    0.08     8.53   31.30      25.68    415.4    0.464
+  B4-eq         1120 1120/1120    41.11     27.7    403.2    0.04    34.57   70.27      59.22    443.3    1.260
+  B4-2eq        1120 1120/1120    40.97     27.7    395.7    0.02    66.95  133.60     112.03    502.6    2.377
+  B4-4eq        1120 1120/1120    40.80     27.7    390.3    0.04   131.87  261.23     213.85   1001.9    4.596
+  B4-impl       1120 1120/1120    41.55     27.7    411.3    0.05    11.21   29.18      23.03    405.5    0.490
+  ins-only      1120 1120/1120    48.31     29.1    132.2    0.03     2.06    4.37       3.81    341.6    0.123
+  every-event   1120 1120/1120    40.11     70.8    597.6    0.08     8.56   31.38      25.44    510.0    0.969
+  open-loop     1120 1120/1120    46.64     20.8    131.5    0.08     1.84    4.36       3.60    415.7    0.140
+  B5            1120 1120/1120    40.79     28.0    245.0    0.08     7.95   29.43      23.82    520.7    0.427
+  SPARC-H       1120 1120/1120    39.45     28.2    328.1    0.07    68.36  287.53     223.71    815.7    3.692
+  SPARC-rk      1120 1120/1120    39.59     27.4    317.7    0.08    10.32   38.65      30.76    442.6    0.557
+  RL(g.)        1120 1117/1120    44.01      0.0      0.0    0.00     7.32   12.28       9.25     48.6    3.124
+  RL(g.)-arr    1120 1119/1120    43.76      0.0      0.0    3.45     7.61   13.18       9.66     49.3    3.321
+  RL(s.1)       1120 1118/1120    44.30      0.0      0.0    0.00     7.42   12.45       9.33     46.4    3.161
+  RL(s.1)-arr   1120 1119/1120    44.00      0.0      0.0    3.38     7.69   13.25       9.74     50.4    3.356
+  greedy        1120 1038/1120    49.10      0.0      0.0    0.00     0.04    0.28       0.26     36.4    0.062
+  greedy-arr    1120 1039/1120    48.90      0.0      0.0    2.19     0.05    0.31       0.27     10.5    0.065
+  SPARC-L>B4-eq  1120 1120/1120    41.06     27.7    401.8    0.08    34.78   71.88      55.76    523.2    1.275
+  B4-eq>SPARC-L  1120 1120/1120    40.41     27.9    333.3    0.03     9.05   34.94      25.87    543.0    0.525
+  B4-eq+t0      1120 1120/1120    41.08     27.8    398.6    0.05    34.40   70.90      59.81   2236.4    1.831
+  SPARC-L+t0    1120 1120/1120    40.05     28.0    327.3    0.05     8.54   36.93      29.20   1151.8    0.775
+
+Paired GM ratio SPARC-L / method (pairs where both succeed; cluster bootstrap over 80 instances, strata = settings, 10,000 resamples, seed 0):
+  method                     F1-F3 pooled       F1       F2       F3 | MA-AT-25- MA-AT-50- SA-AT-50- SA-BT-50- | wins/80  p_less
+  B4-eq        0.9847 [0.9806, 0.9890]   0.9881   0.9880   0.9803 |    0.9784    0.9818    0.9897    0.9890 | 59/80  8.5e-10
+  B4-2eq       0.9884 [0.9838, 0.9930]   0.9920   0.9878   0.9850 |    0.9810    0.9951    0.9929    0.9848 | 56/80  4.3e-06
+  B4-4eq       0.9913 [0.9867, 0.9959]   0.9973   0.9937   0.9846 |    0.9909    0.9921    0.9957    0.9865 | 50/80  3.0e-04
+  B4-impl      0.9740 [0.9695, 0.9785]   0.9808   0.9725   0.9677 |    0.9659    0.9732    0.9819    0.9748 | 73/80  5.6e-17
+  B4-r12       0.9723 [0.9679, 0.9767]   0.9776   0.9742   0.9663 |    0.9573    0.9732    0.9775    0.9812 | 72/80  9.0e-18
+  ins-only     0.8598 [0.8510, 0.8687]   0.8962   0.8509   0.8279 |    0.8092    0.8772    0.8315    0.9261 | 80/80  6.8e-32
+  every-event  1.0098 [1.0052, 1.0145]   1.0013   1.0078   1.0191 |    1.0068    1.0132    1.0148    1.0045 | 26/80  1.0e+00
+  open-loop    0.8827 [0.8753, 0.8899]   0.9221   0.8880   0.8432 |    0.8725    0.8923    0.8397    0.9286 | 80/80  2.6e-34
+  B5           0.9914 [0.9877, 0.9950]   0.9953   0.9828   0.9904 |    0.9913    0.9991    0.9837    0.9915 | 55/80  1.9e-05
+  SPARC-H      1.0229 [1.0181, 1.0277]   1.0094   1.0167   1.0387 |    1.0244    1.0237    1.0353    1.0085 | 12/80  1.0e+00
+  SPARC-rk     1.0135 [1.0081, 1.0189]   1.0070   1.0142   1.0196 |    1.0360    1.0132    1.0152    0.9899 | 27/80  1.0e+00
+  RL(g.)       0.9144 [0.9074, 0.9214]   0.8987   0.8830   0.9415 |    0.8770    0.9001    0.9490    0.9332 | 80/80  1.8e-28
+  RL(g.)-arr   0.9209 [0.9141, 0.9275]   0.9039   0.8922   0.9481 |    0.8899    0.9124    0.9490    0.9332 | 80/80  1.6e-29
+  RL(s.1)      0.9104 [0.9036, 0.9171]   0.8969   0.8871   0.9322 |    0.8711    0.8969    0.9404    0.9349 | 80/80  6.9e-30
+  RL(s.1)-arr  0.9168 [0.9100, 0.9234]   0.9026   0.8923   0.9397 |    0.8836    0.9092    0.9404    0.9349 | 80/80  7.2e-31
+  greedy       0.7878 [0.7748, 0.8006]   0.8070   0.7933   0.7894 |    0.6302    0.8329    0.8044    0.9122 | 80/80  1.1e-22
+  greedy-arr   0.7940 [0.7808, 0.8070]   0.8117   0.8004   0.7923 |    0.6394    0.8470    0.8044    0.9122 | 80/80  2.3e-22
+  SPARC-L>B4-eq 0.9849 [0.9810, 0.9889]   0.9867   0.9933   0.9805 |    0.9825    0.9863    0.9866    0.9844 | 65/80  1.0e-10
+  B4-eq>SPARC-L 1.0000 [0.9950, 1.0050]   0.9980   0.9988   1.0025 |    0.9961    1.0030    1.0047    0.9962 | 38/80  5.0e-01
+
+Per cell (SPARC-L / method):
+  method              F1-R1        F1-R2        F1-R3      F2-R2N3     F3-pf0.1     F3-pf0.2  F3-pf0.2-R2
+  B4-eq              0.9885       0.9901       0.9858       0.9880       0.9817       0.9834       0.9758
+  B4-2eq             0.9904       0.9938       0.9918       0.9878       0.9936       0.9925       0.9693
+  B4-4eq             0.9939       1.0004       0.9976       0.9937       0.9985       0.9871       0.9683
+  B4-impl            0.9814       0.9822       0.9787       0.9725       0.9698       0.9689       0.9644
+  B4-r12             0.9783       0.9801       0.9745       0.9742       0.9650       0.9743       0.9595
+  ins-only           0.9151       0.8707       0.9034       0.8509       0.8605       0.8109       0.8131
+  every-event        0.9960       1.0045       1.0035       1.0078       1.0292       1.0310       0.9974
+  open-loop          0.9505       0.8923       0.9245       0.8880       0.8632       0.8175       0.8496
+  B5                 0.9981       0.9951       0.9928       0.9828       0.9845       0.9893       0.9975
+  SPARC-H            1.0147       1.0123       1.0013       1.0167       1.0450       1.0498       1.0214
+  SPARC-rk           1.0069       1.0128       1.0014       1.0142       1.0112       1.0217       1.0261
+  RL(g.)             0.8900       0.9043       0.9020       0.8830       0.9290       0.9583       0.9387
+  RL(g.)-arr         0.8944       0.9089       0.9085       0.8922       0.9382       0.9608       0.9456
+  RL(s.1)            0.8899       0.9015       0.8994       0.8871       0.9244       0.9418       0.9306
+  RL(s.1)-arr        0.8906       0.9091       0.9083       0.8923       0.9268       0.9593       0.9332
+  greedy             0.8172       0.8090       0.8166       0.7933       0.7936       0.7800       0.8109
+  greedy-arr         0.8143       0.8101       0.8281       0.8004       0.8005       0.7875       0.8080
+  SPARC-L>B4-eq       0.9855       0.9841       0.9905       0.9933       0.9845       0.9788       0.9781
+  B4-eq>SPARC-L       0.9925       1.0065       0.9951       0.9988       1.0027       1.0046       1.0001
+
+Gates (spec Section 7 T1-T3 and Section 8 K1, K2; previews of E2a and K3 for the other agents):
+  T1 (SPARC-L vs B4-eq, pre-specified): FAIL -- pooled 0.9847 [0.9806, 0.9890] (need <= 0.97 and hi < 1); settings < 1: 4/4 (need >= 3)
+     stats.compare t1_pass=False clear_margin=False; per setting MA-AT-25-5-50 0.9784 [0.9711, 0.9855], MA-AT-50-5-50 0.9818 [0.9732, 0.9916], SA-AT-50-5-50 0.9897 [0.9798, 0.9993], SA-BT-50-5-50 0.9890 [0.9821, 0.9957]
+  K1 (planner collapse): FIRES (kill)
+     sensitivity T1 vs B4-2eq: fail -- pooled 0.9884 [0.9838, 0.9930] (need <= 0.97 and hi < 1); settings < 1: 4/4 (need >= 3)
+     sensitivity T1 vs B4-4eq: fail -- pooled 0.9913 [0.9867, 0.9959] (need <= 0.97 and hi < 1); settings < 1: 4/4 (need >= 3)
+     sensitivity T1 vs B4-impl: fail -- pooled 0.9740 [0.9695, 0.9785] (need <= 0.97 and hi < 1); settings < 1: 4/4 (need >= 3)
+     sensitivity T1 vs B4-r12: fail -- pooled 0.9723 [0.9679, 0.9767] (need <= 0.97 and hi < 1); settings < 1: 4/4 (need >= 3)
+     exploratory T1 rule for SPARC-H vs B4-eq: pass -- pooled 0.9627 [0.9579, 0.9674] (need <= 0.97 and hi < 1); settings < 1: 4/4 (need >= 3)
+     exploratory T1 rule for SPARC-rk vs B4-eq: fail -- pooled 0.9717 [0.9665, 0.9768] (need <= 0.97 and hi < 1); settings < 1: 4/4 (need >= 3)
+     exploratory T1 rule for SPARC-L+t0 vs B4-eq+t0: fail -- pooled 0.9768 [0.9721, 0.9815] (need <= 0.97 and hi < 1); settings < 1: 4/4 (need >= 3)
+     sensitivity T1 family-balanced weighting (F1, F2, F3 equal): 0.9855 [0.9807, 0.9902]
+  K2 (no dynamic separation): does not fire -- SPARC/ins-only F3 0.8279 (> 0.98? False); SPARC/B4 F1 0.9881 (> 0.97? True)
+  T2 (trigger rule, descriptive): SPARC-L / every-event 1.0098 [1.0052, 1.0145]
+  T1b (vs insertion-only, descriptive): 0.8598 [0.8510, 0.8687]
+  T3 (F0 noise control) SPARC-L vs open-loop: GM 1.0000 [1.0000, 1.0000], TOST +-2% p=0.00e+00 (t), bootstrap 90% CI of mean log r [0.0000, 0.0000], equivalent True; identical makespans 100.0% of 480 pairs; SPARC-L re-plans per F0 episode 1-1
+  F0 re-planning on noise (S2 analogue, descr.) SPARC-L vs every-event: GM 1.0250 [1.0151, 1.0349], TOST +-2% p=8.26e-01 (t), bootstrap 90% CI of mean log r [0.0165, 0.0328], equivalent False; identical makespans 3.5% of 480 pairs; SPARC-L re-plans per F0 episode 1-1
+  E2a preview (SPARC-L vs SPARC-H, TOST +-2%): mean log r +0.0227 (ratio 1.0229); TOST +-2% p=8.57e-01; bootstrap 90% CI [1.0189, 1.0269]; equivalent (t) False, (bootstrap) False
+  K3 preview (B1 RL(g.) within 5% of SPARC?): SPARC-L/RL(g.) 0.9144 [0.9074, 0.9214] -> does not fire
+  K3 preview (B1 RL(g.)-arr within 5% of SPARC?): SPARC-L/RL(g.)-arr 0.9209 [0.9141, 0.9275] -> does not fire
+  K3 preview (B1 RL(s.1) within 5% of SPARC?): SPARC-L/RL(s.1) 0.9104 [0.9036, 0.9171] -> does not fire
+  K3 preview (B1 RL(s.1)-arr within 5% of SPARC?): SPARC-L/RL(s.1)-arr 0.9168 [0.9100, 0.9234] -> does not fire
+
+Success (all F1-F3 episodes; exact McNemar vs SPARC-L on the paired episodes):
+  B4-eq        SPARC-L 1120/1120, B4-eq 1120/1120; discordant 0/0, p = 1
+  B4-2eq       SPARC-L 1120/1120, B4-2eq 1120/1120; discordant 0/0, p = 1
+  B4-4eq       SPARC-L 1120/1120, B4-4eq 1120/1120; discordant 0/0, p = 1
+  B4-impl      SPARC-L 1120/1120, B4-impl 1120/1120; discordant 0/0, p = 1
+  B4-r12       SPARC-L 1120/1120, B4-r12 1120/1120; discordant 0/0, p = 1
+  ins-only     SPARC-L 1120/1120, ins-only 1120/1120; discordant 0/0, p = 1
+  every-event  SPARC-L 1120/1120, every-event 1120/1120; discordant 0/0, p = 1
+  open-loop    SPARC-L 1120/1120, open-loop 1120/1120; discordant 0/0, p = 1
+  B5           SPARC-L 1120/1120, B5 1120/1120; discordant 0/0, p = 1
+  SPARC-H      SPARC-L 1120/1120, SPARC-H 1120/1120; discordant 0/0, p = 1
+  SPARC-rk     SPARC-L 1120/1120, SPARC-rk 1120/1120; discordant 0/0, p = 1
+  RL(g.)       SPARC-L 1120/1120, RL(g.) 1117/1120; discordant 3/0, p = 0.25
+  RL(g.)-arr   SPARC-L 1120/1120, RL(g.)-arr 1119/1120; discordant 1/0, p = 1
+  RL(s.1)      SPARC-L 1120/1120, RL(s.1) 1118/1120; discordant 2/0, p = 0.5
+  RL(s.1)-arr  SPARC-L 1120/1120, RL(s.1)-arr 1119/1120; discordant 1/0, p = 1
+  greedy       SPARC-L 1120/1120, greedy 1038/1120; discordant 82/0, p = 4.14e-25
+  greedy-arr   SPARC-L 1120/1120, greedy-arr 1039/1120; discordant 81/0, p = 8.27e-25
+  SPARC-L>B4-eq SPARC-L 1120/1120, SPARC-L>B4-eq 1120/1120; discordant 0/0, p = 1
+  B4-eq>SPARC-L SPARC-L 1120/1120, B4-eq>SPARC-L 1120/1120; discordant 0/0, p = 1
+
+EXPLORATORY replication on CRN seeds [2, 3] (same dev instances, new realizations; decided after the seeds 0-1 snapshot; no gate uses it):
+  SPARC-L/B4-eq: 0.9825 [0.9786, 0.9865] (F1 0.9912 F2 0.9865 F3 0.9726); settings MA-AT-25- 0.9744, MA-AT-50- 0.9888, SA-AT-50- 0.9841, SA-BT-50- 0.9829; T1 rule fail
+  SPARC-rk/B4-eq: 0.9665 [0.9614, 0.9720] (F1 0.9825 F2 0.9720 F3 0.9490); settings MA-AT-25- 0.9390, MA-AT-50- 0.9704, SA-AT-50- 0.9758, SA-BT-50- 0.9811; T1 rule pass
+  SPARC-L/SPARC-rk: 1.0166 [1.0119, 1.0212] (F1 1.0089 F2 1.0150 F3 1.0249); settings MA-AT-25- 1.0377, MA-AT-50- 1.0189, SA-AT-50- 1.0085, SA-BT-50- 1.0017
+
+Secondary setting(s) (descriptive):
+  MA-AT-50-5-200 SPARC-L/B4-eq: 0.9873 [0.9787, 0.9964] clusters 20 obs 278
+  MA-AT-50-5-200 SPARC-L/B4-4eq: 0.9969 [0.9892, 1.0054] clusters 20 obs 278
+  MA-AT-50-5-200 SPARC-L/B4-impl: 0.9807 [0.9744, 0.9874] clusters 20 obs 278
+  MA-AT-50-5-200 SPARC-L/B4-r12: 0.9969 [0.9892, 1.0054] clusters 20 obs 278
+  MA-AT-50-5-200 SPARC-L/ins-only: 0.7855 [0.7695, 0.8019] clusters 20 obs 270
+  MA-AT-50-5-200 SPARC-L/every-event: 1.0358 [1.0260, 1.0451] clusters 20 obs 278
+  MA-AT-50-5-200 SPARC-L/open-loop: 0.8190 [0.8077, 0.8296] clusters 20 obs 277
+  MA-AT-50-5-200 SPARC-L/B5: 0.9833 [0.9776, 0.9891] clusters 20 obs 278
+  MA-AT-50-5-200 SPARC-L/SPARC-H: 1.0436 [1.0384, 1.0489] clusters 20 obs 278
+  MA-AT-50-5-200 SPARC-L/RL(g.): 0.9565 [0.9396, 0.9758] clusters 20 obs 278
+  MA-AT-50-5-200 SPARC-L/greedy: 0.8327 [0.8168, 0.8508] clusters 20 obs 276
+    B4-4eq       n 280 success 279 mean 87.48 replans 87.8 cpu p50 34.8 p95 177.6 ms
+    B4-eq        n 280 success 279 mean 88.27 replans 88.0 cpu p50 17.3 p95 117.3 ms
+    B4-impl      n 280 success 279 mean 88.85 replans 88.2 cpu p50 15.4 p95 111.3 ms
+    B4-r12       n 280 success 279 mean 87.48 replans 87.8 cpu p50 34.8 p95 177.6 ms
+    B4-r2        n 280 success 279 mean 88.85 replans 88.2 cpu p50 15.4 p95 111.3 ms
+    B4-r3        n 280 success 279 mean 88.27 replans 88.0 cpu p50 17.3 p95 117.3 ms
+    B5           n 280 success 278 mean 88.38 replans 87.4 cpu p50 29.3 p95 81.0 ms
+    RL(g.)       n 280 success 279 mean 90.64 replans 0.0 cpu p50 14.4 p95 18.4 ms
+    SPARC-H      n 280 success 279 mean 83.75 replans 88.2 cpu p50 299.6 p95 604.1 ms
+    SPARC-L      n 280 success 278 mean 86.95 replans 88.2 cpu p50 34.4 p95 65.6 ms
+    every-event  n 280 success 278 mean 84.39 replans 271.4 cpu p50 33.6 p95 65.4 ms
+    greedy       n 280 success 276 mean 103.41 replans 0.0 cpu p50 0.4 p95 1.0 ms
+    ins-only     n 280 success 270 mean 109.81 replans 92.9 cpu p50 5.2 p95 10.2 ms
+    open-loop    n 280 success 277 mean 105.73 replans 71.6 cpu p50 5.0 p95 9.9 ms

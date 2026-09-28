@@ -1,0 +1,173 @@
+{
+ "method": "equal mean CPU per re-plan on SPARC-Light belief states (ratio of totals); linear fit of B4 CPU over probed restart counts",
+ "probe_restarts": [
+  0,
+  24
+ ],
+ "cells": [
+  "F1-R2",
+  "F2-R2N3",
+  "F3-pf0.2"
+ ],
+ "instances": "0-19",
+ "seeds": "0",
+ "worlds": [
+  "DynTaskEnvX[arrival,causal,L=200,det]@6fabb0570f"
+ ],
+ "created": "2026-09-28T09:29:54",
+ "host_load": [
+  68.87890625,
+  62.31884765625,
+  73.736328125
+ ],
+ "settings": {
+  "MA-AT-25-5-50": {
+   "construction_only": {
+    "a_ms": 1.508129799227798,
+    "b_ms": 0.29958988001394304,
+    "sparc_mean_ms": 15.540269829472328,
+    "sparc_median_ms": 15.484425999999996,
+    "r_star": 46.83783053550229,
+    "r_star_median": 51.488990590253294,
+    "n_events": 1554
+   },
+   "implemented": {
+    "a_ms": 1.5081297992277978,
+    "b_ms": 0.8175897616098243,
+    "sparc_mean_ms": 15.540269829472328,
+    "sparc_median_ms": 15.484425999999996,
+    "r_star": 17.16281280555106,
+    "r_star_median": 18.22903684275592,
+    "n_events": 1554
+   },
+   "r_star_excl_first": 48.16662232382075,
+   "problem_ms_mean": 0.5179998815958813,
+   "n_open_mean": 12.4993564993565,
+   "restarts": 47,
+   "restarts_impl": 17
+  },
+  "MA-AT-50-5-50": {
+   "construction_only": {
+    "a_ms": 1.3465091430073695,
+    "b_ms": 0.25079551542236267,
+    "sparc_mean_ms": 12.287449403259728,
+    "sparc_median_ms": 10.952619000000219,
+    "r_star": 43.62494377870677,
+    "r_star_median": 47.12538280773139,
+    "n_events": 1902
+   },
+   "implemented": {
+    "a_ms": 1.3465091430073681,
+    "b_ms": 0.880159556256571,
+    "sparc_mean_ms": 12.287449403259728,
+    "sparc_median_ms": 10.952619000000219,
+    "r_star": 12.430632812515894,
+    "r_star_median": 11.879320957102664,
+    "n_events": 1902
+   },
+   "r_star_excl_first": 45.042372859701175,
+   "problem_ms_mean": 0.6293640408342085,
+   "n_open_mean": 7.801787592008412,
+   "restarts": 44,
+   "restarts_impl": 12
+  },
+  "SA-AT-50-5-50": {
+   "construction_only": {
+    "a_ms": 2.3956178044096736,
+    "b_ms": 0.423699440226414,
+    "sparc_mean_ms": 23.070772295163536,
+    "sparc_median_ms": 22.610350999999973,
+    "r_star": 48.79674724069873,
+    "r_star_median": 55.23696826588067,
+    "n_events": 1406
+   },
+   "implemented": {
+    "a_ms": 2.3956178044096688,
+    "b_ms": 1.1196004435455185,
+    "sparc_mean_ms": 23.070772295163536,
+    "sparc_median_ms": 22.610350999999973,
+    "r_star": 18.46654724901714,
+    "r_star_median": 19.49915050433164,
+    "n_events": 1406
+   },
+   "r_star_excl_first": 50.42975263117623,
+   "problem_ms_mean": 0.6959010033191049,
+   "n_open_mean": 14.090327169274538,
+   "restarts": 49,
+   "restarts_impl": 18
+  },
+  "SA-BT-50-5-50": {
+   "construction_only": {
+    "a_ms": 1.2569169562906142,
+    "b_ms": 0.21639048488876164,
+    "sparc_mean_ms": 9.613842184288227,
+    "sparc_median_ms": 8.04866799999715,
+    "r_star": 38.61965202533559,
+    "r_star_median": 39.16822061924125,
+    "n_events": 1693
+   },
+   "implemented": {
+    "a_ms": 1.2569169562906133,
+    "b_ms": 0.8890764653967331,
+    "sparc_mean_ms": 9.613842184288227,
+    "sparc_median_ms": 8.04866799999715,
+    "r_star": 9.399557353335744,
+    "r_star_median": 8.442346840446353,
+    "n_events": 1693
+   },
+   "r_star_excl_first": 39.22727073515172,
+   "problem_ms_mean": 0.6726859805079715,
+   "n_open_mean": 6.979326639102186,
+   "restarts": 39,
+   "restarts_impl": 9
+  },
+  "MA-AT-50-5-200": {
+   "construction_only": {
+    "a_ms": 36.892073466992684,
+    "b_ms": 2.146739214208101,
+    "sparc_mean_ms": 42.86409940016306,
+    "sparc_median_ms": 40.45739100000034,
+    "r_star": 2.781905642587969,
+    "r_star_median": 11.843192452081476,
+    "n_events": 1227
+   },
+   "implemented": {
+    "a_ms": 36.89207346699267,
+    "b_ms": 3.40424751439826,
+    "sparc_mean_ms": 42.86409940016306,
+    "sparc_median_ms": 40.45739100000034,
+    "r_star": 1.7542866398261934,
+    "r_star_median": 7.2496266337164865,
+    "n_events": 1227
+   },
+   "r_star_excl_first": 2.4612114186873493,
+   "problem_ms_mean": 1.2575083001901592,
+   "n_open_mean": 51.2599837000815,
+   "restarts": 3,
+   "restarts_impl": 2,
+   "calibration": {
+    "probe_restarts": [
+     0,
+     24
+    ],
+    "cells": [
+     "F1-R2",
+     "F2-R2N3",
+     "F3-pf0.2"
+    ],
+    "instances": "0-4",
+    "seeds": "0",
+    "worlds": [
+     "DynTaskEnvX[arrival,causal,L=200,det]@6fabb0570f"
+    ],
+    "created": "2026-09-28T09:50:47",
+    "host_load": [
+     80.19189453125,
+     91.126953125,
+     90.01708984375
+    ]
+   }
+  }
+ },
+ "charging": "restarts = round(r*) with B4 charged for its constructions only: the per-restart Problem rebuild of the implementation (about 70% of its per-restart CPU) is not counted, which is generous to B4; r*_impl charges the implementation as it runs"
+}
