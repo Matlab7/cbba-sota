@@ -24,7 +24,9 @@ RUNS_DIR = ROOT / "runs"
 
 TRAIT_DIM = 5  # fixed by the released network (agent input 6 + 5, task input 5 + 2 * 5)
 MAX_TIME = 200.0  # simulated-time cap of the env (execute_by_route) and of test.py; success = finished before it
-SPLITS = {"test": (100_000, 50), "dev": (500_000, 20)}  # split -> (seed base, instances)
+# split -> (seed base, instances). dev is the tuning split; val (Phase 1b) is untuned by anyone and used for
+# measurement only (BKS, anytime curves, C1 dry runs); test is run once after the prereg is frozen.
+SPLITS = {"test": (100_000, 50), "dev": (500_000, 20), "val": (900_000, 20)}
 
 
 @dataclass(frozen=True)

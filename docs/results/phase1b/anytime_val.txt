@@ -1,0 +1,399 @@
+
+SA-BT-25-5-20  (val, n = 10 BKS; B1 = 6.54 s)  mean gap to BKS, %  (* = some runs late and left out)
+  rows used 290, disturbed 121 (left out); throttled share of CPU periods in used rows: mean 0.063, max 0.389; CPU received by ALNS/RL jobs: mean 0.976, 5th percentile 0.879
+  method           0.5       1       2       5      10      B1     2B1
+  ALNS2-1         0.47    0.36    0.27    0.17    0.00    0.11    0.00
+  ALNS2-8             -        -        -        -        -    0.00        -
+  ALNS1-1         1.07    0.37    0.32    0.52    0.17    0.10    0.17
+  ALNS1-8             -        -        -        -        -    0.12        -
+  CPSAT-1         5.79    6.31    2.32    1.02    0.11    1.72    0.82
+  CPSAT-8             -        -        -        -        -    0.00        -
+  RL-1                -   25.75*   24.75   25.69   21.92   22.49   23.40
+  RL-8                -        -        -        -        -   17.82        -
+  CONSTRUCT-1     2.71    2.55    1.95    1.88    1.45    1.88    1.02
+  CONSTRUCT-8     2.26    1.88    1.45    0.74    0.71    0.74    0.37
+  share of the constructor-to-BKS gap closed (same budget and cores):
+  ALNS2-1          65%     80%     78%     91%    100%     91%    100%
+  ALNS2-8            -       -       -       -       -    100%       -
+  ALNS1-1          46%     71%     74%     73%     88%     91%     83%
+  ALNS1-8            -       -       -       -       -     76%       -
+  CPSAT-1        -167%   -109%    -44%     46%     92%     52%     20%
+  CPSAT-8            -       -       -       -       -    100%       -
+  RL-1               -   -971%  -1222%  -1270%  -1413%  -1092%  -2180%
+  RL-8               -       -       -       -       -  -2431%       -
+
+SA-AT-25-5-20  (val, n = 10 BKS; B1 = 10.2 s)  mean gap to BKS, %  (* = some runs late and left out)
+  rows used 323, disturbed 105 (left out); throttled share of CPU periods in used rows: mean 0.104, max 0.391; CPU received by ALNS/RL jobs: mean 0.968, 5th percentile 0.855
+  method           0.5       1       2       5      10      B1     2B1
+  ALNS2-1         5.56    3.41    3.22    2.42    2.41    2.25    1.74
+  ALNS2-8             -        -        -        -        -    0.97        -
+  ALNS1-1         7.85    3.34    4.17    2.60    2.39    2.09    1.96
+  ALNS1-8             -        -        -        -        -    0.39        -
+  CPSAT-1        11.64    9.83    8.09    8.56    6.07    6.07    5.51
+  CPSAT-8             -        -        -        -        -    3.72        -
+  RL-1                -        -   31.44   28.93   29.70   30.38   27.98
+  RL-8                -        -        -        -        -   23.62        -
+  CONSTRUCT-1     7.56    6.65    5.95    4.90    4.61    4.61    4.23
+  CONSTRUCT-8     5.72    4.38    4.00    3.78    3.49    3.49    2.90
+  share of the constructor-to-BKS gap closed (same budget and cores):
+  ALNS2-1          26%     61%     53%     51%     50%     53%     56%
+  ALNS2-8            -       -       -       -       -     77%       -
+  ALNS1-1           3%     48%     36%     50%     48%     57%     53%
+  ALNS1-8            -       -       -       -       -     90%       -
+  CPSAT-1         -56%    -53%    -36%    -70%    -32%    -32%    -33%
+  CPSAT-8            -       -       -       -       -     -5%       -
+  RL-1               -       -   -435%   -474%   -531%   -543%   -561%
+  RL-8               -       -       -       -       -   -552%       -
+
+MA-AT-25-5-20  (val, n = 10 BKS; B1 = 7.6 s)  mean gap to BKS, %  (* = some runs late and left out)
+  rows used 353, disturbed 47 (left out); throttled share of CPU periods in used rows: mean 0.138, max 0.400; CPU received by ALNS/RL jobs: mean 0.978, 5th percentile 0.927
+  method           0.5       1       2       5      10      B1     2B1
+  ALNS2-1         2.84    1.54    1.90    0.52    0.84    0.82    0.43
+  ALNS2-8             -        -        -        -        -    0.16        -
+  ALNS1-1         3.85    2.98    0.80    0.37    1.37    1.86    1.01
+  ALNS1-8             -        -        -        -        -    0.64        -
+  CPSAT-1        12.92   10.40    9.39    8.25    7.14    7.07    6.11
+  CPSAT-8             -        -        -        -        -    4.18        -
+  RL-1                -   42.66*   37.76   37.36   34.14   34.42   29.87
+  RL-8                -        -        -        -        -   29.64        -
+  CONSTRUCT-1     8.32    7.72    6.41    5.12    4.87    4.95    4.51
+  CONSTRUCT-8     5.66    4.77    4.08    3.69    3.46    3.53    3.30
+  share of the constructor-to-BKS gap closed (same budget and cores):
+  ALNS2-1          67%     78%     72%     90%     85%     85%     91%
+  ALNS2-8            -       -       -       -       -     96%       -
+  ALNS1-1          51%     52%     87%     93%     75%     67%     80%
+  ALNS1-8            -       -       -       -       -     86%       -
+  CPSAT-1         -58%    -38%    -45%    -65%    -46%    -44%    -33%
+  CPSAT-8            -       -       -       -       -     -4%       -
+  RL-1               -   -553%   -478%   -612%   -558%   -563%   -507%
+  RL-8               -       -       -       -       -   -632%       -
+
+SA-BT-25-5-50  (val, n = 10 BKS; B1 = 13.45 s)  mean gap to BKS, %  (* = some runs late and left out)
+  rows used 438, disturbed 61 (left out); throttled share of CPU periods in used rows: mean 0.182, max 0.400; CPU received by ALNS/RL jobs: mean 0.954, 5th percentile 0.854
+  method           0.5       1       2       5      10      B1     2B1
+  ALNS2-1         8.01    7.37    6.14    3.57    3.90    3.58    1.74
+  ALNS2-8         7.44    6.00    3.58    1.71    0.50    1.24    0.98
+  ALNS1-1        12.44   10.92    8.84    5.60    4.29    3.32    3.20
+  ALNS1-8             -        -        -        -        -    2.19        -
+  CPSAT-1        17.94   16.65   15.51   14.30   12.65   12.30   11.02
+  CPSAT-8        15.70   14.09   13.73   12.62   10.63   10.42   10.55
+  RL-1                -        -        -   35.30   34.18   32.59   33.20
+  RL-8                -        -        -   31.01   30.56   28.76        -
+  CONSTRUCT-1    15.13   13.98   13.64   12.79   12.05   11.74   11.12
+  CONSTRUCT-8    13.07   12.58   11.99   11.23   10.78   10.42    9.95
+  share of the constructor-to-BKS gap closed (same budget and cores):
+  ALNS2-1          46%     47%     54%     69%     65%     67%     83%
+  ALNS2-8          40%     49%     67%     84%     95%     86%     90%
+  ALNS1-1          13%     22%     32%     52%     62%     70%     70%
+  ALNS1-8            -       -       -       -       -     77%       -
+  CPSAT-1         -18%    -19%    -16%    -22%    -12%    -12%     -5%
+  CPSAT-8         -30%    -20%    -26%    -21%    -10%     -4%     -7%
+  RL-1               -       -       -   -200%   -202%   -195%   -217%
+  RL-8               -       -       -   -197%   -215%   -208%       -
+
+SA-BT-50-5-50  (val, n = 10 BKS; B1 = 19.14 s)  mean gap to BKS, %  (* = some runs late and left out)
+  rows used 439, disturbed 124 (left out); throttled share of CPU periods in used rows: mean 0.165, max 0.397; CPU received by ALNS/RL jobs: mean 0.951, 5th percentile 0.864
+  method           0.5       1       2       5      10      B1     2B1
+  ALNS2-1         5.83    3.20    3.90    1.94    1.89    1.07    1.18
+  ALNS2-8         4.91    3.03    1.47    1.09    1.30    0.41    0.28
+  ALNS1-1         7.24    5.84    5.44    4.66    1.58    1.79    1.27
+  ALNS1-8             -        -        -        -        -    0.87        -
+  CPSAT-1        17.37   15.30   13.94   12.93    9.81    8.21    7.07
+  CPSAT-8        15.53   14.18   11.12    9.72    6.35    5.57    4.15
+  RL-1                -        -        -   38.20   37.74   35.11   34.88*
+  RL-8                -        -        -   34.08   33.34   32.73        -
+  CONSTRUCT-1    15.78   13.77   12.43   11.37   11.21   10.77   10.10
+  CONSTRUCT-8    12.92   12.55   11.90   10.42    9.64    9.33    8.85
+  share of the constructor-to-BKS gap closed (same budget and cores):
+  ALNS2-1          63%     77%     66%     83%     83%     89%     88%
+  ALNS2-8          61%     75%     87%     90%     87%     95%     96%
+  ALNS1-1          56%     54%     57%     59%     86%     88%     87%
+  ALNS1-8            -       -       -       -       -     89%       -
+  CPSAT-1         -12%    -16%    -14%    -16%     12%     21%     28%
+  CPSAT-8         -25%    -17%      4%      7%     34%     43%     52%
+  RL-1               -       -       -   -242%   -241%   -233%   -223%
+  RL-8               -       -       -   -225%   -250%   -250%       -
+
+SA-AT-50-5-50  (val, n = 10 BKS; B1 = 29.8 s)  mean gap to BKS, %  (* = some runs late and left out)
+  rows used 405, disturbed 210 (left out); throttled share of CPU periods in used rows: mean 0.134, max 0.400; CPU received by ALNS/RL jobs: mean 0.952, 5th percentile 0.858
+  method           0.5       1       2       5      10      B1     2B1
+  ALNS2-1        11.10    8.13    7.98    7.40    5.45    3.30    3.38
+  ALNS2-8        11.56    8.58    5.86    3.82    3.00    0.85    0.94
+  ALNS1-1        21.28   18.02   15.69   10.72    9.46    5.69    6.30
+  ALNS1-8             -        -        -        -        -    3.02        -
+  CPSAT-1        15.50   14.61   14.06   12.62   11.47    9.47    9.63
+  CPSAT-8        16.16   13.83   13.29   11.85    9.70    9.13    8.00
+  RL-1                -        -        -        -   37.54   34.11   34.33
+  RL-8                -        -        -        -   35.03   31.66        -
+  CONSTRUCT-1    13.04   11.89   11.29   10.45   10.04    9.00    8.61
+  CONSTRUCT-8    11.55   11.02    9.96    9.09    8.59    7.92    7.65
+  share of the constructor-to-BKS gap closed (same budget and cores):
+  ALNS2-1           7%     20%     16%     30%     46%     55%     61%
+  ALNS2-8          -1%     22%     41%     58%     66%     93%     84%
+  ALNS1-1         -70%    -64%    -39%     -2%      5%     29%     28%
+  ALNS1-8            -       -       -       -       -     59%       -
+  CPSAT-1         -28%    -21%    -23%    -20%    -14%     -8%    -11%
+  CPSAT-8         -41%    -26%    -34%    -30%    -13%    -17%     -5%
+  RL-1               -       -       -       -   -273%   -279%   -296%
+  RL-8               -       -       -       -   -308%   -325%       -
+
+MA-AT-25-5-50  (val, n = 10 BKS; B1 = 16.34 s)  mean gap to BKS, %  (* = some runs late and left out)
+  rows used 449, disturbed 186 (left out); throttled share of CPU periods in used rows: mean 0.146, max 0.400; CPU received by ALNS/RL jobs: mean 0.961, 5th percentile 0.865
+  method           0.5       1       2       5      10      B1     2B1
+  ALNS2-1         7.35    7.57    5.81    3.51    3.95    3.35    2.63
+  ALNS2-8         7.44    6.03    4.15    2.27    1.60    1.37    0.65
+  ALNS1-1        11.10   12.07    7.86    8.99    4.90    3.75    3.22
+  ALNS1-8             -        -        -        -        -    1.45        -
+  CPSAT-1        21.99   19.61   18.60   17.28   16.63   14.92   13.34
+  CPSAT-8        22.47   19.59   17.35   14.91   14.42   11.92   11.18
+  RL-1                -        -        -   44.60*   42.87   43.42   40.65
+  RL-8                -        -        -   38.89   35.54   37.60        -
+  CONSTRUCT-1    17.22   16.31   15.30   14.86   14.86   14.15   13.22
+  CONSTRUCT-8    15.12   14.72   13.58   12.52   12.39   11.99   11.42
+  share of the constructor-to-BKS gap closed (same budget and cores):
+  ALNS2-1          61%     52%     64%     79%     78%     81%     83%
+  ALNS2-8          57%     64%     72%     85%     89%     89%     92%
+  ALNS1-1          42%     25%     48%     47%     70%     74%     75%
+  ALNS1-8            -       -       -       -       -     89%       -
+  CPSAT-1         -28%    -17%    -24%    -10%     -5%     -8%      8%
+  CPSAT-8         -38%    -24%    -25%    -14%    -11%     -3%      3%
+  RL-1               -       -       -   -184%   -166%   -192%   -180%
+  RL-8               -       -       -   -193%   -166%   -200%       -
+
+MA-AT-50-5-50  (val, n = 10 BKS; B1 = 23.43 s)  mean gap to BKS, %  (* = some runs late and left out)
+  rows used 397, disturbed 334 (left out); throttled share of CPU periods in used rows: mean 0.151, max 0.398; CPU received by ALNS/RL jobs: mean 0.958, 5th percentile 0.878
+  method           0.5       1       2       5      10      B1     2B1
+  ALNS2-1         9.15    6.97    6.27    5.12    3.74    1.72    1.15
+  ALNS2-8         7.32    5.56    3.49    2.01    1.53    1.14    0.60
+  ALNS1-1        11.08    9.22    6.84    4.74    3.38    2.99    2.60
+  ALNS1-8             -        -        -        -        -    1.81        -
+  CPSAT-1        22.27   21.80   20.67   20.84   18.83   16.47   17.30
+  CPSAT-8        24.20   21.58   19.29   17.19   16.59   14.48   12.52
+  RL-1                -        -        -   50.72*   49.81   43.52   41.46*
+  RL-8                -        -        -   47.05*   41.90   39.97        -
+  CONSTRUCT-1    21.82   19.65   18.81   18.55   17.03   16.75   15.77
+  CONSTRUCT-8    17.72   17.47   16.86   16.10   15.42   14.63   13.97
+  share of the constructor-to-BKS gap closed (same budget and cores):
+  ALNS2-1          62%     64%     62%     72%     79%     90%     93%
+  ALNS2-8          60%     69%     80%     88%     91%     93%     97%
+  ALNS1-1          49%     53%     67%     75%     81%     81%     84%
+  ALNS1-8            -       -       -       -       -     89%       -
+  CPSAT-1          -9%    -15%    -11%    -11%    -11%     -5%    -10%
+  CPSAT-8         -37%    -22%    -13%     -6%     -9%     -3%     10%
+  RL-1               -       -       -   -192%   -192%   -161%   -166%
+  RL-8               -       -       -   -179%   -171%   -183%       -
+
+MA-AT-50-5-200  (val, n = 10 BKS; B1 = 75.2 s)  mean gap to BKS, %  (* = some runs late and left out)
+  rows used 442, disturbed 42 (left out); throttled share of CPU periods in used rows: mean 0.103, max 0.391; CPU received by ALNS/RL jobs: mean 0.955, 5th percentile 0.832
+  method           0.5       1       2       5      10      B1     2B1
+  ALNS2-1         9.21    8.93    7.28    6.49    6.48    2.87    2.56
+  ALNS2-8        10.45    9.47    7.00    5.20    4.51    1.20    1.23
+  ALNS1-1        30.77   28.64   27.89   24.24   22.25   15.94   15.59
+  ALNS1-8             -        -        -        -        -   10.69        -
+  CPSAT-1        15.34   15.34   15.32   15.93   15.66   13.99   14.27
+  CPSAT-8        16.27   16.27   15.81   15.51   15.06   12.94        -
+  RL-1                -        -        -        -        -   43.93   45.00
+  RL-8                -        -        -        -        -   40.43        -
+  CONSTRUCT-1    15.03   14.88   14.88   14.48   14.48   14.31        -
+  CONSTRUCT-8    14.38   14.38   14.38   14.38   14.38   14.31        -
+  share of the constructor-to-BKS gap closed (same budget and cores):
+  ALNS2-1          35%     39%     51%     55%     58%     81%       -
+  ALNS2-8          29%     36%     52%     65%     69%     92%       -
+  ALNS1-1        -121%   -107%   -101%    -63%    -51%    -19%       -
+  ALNS1-8            -       -       -       -       -     23%       -
+  CPSAT-1          -1%     -1%     -1%     -5%     -3%      5%       -
+  CPSAT-8          -7%     -7%     -4%     -2%     -0%     11%       -
+  RL-1               -       -       -       -       -   -205%       -
+  RL-8               -       -       -       -       -   -179%       -
+
+Paired ratios ALNS2 / other (bootstrap 95% CI; wins-losses; Holm over settings x competitors per row type)
+  1 core 0.5 s                       MA-AT-25-5-20     vs CONSTRUCT-1@0.5    n=10 0.951 [0.930, 0.974] 9-1 p_holm 0.012
+  1 core 0.5 s                       MA-AT-25-5-20     vs CPSAT-1@0.5        n=10 0.912 [0.889, 0.935] 10-0 p_holm 0.00066
+  1 core 0.5 s                       MA-AT-25-5-50     vs CONSTRUCT-1@0.5    n= 6 0.917 [0.893, 0.944] 6-0 p_holm 0.012
+  1 core 0.5 s                       MA-AT-25-5-50     vs CPSAT-1@0.5        n= 6 0.887 [0.865, 0.908] 6-0 p_holm 0.0026
+  1 core 0.5 s                       MA-AT-50-5-200    vs CONSTRUCT-1@0.5    n= 8 0.955 [0.936, 0.973] 8-0 p_holm 0.012
+  1 core 0.5 s                       MA-AT-50-5-200    vs CPSAT-1@0.5        n= 9 0.952 [0.933, 0.969] 9-0 p_holm 0.0088
+  1 core 0.5 s                       MA-AT-50-5-50     vs CONSTRUCT-1@0.5    n= 5 0.892 [0.858, 0.927] 5-0 p_holm 0.013
+  1 core 0.5 s                       MA-AT-50-5-50     vs CPSAT-1@0.5        n=10 0.894 [0.871, 0.916] 10-0 p_holm 0.00015
+  1 core 0.5 s                       SA-AT-25-5-20     vs CONSTRUCT-1@0.5    n= 6 0.980 [0.951, 1.009] 4-2 p_holm 0.25
+  1 core 0.5 s                       SA-AT-25-5-20     vs CPSAT-1@0.5        n= 6 0.942 [0.920, 0.957] 6-0 p_holm 0.012
+  1 core 0.5 s                       SA-AT-50-5-50     vs CONSTRUCT-1@0.5    n= 5 0.991 [0.976, 1.011] 4-1 p_holm 0.25
+  1 core 0.5 s                       SA-AT-50-5-50     vs CPSAT-1@0.5        n= 7 0.962 [0.947, 0.974] 7-0 p_holm 0.012
+  1 core 0.5 s                       SA-BT-25-5-20     vs CONSTRUCT-1@0.5    n= 5 0.983 [0.970, 0.995] 5-0 p_holm 0.11
+  1 core 0.5 s                       SA-BT-25-5-20     vs CPSAT-1@0.5        n=10 0.950 [0.934, 0.967] 10-0 p_holm 0.0025
+  1 core 0.5 s                       SA-BT-25-5-50     vs CONSTRUCT-1@0.5    n= 8 0.941 [0.921, 0.960] 8-0 p_holm 0.0058
+  1 core 0.5 s                       SA-BT-25-5-50     vs CPSAT-1@0.5        n= 6 0.922 [0.898, 0.951] 6-0 p_holm 0.012
+  1 core 0.5 s                       SA-BT-50-5-50     vs CONSTRUCT-1@0.5    n= 5 0.916 [0.902, 0.933] 5-0 p_holm 0.0044
+  1 core 0.5 s                       SA-BT-50-5-50     vs CPSAT-1@0.5        n= 6 0.906 [0.887, 0.922] 6-0 p_holm 0.002
+  1 core 1 s                         MA-AT-25-5-20     vs CONSTRUCT-1@1      n= 8 0.945 [0.922, 0.968] 8-0 p_holm 0.011
+  1 core 1 s                         MA-AT-25-5-20     vs CPSAT-1@1          n= 7 0.919 [0.889, 0.946] 7-0 p_holm 0.0089
+  1 core 1 s                         MA-AT-25-5-20     vs RL-1@1             n= 5 0.704 [0.664, 0.741] 5-0 p_holm 0.0026
+  1 core 1 s                         MA-AT-25-5-50     vs CONSTRUCT-1@1      n= 7 0.930 [0.900, 0.959] 7-0 p_holm 0.016
+  1 core 1 s                         MA-AT-25-5-50     vs CPSAT-1@1          n= 6 0.904 [0.869, 0.944] 6-0 p_holm 0.016
+  1 core 1 s                         MA-AT-50-5-200    vs CONSTRUCT-1@1      n= 9 0.949 [0.933, 0.963] 9-0 p_holm 0.0017
+  1 core 1 s                         MA-AT-50-5-200    vs CPSAT-1@1          n=10 0.945 [0.927, 0.960] 10-0 p_holm 0.0014
+  1 core 1 s                         MA-AT-50-5-50     vs CONSTRUCT-1@1      n= 5 0.896 [0.874, 0.919] 5-0 p_holm 0.0076
+  1 core 1 s                         MA-AT-50-5-50     vs CPSAT-1@1          n= 6 0.882 [0.854, 0.905] 6-0 p_holm 0.0029
+  1 core 1 s                         SA-AT-25-5-20     vs CONSTRUCT-1@1      n= 8 0.963 [0.950, 0.977] 8-0 p_holm 0.0072
+  1 core 1 s                         SA-AT-25-5-20     vs CPSAT-1@1          n=10 0.942 [0.927, 0.957] 10-0 p_holm 0.00041
+  1 core 1 s                         SA-AT-50-5-50     vs CONSTRUCT-1@1      n= 5 0.978 [0.965, 0.991] 5-0 p_holm 0.068
+  1 core 1 s                         SA-AT-50-5-50     vs CPSAT-1@1          n=10 0.944 [0.929, 0.959] 10-0 p_holm 0.00078
+  1 core 1 s                         SA-BT-25-5-20     vs CONSTRUCT-1@1      n= 5 0.981 [0.965, 0.995] 5-0 p_holm 0.068
+  1 core 1 s                         SA-BT-25-5-20     vs CPSAT-1@1          n= 4 0.948 [0.923, 0.975] 4-0 p_holm 0.068
+  1 core 1 s                         SA-BT-25-5-20     vs RL-1@1             n= 9 0.799 [0.779, 0.822] 9-0 p_holm 3e-06
+  1 core 1 s                         SA-BT-25-5-50     vs CONSTRUCT-1@1      n=10 0.942 [0.933, 0.951] 10-0 p_holm 1.1e-05
+  1 core 1 s                         SA-BT-25-5-50     vs CPSAT-1@1          n=10 0.921 [0.908, 0.933] 10-0 p_holm 1e-05
+  1 core 1 s                         SA-BT-50-5-50     vs CONSTRUCT-1@1      n= 5 0.911 [0.902, 0.921] 5-0 p_holm 0.001
+  1 core 1 s                         SA-BT-50-5-50     vs CPSAT-1@1          n= 6 0.896 [0.881, 0.916] 6-0 p_holm 0.0011
+  1 core 2 s                         MA-AT-25-5-20     vs CONSTRUCT-1@2      n=10 0.959 [0.933, 0.983] 9-0 p_holm 0.037
+  1 core 2 s                         MA-AT-25-5-20     vs CPSAT-1@2          n=10 0.933 [0.911, 0.957] 10-0 p_holm 0.0017
+  1 core 2 s                         MA-AT-25-5-20     vs RL-1@2             n=10 0.743 [0.716, 0.770] 10-0 p_holm 9.3e-07
+  1 core 2 s                         MA-AT-25-5-50     vs CONSTRUCT-1@2      n= 8 0.917 [0.902, 0.933] 8-0 p_holm 0.00023
+  1 core 2 s                         MA-AT-25-5-50     vs CPSAT-1@2          n=10 0.893 [0.878, 0.907] 10-0 p_holm 2.6e-06
+  1 core 2 s                         MA-AT-50-5-200    vs CONSTRUCT-1@2      n= 9 0.934 [0.918, 0.951] 9-0 p_holm 0.00054
+  1 core 2 s                         MA-AT-50-5-200    vs CPSAT-1@2          n=10 0.931 [0.913, 0.948] 10-0 p_holm 0.00034
+  1 core 2 s                         MA-AT-50-5-50     vs CONSTRUCT-1@2      n= 5 0.903 [0.876, 0.931] 5-0 p_holm 0.014
+  1 core 2 s                         MA-AT-50-5-50     vs CPSAT-1@2          n=10 0.882 [0.861, 0.900] 10-0 p_holm 2.8e-05
+  1 core 2 s                         SA-AT-25-5-20     vs CONSTRUCT-1@2      n= 8 0.970 [0.954, 0.992] 7-1 p_holm 0.047
+  1 core 2 s                         SA-AT-25-5-20     vs CPSAT-1@2          n=10 0.955 [0.939, 0.970] 10-0 p_holm 0.002
+  1 core 2 s                         SA-AT-25-5-20     vs RL-1@2             n=10 0.786 [0.771, 0.798] 10-0 p_holm 1.1e-08
+  1 core 2 s                         SA-AT-50-5-50     vs CONSTRUCT-1@2      n= 5 0.984 [0.970, 0.998] 3-2 p_holm 0.12
+  1 core 2 s                         SA-AT-50-5-50     vs CPSAT-1@2          n=10 0.947 [0.931, 0.963] 10-0 p_holm 0.00091
+  1 core 2 s                         SA-BT-25-5-20     vs CONSTRUCT-1@2      n= 5 0.985 [0.972, 0.997] 5-0 p_holm 0.12
+  1 core 2 s                         SA-BT-25-5-20     vs CPSAT-1@2          n= 6 0.981 [0.966, 0.996] 4-0 p_holm 0.12
+  1 core 2 s                         SA-BT-25-5-20     vs RL-1@2             n= 7 0.794 [0.776, 0.816] 7-0 p_holm 2.8e-05
+  1 core 2 s                         SA-BT-25-5-50     vs CONSTRUCT-1@2      n= 8 0.936 [0.923, 0.949] 8-0 p_holm 0.00034
+  1 core 2 s                         SA-BT-25-5-50     vs CPSAT-1@2          n= 7 0.915 [0.902, 0.929] 7-0 p_holm 0.00025
+  1 core 2 s                         SA-BT-50-5-50     vs CONSTRUCT-1@2      n= 6 0.925 [0.917, 0.934] 6-0 p_holm 0.00019
+  1 core 2 s                         SA-BT-50-5-50     vs CPSAT-1@2          n= 7 0.909 [0.904, 0.915] 7-0 p_holm 1e-06
+  C1 8 cores 2B1                     MA-AT-25-5-50     vs CONSTRUCT-8@2B1    n= 7 0.907 [0.885, 0.933] 7-0 p_holm 0.0012
+  C1 8 cores 2B1                     MA-AT-25-5-50     vs CPSAT-8@2B1        n= 7 0.912 [0.890, 0.934] 7-0 p_holm 0.0012
+  C1 8 cores 2B1                     MA-AT-50-5-50     vs CONSTRUCT-8@2B1    n= 5 0.883 [0.861, 0.905] 5-0 p_holm 0.0016
+  C1 8 cores 2B1                     MA-AT-50-5-50     vs CPSAT-8@2B1        n= 5 0.894 [0.868, 0.918] 5-0 p_holm 0.0022
+  C1 8 cores 2B1                     SA-AT-50-5-50     vs CONSTRUCT-8@2B1    n= 5 0.939 [0.930, 0.947] 5-0 p_holm 0.00088
+  C1 8 cores 2B1                     SA-AT-50-5-50     vs CPSAT-8@2B1        n= 5 0.936 [0.927, 0.944] 5-0 p_holm 0.00088
+  C1 8 cores 2B1                     SA-BT-25-5-50     vs CONSTRUCT-8@2B1    n=10 0.919 [0.912, 0.925] 10-0 p_holm 1.5e-08
+  C1 8 cores 2B1                     SA-BT-25-5-50     vs CPSAT-8@2B1        n=10 0.914 [0.903, 0.925] 10-0 p_holm 9.3e-07
+  C1 8 cores 2B1                     SA-BT-50-5-50     vs CONSTRUCT-8@2B1    n= 8 0.922 [0.911, 0.931] 8-0 p_holm 1.1e-05
+  C1 8 cores 2B1                     SA-BT-50-5-50     vs CPSAT-8@2B1        n= 7 0.964 [0.947, 0.980] 7-0 p_holm 0.0046
+  C1 8 cores B1                      MA-AT-25-5-20     vs CONSTRUCT-8@B1     n= 5 0.964 [0.938, 0.990] 3-0 p_holm 0.13
+  C1 8 cores B1                      MA-AT-25-5-20     vs CPSAT-8@B1         n= 5 0.962 [0.938, 0.986] 4-0 p_holm 0.12
+  C1 8 cores B1                      MA-AT-25-5-20     vs RL-8@B1            n= 5 0.774 [0.748, 0.800] 5-0 p_holm 0.0013
+  C1 8 cores B1                      MA-AT-25-5-50     vs CONSTRUCT-8@B1     n= 8 0.906 [0.889, 0.924] 8-0 p_holm 0.00029
+  C1 8 cores B1                      MA-AT-25-5-50     vs CPSAT-8@B1         n=10 0.906 [0.895, 0.919] 10-0 p_holm 3.5e-06
+  C1 8 cores B1                      MA-AT-25-5-50     vs RL-8@B1            n=10 0.739 [0.717, 0.763] 10-0 p_holm 2.1e-07
+  C1 8 cores B1                      MA-AT-50-5-200    vs CONSTRUCT-8@B1     n= 8 0.883 [0.867, 0.899] 8-0 p_holm 4.7e-05
+  C1 8 cores B1                      MA-AT-50-5-200    vs CPSAT-8@B1         n= 9 0.893 [0.877, 0.909] 9-0 p_holm 2.8e-05
+  C1 8 cores B1                      MA-AT-50-5-200    vs RL-8@B1            n= 9 0.720 [0.703, 0.737] 9-0 p_holm 5.7e-08
+  C1 8 cores B1                      MA-AT-50-5-50     vs CONSTRUCT-8@B1     n= 5 0.882 [0.856, 0.908] 5-0 p_holm 0.0075
+  C1 8 cores B1                      MA-AT-50-5-50     vs CPSAT-8@B1         n= 5 0.882 [0.849, 0.915] 5-0 p_holm 0.014
+  C1 8 cores B1                      MA-AT-50-5-50     vs RL-8@B1            n= 5 0.716 [0.681, 0.761] 5-0 p_holm 0.0021
+  C1 8 cores B1                      SA-AT-25-5-20     vs CONSTRUCT-8@B1     n= 5 0.972 [0.963, 0.982] 5-0 p_holm 0.021
+  C1 8 cores B1                      SA-AT-25-5-20     vs CPSAT-8@B1         n= 5 0.974 [0.956, 0.990] 4-0 p_holm 0.13
+  C1 8 cores B1                      SA-AT-25-5-20     vs RL-8@B1            n= 5 0.813 [0.784, 0.841] 5-0 p_holm 0.0025
+  C1 8 cores B1                      SA-AT-50-5-50     vs CONSTRUCT-8@B1     n= 5 0.933 [0.925, 0.941] 5-0 p_holm 0.0011
+  C1 8 cores B1                      SA-AT-50-5-50     vs CPSAT-8@B1         n= 8 0.927 [0.918, 0.935] 8-0 p_holm 1.6e-05
+  C1 8 cores B1                      SA-AT-50-5-50     vs RL-8@B1            n= 6 0.759 [0.743, 0.773] 6-0 p_holm 2.3e-05
+  C1 8 cores B1                      SA-BT-25-5-20     vs CONSTRUCT-8@B1     n= 5 0.993 [0.983, 1.000] 3-0 p_holm 0.21
+  C1 8 cores B1                      SA-BT-25-5-20     vs CPSAT-8@B1         n= 6 1.000 [1.000, 1.000] 0-0 p_holm 0.5
+  C1 8 cores B1                      SA-BT-25-5-20     vs RL-8@B1            n= 6 0.840 [0.820, 0.859] 6-0 p_holm 0.00044
+  C1 8 cores B1                      SA-BT-25-5-50     vs CONSTRUCT-8@B1     n= 5 0.926 [0.919, 0.935] 5-0 p_holm 0.00076
+  C1 8 cores B1                      SA-BT-25-5-50     vs CPSAT-8@B1         n= 5 0.923 [0.911, 0.936] 5-0 p_holm 0.0025
+  C1 8 cores B1                      SA-BT-25-5-50     vs RL-8@B1            n= 5 0.787 [0.767, 0.806] 5-0 p_holm 0.00064
+  C1 8 cores B1                      SA-BT-50-5-50     vs CONSTRUCT-8@B1     n= 7 0.917 [0.910, 0.924] 7-0 p_holm 1.3e-05
+  C1 8 cores B1                      SA-BT-50-5-50     vs CPSAT-8@B1         n= 8 0.953 [0.941, 0.965] 8-0 p_holm 0.0014
+  C1 8 cores B1                      SA-BT-50-5-50     vs RL-8@B1            n= 7 0.758 [0.735, 0.776] 7-0 p_holm 2.5e-05
+  C2 1 core 0.5 s vs 8 cores B1      MA-AT-25-5-20     vs CONSTRUCT-8@B1     n=10 0.994 [0.980, 1.007] 6-3 p_holm 1
+  C2 1 core 0.5 s vs 8 cores B1      MA-AT-25-5-20     vs CPSAT-8@B1         n= 6 0.991 [0.968, 1.007] 3-3 p_holm 1
+  C2 1 core 0.5 s vs 8 cores B1      MA-AT-25-5-20     vs RL-8@B1            n= 5 0.796 [0.781, 0.812] 5-0 p_holm 0.0004
+  C2 1 core 0.5 s vs 8 cores B1      MA-AT-25-5-50     vs CONSTRUCT-8@B1     n= 6 0.961 [0.946, 0.976] 6-0 p_holm 0.044
+  C2 1 core 0.5 s vs 8 cores B1      MA-AT-25-5-50     vs CPSAT-8@B1         n= 7 0.966 [0.951, 0.980] 7-0 p_holm 0.044
+  C2 1 core 0.5 s vs 8 cores B1      MA-AT-25-5-50     vs RL-8@B1            n= 7 0.798 [0.780, 0.817] 7-0 p_holm 2.8e-05
+  C2 1 core 0.5 s vs 8 cores B1      MA-AT-50-5-200    vs CONSTRUCT-8@B1     n= 8 0.962 [0.947, 0.975] 8-0 p_holm 0.016
+  C2 1 core 0.5 s vs 8 cores B1      MA-AT-50-5-200    vs CPSAT-8@B1         n= 9 0.971 [0.956, 0.984] 9-0 p_holm 0.044
+  C2 1 core 0.5 s vs 8 cores B1      MA-AT-50-5-200    vs RL-8@B1            n= 9 0.777 [0.760, 0.792] 9-0 p_holm 2e-07
+  C2 1 core 0.5 s vs 8 cores B1      MA-AT-50-5-50     vs CONSTRUCT-8@B1     n= 5 0.947 [0.921, 0.973] 5-0 p_holm 0.16
+  C2 1 core 0.5 s vs 8 cores B1      MA-AT-50-5-50     vs CPSAT-8@B1         n= 6 0.946 [0.907, 0.987] 4-1 p_holm 0.34
+  C2 1 core 0.5 s vs 8 cores B1      MA-AT-50-5-50     vs RL-8@B1            n= 7 0.779 [0.747, 0.815] 7-0 p_holm 0.00046
+  C2 1 core 0.5 s vs 8 cores B1      SA-AT-25-5-20     vs CONSTRUCT-8@B1     n= 6 1.020 [0.989, 1.052] 2-4 p_holm 1
+  C2 1 core 0.5 s vs 8 cores B1      SA-AT-25-5-20     vs CPSAT-8@B1         n= 5 1.017 [0.995, 1.046] 1-3 p_holm 1
+  C2 1 core 0.5 s vs 8 cores B1      SA-AT-25-5-20     vs RL-8@B1            n= 5 0.850 [0.803, 0.878] 5-0 p_holm 0.039
+  C2 1 core 0.5 s vs 8 cores B1      SA-AT-50-5-50     vs CONSTRUCT-8@B1     n= 5 1.038 [1.029, 1.048] 0-5 p_holm 1
+  C2 1 core 0.5 s vs 8 cores B1      SA-AT-50-5-50     vs CPSAT-8@B1         n= 8 1.016 [1.006, 1.027] 1-7 p_holm 1
+  C2 1 core 0.5 s vs 8 cores B1      SA-AT-50-5-50     vs RL-8@B1            n= 6 0.846 [0.837, 0.863] 6-0 p_holm 0.00012
+  C2 1 core 0.5 s vs 8 cores B1      SA-BT-25-5-20     vs CONSTRUCT-8@B1     n= 5 1.002 [0.994, 1.012] 2-1 p_holm 1
+  C2 1 core 0.5 s vs 8 cores B1      SA-BT-25-5-20     vs CPSAT-8@B1         n= 8 1.006 [1.000, 1.018] 0-1 p_holm 1
+  C2 1 core 0.5 s vs 8 cores B1      SA-BT-25-5-20     vs RL-8@B1            n= 7 0.856 [0.828, 0.884] 7-0 p_holm 0.0015
+  C2 1 core 0.5 s vs 8 cores B1      SA-BT-25-5-50     vs CONSTRUCT-8@B1     n= 8 0.982 [0.965, 0.999] 6-2 p_holm 0.5
+  C2 1 core 0.5 s vs 8 cores B1      SA-BT-25-5-50     vs CPSAT-8@B1         n= 6 0.974 [0.949, 1.004] 4-2 p_holm 0.78
+  C2 1 core 0.5 s vs 8 cores B1      SA-BT-25-5-50     vs RL-8@B1            n= 5 0.835 [0.811, 0.859] 5-0 p_holm 0.0039
+  C2 1 core 0.5 s vs 8 cores B1      SA-BT-50-5-50     vs CONSTRUCT-8@B1     n= 5 0.967 [0.959, 0.974] 5-0 p_holm 0.015
+  C2 1 core 0.5 s vs 8 cores B1      SA-BT-50-5-50     vs CPSAT-8@B1         n= 7 1.002 [0.997, 1.008] 2-4 p_holm 1
+  C2 1 core 0.5 s vs 8 cores B1      SA-BT-50-5-50     vs RL-8@B1            n= 7 0.807 [0.798, 0.819] 7-0 p_holm 1.4e-06
+  C2 1 core 1 s vs 8 cores B1        MA-AT-25-5-20     vs CONSTRUCT-8@B1     n= 8 0.985 [0.964, 1.002] 4-1 p_holm 0.66
+  C2 1 core 1 s vs 8 cores B1        MA-AT-25-5-20     vs CPSAT-8@B1         n= 6 0.977 [0.959, 0.992] 5-0 p_holm 0.26
+  C2 1 core 1 s vs 8 cores B1        MA-AT-25-5-20     vs RL-8@B1            n= 5 0.783 [0.753, 0.809] 5-0 p_holm 0.0025
+  C2 1 core 1 s vs 8 cores B1        MA-AT-25-5-50     vs CONSTRUCT-8@B1     n= 7 0.968 [0.943, 0.991] 5-2 p_holm 0.26
+  C2 1 core 1 s vs 8 cores B1        MA-AT-25-5-50     vs CPSAT-8@B1         n= 9 0.965 [0.949, 0.981] 8-1 p_holm 0.024
+  C2 1 core 1 s vs 8 cores B1        MA-AT-25-5-50     vs RL-8@B1            n= 9 0.786 [0.755, 0.817] 9-0 p_holm 4e-05
+  C2 1 core 1 s vs 8 cores B1        MA-AT-50-5-200    vs CONSTRUCT-8@B1     n= 9 0.953 [0.941, 0.964] 9-0 p_holm 0.00098
+  C2 1 core 1 s vs 8 cores B1        MA-AT-50-5-200    vs CPSAT-8@B1         n=10 0.965 [0.951, 0.977] 10-0 p_holm 0.0073
+  C2 1 core 1 s vs 8 cores B1        MA-AT-50-5-200    vs RL-8@B1            n=10 0.777 [0.758, 0.796] 10-0 p_holm 1.7e-07
+  C2 1 core 1 s vs 8 cores B1        MA-AT-50-5-50     vs CONSTRUCT-8@B1     n= 5 0.935 [0.916, 0.951] 5-0 p_holm 0.021
+  C2 1 core 1 s vs 8 cores B1        MA-AT-50-5-50     vs CPSAT-8@B1         n= 5 0.935 [0.906, 0.967] 5-0 p_holm 0.13
+  C2 1 core 1 s vs 8 cores B1        MA-AT-50-5-50     vs RL-8@B1            n= 5 0.759 [0.729, 0.791] 5-0 p_holm 0.0025
+  C2 1 core 1 s vs 8 cores B1        SA-AT-25-5-20     vs CONSTRUCT-8@B1     n= 8 0.992 [0.982, 1.005] 7-1 p_holm 0.72
+  C2 1 core 1 s vs 8 cores B1        SA-AT-25-5-20     vs CPSAT-8@B1         n= 5 0.996 [0.968, 1.025] 3-2 p_holm 1
+  C2 1 core 1 s vs 8 cores B1        SA-AT-25-5-20     vs RL-8@B1            n= 6 0.842 [0.816, 0.868] 6-0 p_holm 0.0019
+  C2 1 core 1 s vs 8 cores B1        SA-AT-50-5-50     vs CONSTRUCT-8@B1     n= 5 1.014 [1.005, 1.021] 1-4 p_holm 1
+  C2 1 core 1 s vs 8 cores B1        SA-AT-50-5-50     vs CPSAT-8@B1         n= 9 0.992 [0.978, 1.005] 5-4 p_holm 0.72
+  C2 1 core 1 s vs 8 cores B1        SA-AT-50-5-50     vs RL-8@B1            n= 8 0.827 [0.814, 0.841] 8-0 p_holm 1.7e-06
+  C2 1 core 1 s vs 8 cores B1        SA-BT-25-5-20     vs CONSTRUCT-8@B1     n= 5 0.998 [0.994, 1.000] 2-0 p_holm 0.72
+  C2 1 core 1 s vs 8 cores B1        SA-BT-25-5-20     vs CPSAT-8@B1         n= 7 1.005 [1.000, 1.012] 0-2 p_holm 1
+  C2 1 core 1 s vs 8 cores B1        SA-BT-25-5-20     vs RL-8@B1            n= 6 0.860 [0.831, 0.889] 6-0 p_holm 0.0047
+  C2 1 core 1 s vs 8 cores B1        SA-BT-25-5-50     vs CONSTRUCT-8@B1     n=10 0.973 [0.962, 0.984] 10-0 p_holm 0.0092
+  C2 1 core 1 s vs 8 cores B1        SA-BT-25-5-50     vs CPSAT-8@B1         n= 6 0.975 [0.957, 0.994] 5-1 p_holm 0.26
+  C2 1 core 1 s vs 8 cores B1        SA-BT-25-5-50     vs RL-8@B1            n= 5 0.837 [0.829, 0.846] 5-0 p_holm 9.2e-05
+  C2 1 core 1 s vs 8 cores B1        SA-BT-50-5-50     vs CONSTRUCT-8@B1     n= 5 0.942 [0.939, 0.945] 5-0 p_holm 0.0001
+  C2 1 core 1 s vs 8 cores B1        SA-BT-50-5-50     vs CPSAT-8@B1         n= 7 0.977 [0.968, 0.986] 7-0 p_holm 0.022
+  C2 1 core 1 s vs 8 cores B1        SA-BT-50-5-50     vs RL-8@B1            n= 7 0.787 [0.778, 0.797] 7-0 p_holm 4.2e-07
+  C2 1 core 2 s vs 8 cores B1        MA-AT-25-5-20     vs CONSTRUCT-8@B1     n=10 0.985 [0.967, 1.001] 6-2 p_holm 0.51
+  C2 1 core 2 s vs 8 cores B1        MA-AT-25-5-20     vs CPSAT-8@B1         n= 6 0.984 [0.961, 1.003] 2-1 p_holm 0.62
+  C2 1 core 2 s vs 8 cores B1        MA-AT-25-5-20     vs RL-8@B1            n= 5 0.795 [0.784, 0.807] 5-0 p_holm 0.00011
+  C2 1 core 2 s vs 8 cores B1        MA-AT-25-5-50     vs CONSTRUCT-8@B1     n= 8 0.945 [0.929, 0.959] 8-0 p_holm 0.0027
+  C2 1 core 2 s vs 8 cores B1        MA-AT-25-5-50     vs CPSAT-8@B1         n=10 0.946 [0.932, 0.959] 10-0 p_holm 0.00039
+  C2 1 core 2 s vs 8 cores B1        MA-AT-25-5-50     vs RL-8@B1            n=10 0.771 [0.750, 0.793] 10-0 p_holm 3.3e-07
+  C2 1 core 2 s vs 8 cores B1        MA-AT-50-5-200    vs CONSTRUCT-8@B1     n= 9 0.939 [0.924, 0.953] 9-0 p_holm 0.00075
+  C2 1 core 2 s vs 8 cores B1        MA-AT-50-5-200    vs CPSAT-8@B1         n=10 0.950 [0.937, 0.965] 10-0 p_holm 0.00089
+  C2 1 core 2 s vs 8 cores B1        MA-AT-50-5-200    vs RL-8@B1            n=10 0.765 [0.749, 0.781] 10-0 p_holm 2.4e-08
+  C2 1 core 2 s vs 8 cores B1        MA-AT-50-5-50     vs CONSTRUCT-8@B1     n= 5 0.936 [0.914, 0.951] 5-0 p_holm 0.03
+  C2 1 core 2 s vs 8 cores B1        MA-AT-50-5-50     vs CPSAT-8@B1         n= 6 0.930 [0.904, 0.959] 6-0 p_holm 0.038
+  C2 1 core 2 s vs 8 cores B1        MA-AT-50-5-50     vs RL-8@B1            n= 7 0.765 [0.731, 0.802] 7-0 p_holm 0.00049
+  C2 1 core 2 s vs 8 cores B1        SA-AT-25-5-20     vs CONSTRUCT-8@B1     n= 8 0.993 [0.977, 1.010] 5-3 p_holm 0.92
+  C2 1 core 2 s vs 8 cores B1        SA-AT-25-5-20     vs CPSAT-8@B1         n= 5 0.994 [0.964, 1.017] 2-2 p_holm 1
+  C2 1 core 2 s vs 8 cores B1        SA-AT-25-5-20     vs RL-8@B1            n= 6 0.837 [0.803, 0.863] 6-0 p_holm 0.0028
+  C2 1 core 2 s vs 8 cores B1        SA-AT-50-5-50     vs CONSTRUCT-8@B1     n= 5 1.015 [1.001, 1.028] 2-3 p_holm 1
+  C2 1 core 2 s vs 8 cores B1        SA-AT-50-5-50     vs CPSAT-8@B1         n= 9 0.988 [0.975, 1.002] 6-3 p_holm 0.51
+  C2 1 core 2 s vs 8 cores B1        SA-AT-50-5-50     vs RL-8@B1            n= 8 0.827 [0.813, 0.838] 8-0 p_holm 9e-07
+  C2 1 core 2 s vs 8 cores B1        SA-BT-25-5-20     vs CONSTRUCT-8@B1     n= 5 0.997 [0.993, 1.000] 3-0 p_holm 0.52
+  C2 1 core 2 s vs 8 cores B1        SA-BT-25-5-20     vs CPSAT-8@B1         n= 7 1.003 [1.000, 1.009] 0-1 p_holm 1
+  C2 1 core 2 s vs 8 cores B1        SA-BT-25-5-20     vs RL-8@B1            n= 6 0.843 [0.821, 0.865] 6-0 p_holm 0.00089
+  C2 1 core 2 s vs 8 cores B1        SA-BT-25-5-50     vs CONSTRUCT-8@B1     n= 8 0.965 [0.953, 0.976] 8-0 p_holm 0.0063
+  C2 1 core 2 s vs 8 cores B1        SA-BT-25-5-50     vs CPSAT-8@B1         n= 5 0.964 [0.951, 0.976] 5-0 p_holm 0.037
+  C2 1 core 2 s vs 8 cores B1        SA-BT-25-5-50     vs RL-8@B1            n= 5 0.822 [0.800, 0.843] 5-0 p_holm 0.0014
+  C2 1 core 2 s vs 8 cores B1        SA-BT-50-5-50     vs CONSTRUCT-8@B1     n= 6 0.951 [0.946, 0.956] 6-0 p_holm 0.00015
+  C2 1 core 2 s vs 8 cores B1        SA-BT-50-5-50     vs CPSAT-8@B1         n= 8 0.982 [0.970, 0.994] 6-2 p_holm 0.11
+  C2 1 core 2 s vs 8 cores B1        SA-BT-50-5-50     vs RL-8@B1            n= 8 0.784 [0.766, 0.798] 8-0 p_holm 1.5e-06
+  ablation v2/v1 8 cores B1          MA-AT-25-5-20     vs ALNS1-8@B1         n= 5 0.995 [0.989, 1.001] 2-1 p_holm 0.8
+  ablation v2/v1 8 cores B1          MA-AT-25-5-50     vs ALNS1-8@B1         n=10 0.999 [0.991, 1.007] 4-6 p_holm 0.86
+  ablation v2/v1 8 cores B1          MA-AT-50-5-200    vs ALNS1-8@B1         n= 8 0.917 [0.893, 0.941] 8-0 p_holm 0.0025
+  ablation v2/v1 8 cores B1          MA-AT-50-5-50     vs ALNS1-8@B1         n= 6 0.996 [0.982, 1.005] 2-2 p_holm 0.84
+  ablation v2/v1 8 cores B1          SA-AT-25-5-20     vs ALNS1-8@B1         n= 5 1.006 [0.998, 1.014] 2-3 p_holm 0.86
+  ablation v2/v1 8 cores B1          SA-AT-50-5-50     vs ALNS1-8@B1         n= 8 0.980 [0.969, 0.991] 7-1 p_holm 0.059
+  ablation v2/v1 8 cores B1          SA-BT-25-5-20     vs ALNS1-8@B1         n= 6 0.999 [0.996, 1.000] 1-0 p_holm 0.8
+  ablation v2/v1 8 cores B1          SA-BT-25-5-50     vs ALNS1-8@B1         n= 5 0.991 [0.978, 1.004] 3-2 p_holm 0.8
+  ablation v2/v1 8 cores B1          SA-BT-50-5-50     vs ALNS1-8@B1         n= 8 0.995 [0.990, 0.999] 4-0 p_holm 0.24
+wrote docs/results/phase1b/anytime_val.md
+
+wrote docs/results/phase1b/anytime_gaps_val.csv and anytime_ratios_val.csv
+wrote docs/results/phase1b/anytime_val.png

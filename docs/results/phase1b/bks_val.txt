@@ -1,0 +1,46 @@
+
+SA-BT-25-5-20: 10 BKS, mean 16.771; found by ALNS2-16x30s 6, CPFULL-8x60s 4
+  ALNS2-16x30s       n=10 gap to BKS 0.00%, found BKS 6, own gain T/2 -> T -0.00%
+  CPFULL-8x60s       n=10 gap to BKS 0.00%, found BKS 4, own gain T/2 -> T 0.00%, proven optimal 10/10, BKS to certified bound 0.11%
+
+SA-AT-25-5-20: 10 BKS, mean 25.272; found by CPFULL-8x60s 6, ALNS2-16x30s 4
+  ALNS2-16x30s       n=10 gap to BKS 0.34%, found BKS 4, own gain T/2 -> T 0.00%
+  CPFULL-8x60s       n=10 gap to BKS 0.00%, found BKS 6, own gain T/2 -> T 0.00%, proven optimal 0/10, BKS to certified bound 40.15%
+
+MA-AT-25-5-20: 10 BKS, mean 17.760; found by ALNS2-16x30s 8, CPFULL-8x60s 2
+  ALNS2-16x30s       n=10 gap to BKS 0.04%, found BKS 8, own gain T/2 -> T -0.00%
+  CPFULL-8x60s       n=10 gap to BKS 0.00%, found BKS 2, own gain T/2 -> T 0.00%, proven optimal 1/10, BKS to certified bound 28.18%
+
+SA-BT-25-5-50: 10 BKS, mean 26.488; found by ALNS2-16x90s 4, ALNS2-8@B1 3, ALNS2-8@5 1, ALNS2-8@10 1, ALNS2-8@2B1 1
+  ALNS2-16x90s       n=10 gap to BKS 0.85%, found BKS 4, own gain T/2 -> T 0.00%
+  ALNS2i-16x90s-check n= 3 gap to BKS 0.77%, found BKS 0, own gain T/2 -> T 0.14%
+  CPLNS-8x90s        n= 5 gap to BKS 9.75%, found BKS 0, own gain T/2 -> T 0.75%
+
+SA-BT-50-5-50: 10 BKS, mean 16.734; found by ALNS2-8@2B1 5, ALNS2-16x90s 3, ALNS1-8@B1 1, ALNS2-1@B1 1
+  ALNS2-16x90s       n=10 gap to BKS 0.42%, found BKS 3, own gain T/2 -> T 0.12%
+  ALNS2i-16x90s-check n= 3 gap to BKS 0.16%, found BKS 0, own gain T/2 -> T 0.05%
+  CPLNS-8x90s        n= 5 gap to BKS 4.58%, found BKS 0, own gain T/2 -> T 0.30%
+
+SA-AT-50-5-50: 10 BKS, mean 26.972; found by ALNS2-8@B1 5, ALNS2-8@2B1 3, ALNS2-16x90s 1, ALNS2-1@B1 1
+  ALNS2-16x600s-check n= 1 gap to BKS 2.26%, found BKS 0, own gain T/2 -> T 0.23%
+  ALNS2-16x90s       n=10 gap to BKS 1.46%, found BKS 1, own gain T/2 -> T 0.40%
+  ALNS2i-16x90s-check n= 3 gap to BKS -0.25%, found BKS 0, own gain T/2 -> T 1.11%
+  CPLNS-8x90s        n= 5 gap to BKS 8.30%, found BKS 0, own gain T/2 -> T 0.84%
+
+MA-AT-25-5-50: 10 BKS, mean 30.257; found by ALNS2-8@2B1 5, ALNS2-8@B1 2, ALNS2-16x90s 2, ALNS1-8@B1 1
+  ALNS2-16x90s       n=10 gap to BKS 1.13%, found BKS 2, own gain T/2 -> T 0.00%
+  ALNS2i-16x90s-check n= 3 gap to BKS 0.97%, found BKS 0, own gain T/2 -> T 0.44%
+  CPLNS-8x90s        n= 5 gap to BKS 11.29%, found BKS 0, own gain T/2 -> T 0.91%
+
+MA-AT-50-5-50: 10 BKS, mean 19.091; found by ALNS2-8@2B1 5, ALNS2-16x90s 2, ALNS2-8@B1 2, ALNS2-1@B1 1
+  ALNS2-16x600s-check n= 1 gap to BKS 0.24%, found BKS 0, own gain T/2 -> T 0.00%
+  ALNS2-16x90s       n=10 gap to BKS 0.82%, found BKS 2, own gain T/2 -> T 0.03%
+  ALNS2i-16x90s-check n= 3 gap to BKS -0.10%, found BKS 0, own gain T/2 -> T 0.28%
+  CPLNS-8x90s        n= 5 gap to BKS 11.24%, found BKS 0, own gain T/2 -> T 1.01%
+
+MA-AT-50-5-200: 10 BKS, mean 60.233; found by ALNS2-16x240s 5, ALNS2-8@2B1 4, ALNS2-1@2B1 1
+  ALNS2-16x240s      n=10 gap to BKS 0.38%, found BKS 5, own gain T/2 -> T 0.14%
+
+wrote /home/jovyan/dev/cbba-sota/runs/bks/val_bks.json: 90 instances
+wrote docs/results/phase1b/bks_val.csv
+wrote docs/results/phase1b/bks_val_runs.csv
