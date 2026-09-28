@@ -422,10 +422,13 @@ def _split(arcs: list[tuple[int, int]], f: np.ndarray, energy: np.ndarray, s: in
     return out
 
 
-def convert(model: Model, x: list[np.ndarray], q: np.ndarray, time_limit: float = COVER_LIMIT) -> Plan:
+def convert(model: Model, x: list[np.ndarray], q: np.ndarray, time_limit: float = COVER_LIMIT,
+            deadline: float = math.inf) -> Plan:
     """Plan from a MILP solution: rounded and split species flows, paths given to the species' agents in id order,
     keys = MILP start times ``q`` (a topological order of the routes if ``q`` does not order them strictly), pruned
-    to a minimal cover. Raises ``_Failed`` with the stage that failed."""
+    to a minimal cover. Each species' path split gets at most ``time_limit`` s and what is left until ``deadline``
+    (``perf_counter``; at least 0.1 s), then falls back to the greedy split. Raises ``_Failed`` with the stage that
+    failed."""
     inst = model.inst
     T, S = inst.n_tasks, inst.n_species
     routes: list[list[int]] = [[] for _ in range(inst.n_agents)]
@@ -435,7 +438,7 @@ def convert(model: Model, x: list[np.ndarray], q: np.ndarray, time_limit: float 
             continue
         energy = np.array([model.time(k, i, j) * inst.speed for i, j in arcs])
         f = _round(arcs, x[k], energy, T + k, T + S + k)
-        paths = _split(arcs, f, energy, T + k, T + S + k, time_limit)
+        paths = _split(arcs, f, energy, T + k, T + S + k, min(time_limit, max(0.1, deadline - time.perf_counter())))
         agents = np.flatnonzero(inst.species == k)
         if len(paths) > len(agents):
             raise _Failed("ROUNDING_EXCEEDS_AGENTS")
@@ -528,7 +531,7 @@ def solve(inst: Instance, time_limit: float, backend: str = "CP_SAT", threads: i
             os.unlink(sol_file)
     x, q, qmax = model.split(values)
     try:
-        plan = convert(model, x, q, min(COVER_LIMIT, max(0.1, deadline - time.perf_counter())))
+        plan = convert(model, x, q, COVER_LIMIT, deadline)
     except _Failed as e:
         return result(e.args[0], objective=objective, bound=bound, qmax=qmax, build=build)
     return result(status, plan, objective, bound, qmax, build)

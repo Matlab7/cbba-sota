@@ -19,10 +19,12 @@ Kinds (each job uses ``--width`` CPUs, one job per lane at a time):
     the best of their ``greedy.construct`` restart streams built in min(10% of T, 3 s), sub-solves of
     ``pcpsat_sub_time`` seconds;
   - CPFULLc: the full CP-SAT model (all arcs, ``width`` threads, seed 4000) hinted with the best of ``width``
-    ``greedy.construct`` restart streams built in min(10% of T, 3 s); certified lower bound as for CPFULL.
-  They enter the BKS like every other run; ``collect`` also reports, per instance, the best independent plan next
-  to the best plan of the other runs (mostly ALNS), so that "gap to the BKS" has a reference that ALNS did not
-  produce.
+    ``greedy.construct`` restart streams built in min(10% of T, 3 s); certified lower bound as for CPFULL. Up to 200
+    tasks only: at 500 tasks the full arc set has about 30 million arc literals.
+  They enter the BKS like every other run. ``collect`` also reports, per setting, the best plan of the runs without
+  any ALNS component (``alns_free``: the independent references, CPLNS and every competitor of the timed campaigns)
+  next to the best plan of the ALNS runs (and of CPFULL, which is hinted with the best plan so far), so that "gap to
+  the BKS" has a reference that ALNS did not produce.
 T (``--seconds``, default ``SECONDS`` by task count) is wall time from after instance loading, construction
 included. Every makespan is the env replay of the returned plan. Rows go to runs/bks/<setting>.jsonl with 0-based
 routes, the best-so-far trace, the instance fingerprint, the code version and host conditions; resumable per
@@ -66,7 +68,7 @@ SECONDS = {20: 30.0, 50: 90.0, 200: 240.0, 500: 600.0}  # T per task count (see 
 SUB_TIME = {"MA-AT-150-10-500": 10.0}  # CP-SAT LNS seconds per sub-solve (default 2 s; dev choice)
 SEEDS = {"ALNS2": 1000, "ALNS2i": 2000, "CPLNS": 1, "CPFULL": 0, "PLNS": 3000, "CPFULLc": 4000}
 CHECKS = ("ALNS2i",)  # run on a subset only: compared with the BKS, not part of it
-INDEPENDENT = ("PLNS", "CPFULLc")  # no ALNS component: their best is also reported on its own
+INDEPENDENT = ("PLNS", "CPFULLc")  # long reference runs without any ALNS component
 # Dev choices of ``anytime.py tune`` (2026-09-28, 8 cores at B1, dev 0-9, 500 tasks dev 0-2): per setting the variant
 # with the lowest mean makespan (docs/results/val-c1/tune_dev.txt). Parallel CP-SAT LNS sub-solve seconds (default 2 s):
 PCPSAT_SUB_TIME: dict[str, float] = {"SA-BT-25-5-50": 0.5, "SA-BT-50-5-50": 5.0, "SA-AT-50-5-50": 0.5,
@@ -140,6 +142,8 @@ def run_job(name: str, split: str, i: int, kind: str, width: int, seconds: float
             "trace": [(t, ms) for t, ms, _ in res.trajectory], "iterations": res.iterations,
             "init_makespan": res.init_makespan, "sub_time": pcpsat_sub_time(name), "fingerprint": fp}
     if kind == "CPFULLc":
+        if inst.n_tasks > 200:
+            raise ValueError("CPFULLc builds every arc: up to 200 tasks only")
         hint = cpsat.construct_parallel(inst, width, t0 + min(0.1 * seconds, 3.0), seed=SEEDS[kind])
         res = cpsat.solve_full(inst, seconds, workers=width, hint=hint, seed=SEEDS[kind], t0=t0)
         lb = res.bound - (inst.n_tasks + 1) / cpsat.SCALE if res.bound == res.bound else None
@@ -161,6 +165,12 @@ def rows_of(name: str, split: str = SPLIT) -> list[dict]:
         out += [r | {"source": root.name} for r in runtime.read_rows(path)
                 if r.get("split", split) == split and runtime.is_current(r)]
     return out
+
+
+def alns_free(r: dict) -> bool:
+    """The row's plan has no ALNS component: not an ALNS run, not a CPFULL BKS run (hinted with the best plan so
+    far), not an ALNS polish."""
+    return r.get("kind", "") not in ("ALNS2", "ALNS2i", "CPFULL") and r.get("method", "") not in ("ALNS2", "ALNS1")
 
 
 def best_known(rows: list[dict]) -> dict[int, dict]:
@@ -230,8 +240,8 @@ def collect(args) -> None:
         best = best_known(rows)
         if not best:
             continue
-        indep = best_known([r for r in rows if r.get("kind") in INDEPENDENT])
-        own = best_known([r for r in rows if r.get("kind") not in INDEPENDENT])
+        indep = best_known([r for r in rows if alns_free(r)])
+        own = best_known([r for r in rows if not alns_free(r)])
         out[name] = {}
         for i in sorted(best):
             e = best[i]
@@ -243,16 +253,16 @@ def collect(args) -> None:
                             "file": r["source"], "fingerprint": r["fingerprint"], "lb": lb}
             table.append({"setting": name, "instance": i, "bks": e["bks"], "found_by": label(r), "lb": lb,
                           "gap_to_lb_pct": None if lb is None else 100 * (e["bks"] - lb) / e["bks"],
-                          "own_bks": own.get(i, {}).get("bks"), "independent_best": ind,
-                          "independent_by": None if ind is None else label(indep[i]["row"])})
+                          "alns_best": own.get(i, {}).get("bks"), "alns_free_best": ind,
+                          "alns_free_by": None if ind is None else label(indep[i]["row"])})
         both = [i for i in out[name] if indep.get(i, {}).get("bks") is not None
                 and own.get(i, {}).get("bks") is not None]
         if both:
             rel = np.array([100 * (own[i]["bks"] - indep[i]["bks"]) / indep[i]["bks"] for i in both])
-            print(f"\n{name}: independent references on {len(both)} instances: best of the other runs "
-                  f"{np.mean([own[i]['bks'] for i in both]):.3f} vs best independent "
-                  f"{np.mean([indep[i]['bks'] for i in both]):.3f}, i.e. {rel.mean():+.2f}% (min {rel.min():+.2f}%, "
-                  f"max {rel.max():+.2f}%); independent better on {int((rel > 1e-7).sum())}")
+            print(f"\n{name}: on {len(both)} instances, best ALNS-derived plan {np.mean([own[i]['bks'] for i in both]):.3f}"
+                  f" vs best plan without ALNS {np.mean([indep[i]['bks'] for i in both]):.3f}: ALNS-derived "
+                  f"{rel.mean():+.2f}% (min {rel.min():+.2f}%, max {rel.max():+.2f}%); without ALNS better on "
+                  f"{int((rel > 1e-7).sum())}")
         d = diagnostics(name, rows, best)
         diag += d
         found = {}
@@ -301,6 +311,9 @@ def run(args) -> None:
     for kind in args.kinds:
         done = _done(kind, args.width, seconds_of, args.check)
         for name in args.settings:
+            if kind == "CPFULLc" and configs.get(name).n_tasks > 200:
+                print(f"skip CPFULLc on {name}: every arc of 500 tasks (up to 200 tasks only)", flush=True)
+                continue
             n = min(args.n, configs.get(name).n_instances(SPLIT))
             jobs += [{"setting": name, "split": SPLIT, "instance": i, "kind": kind, "workers": args.width,
                       "time_s": seconds_of(name)} | ({"check": True} if args.check else {})

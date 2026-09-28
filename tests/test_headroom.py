@@ -99,6 +99,8 @@ def test_independent_references_use_no_alns_plan(tmp_path, monkeypatch):
     (tmp_path / f"{name}.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
     best = bks.best_known(bks.rows_of(name))[0]
     assert best["bks"] == min(plns["makespan"], full["makespan"]) and best["row"]["kind"] in bks.INDEPENDENT
+    assert [bks.alns_free(r) for r in rows] == [True, True, False]
+    assert bks.alns_free({"method": "PCPSAT"}) and not bks.alns_free({"kind": "CPFULL"})
 
 
 def test_anytime_grid():
@@ -129,9 +131,10 @@ def test_c1_grid_and_tune_variants():
     assert ("CTAS", 8, "B1") in mid and ("CTAS", 8, "B1") not in large  # CTAS-D fails at 500 tasks (dev pilot)
     assert set(later) < set(mid) and ("PCPSAT", 8, "2B1") in later and ("RL", 8, "1") in mid
     assert at.grid_c1(get("SA-AT-25-5-20")) == [] and {b for _, c, b in large if c == 8} == {"B1", "stream"}
-    assert at.parse_variant("PCPSAT:sub_time=0.5,q0=8") == ("PCPSAT", "sub_time=0.5,q0=8", {"sub_time": 0.5, "q0": 8})
-    with pytest.raises(SystemExit):
-        at.parse_variant("ALNS2:lam=0.1")
+    assert at.parse_variant("PCPSAT:sub_time=0.5") == ("PCPSAT", "sub_time=0.5", {"sub_time": 0.5})
+    for bad in ("ALNS2:lam=0.1", "PCPSAT:sub_time=0.5,q0=8", "CPFULL:sub_time=1"):  # run_* take sub_time / knn only
+        with pytest.raises(SystemExit):
+            at.parse_variant(bad)
 
 
 def test_construct_streams_are_read_off_at_every_budget():
@@ -161,7 +164,7 @@ def test_construct_streams_are_read_off_at_every_budget():
         assert by[1, label]["stream"] == 0
 
 
-def test_gap_table_and_ratios(tmp_path):
+def test_gap_table_and_ratios(tmp_path, monkeypatch):
     """Gap to BKS, share of the constructor-to-BKS gap closed (ratio of means) and the late rule."""
     at = _script("anytime")
     name = "SA-BT-25-5-20"
@@ -184,6 +187,16 @@ def test_gap_table_and_ratios(tmp_path):
     rat = {r["other"]: r for r in at.ratios(name, rows)}
     assert rat["CONSTRUCT-8@B1"]["ratio"] == pytest.approx(0.875) and rat["CONSTRUCT-8@B1"]["wins"] == 2
     assert "CPSAT-8@B1" not in rat  # one on-time pair only
+
+    # the c1 rule scores a late run by the best plan its trace had by the budget, else as a failure (200)
+    monkeypatch.setattr(at, "LATE_RULE", "score")
+    g = {(x["method"], x["budget"]): x for x in at.gap_table(name, rows, {0: 10.0, 1: 20.0})}
+    assert g["CPSAT", "B1"]["on_time"] == 2 and g["CPSAT", "B1"]["late"] == 1
+    assert g["CPSAT", "B1"]["mean_makespan"] == pytest.approx((11.0 + 200.0) / 2)
+    rows[("CPSAT", 8, "B1")][1]["trace"] = [(1.0, 23.0), (2.0, 22.5), (1e9, 21.0)]
+    assert at.at_budget(rows[("CPSAT", 8, "B1")][1]) == 22.5
+    rat = {r["other"]: r for r in at.ratios(name, rows)}
+    assert rat["CPSAT-8@B1"]["n"] == 2 and rat["CPSAT-8@B1"]["ratio"] == pytest.approx((10.5 / 11.0 + 21.0 / 22.5) / 2)
 
 
 def test_bks_table_roundtrip(tmp_path, monkeypatch):

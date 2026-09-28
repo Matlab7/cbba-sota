@@ -18,6 +18,7 @@ import multiprocessing as mp
 import os
 import socket
 import subprocess
+import sys
 import time
 from collections.abc import Callable, Iterable, Iterator
 from concurrent.futures import ProcessPoolExecutor
@@ -102,12 +103,17 @@ def code_version(root: Path = ROOT) -> str:
 
 
 def require_clean(allow_dirty: bool = False) -> str:
-    """``code_version()`` for the rows of a timed campaign; exits if the source has uncommitted changes, unless
-    ``allow_dirty`` (smoke tests), so that every timed row names a commit that reproduces it."""
+    """``code_version()`` for the rows of a timed campaign; exits if the source has uncommitted changes or is not in a
+    git checkout, unless ``allow_dirty`` (smoke tests), so that every timed row names a commit that reproduces it. It
+    also exits if the running script belongs to another checkout than the imported ``cbba_sota`` (a campaign worktree
+    run without ``PYTHONPATH``), whose commit the rows would otherwise name."""
+    script_root = Path(sys.argv[0]).resolve().parents[1] if sys.argv and sys.argv[0] else None
+    if script_root is not None and (script_root / "cbba_sota").is_dir() and script_root != ROOT:
+        raise SystemExit(f"script from {script_root} imports cbba_sota from {ROOT}: set PYTHONPATH={script_root}")
     version = code_version()
-    if "dirty" in version and not allow_dirty:
-        raise SystemExit(f"source tree is dirty ({version}): commit before a timed campaign, or pass --allow-dirty "
-                         "for a smoke test")
+    if ("dirty" in version or version == "unknown") and not allow_dirty:
+        raise SystemExit(f"source tree is dirty or unknown ({version}): commit before a timed campaign, or pass "
+                         "--allow-dirty for a smoke test")
     return version
 
 
@@ -236,10 +242,19 @@ def cgroup_cpu_stat() -> dict[str, int]:
     return {}
 
 
+def boot_id() -> str | None:
+    """The kernel's boot id: tells the physical node apart when a pod keeps its host name across nodes."""
+    try:
+        return Path("/proc/sys/kernel/random/boot_id").read_text().strip()
+    except OSError:
+        return None
+
+
 class Probe:
-    """Host conditions over one job: the host name, CPU affinity of the process running it (``cpus`` if given),
-    load average at the start and end, and the change in the cgroup's throttling counters (the whole container, not
-    only this job). Rows without ``host`` were written on the first server, before 2026-09-28 15:00."""
+    """Host conditions over one job: the host (pod) name and the node's boot id, CPU affinity of the process running
+    it (``cpus`` if given), load average at the start and end, and the change in the cgroup's throttling counters
+    (the whole container, not only this job). Rows without ``host`` were written on the first server, before
+    2026-09-28 15:00; rows without ``boot_id`` before 2026-09-28 19:00."""
 
     def __init__(self, cpus: Iterable[int] | None = None):
         self.cpus = None if cpus is None else format_cpus(cpus)
@@ -247,8 +262,8 @@ class Probe:
 
     def fields(self) -> dict:
         end = cgroup_cpu_stat()
-        out = {"host": socket.gethostname(), "affinity": self.cpus or affinity(), "load1": self.load1,
-               "load1_end": os.getloadavg()[0]}
+        out = {"host": socket.gethostname(), "boot_id": boot_id(), "affinity": self.cpus or affinity(),
+               "load1": self.load1, "load1_end": os.getloadavg()[0]}
         for key in ("nr_throttled", "throttled_usec"):
             if key in self.stat and key in end:
                 out[key] = end[key] - self.stat[key]

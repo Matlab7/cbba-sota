@@ -82,6 +82,7 @@ import threading
 import time
 import traceback
 from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures.process import BrokenProcessPool
 from pathlib import Path
 
 import numpy as np
@@ -105,6 +106,8 @@ FAIL = cd.FAIL
 QUIET = 0.4  # a lane starts a unit only when at most this share of the cgroup's CPU periods was throttled
 RL_FIRST_ONE = 10.0  # RL budgets up to this many seconds start with a lockstep batch of 1 sample (else 4)
 DISTURBED = 0.4  # rows whose job saw a larger throttled share are re-run on resume and left out of reports
+LATE_RULES = {"phase1b": "drop", "c1": "score"}  # how reports treat runs over their budget (``at_budget``)
+LATE_RULE = "drop"
 
 
 def budgets(setting) -> dict[str, float]:
@@ -343,28 +346,36 @@ class Lane(cd.Lane):
             time.sleep(27.0)
             waited += 30.0
 
-        def one(job):
+        def one(job) -> bool:
             probe, started = runtime.Probe(self.cpus), time.time()
             try:
                 rows = _run_job(self.ex, job)
+            except BrokenProcessPool:  # a lane process died (e.g. out of memory): requeued below
+                return False
             except Exception:  # noqa: BLE001  (logged; the job has no row and reruns on resume)
                 print(f"FAILED {job}\n{traceback.format_exc()}", flush=True)
-                return
+                return True
             periods = runtime.cgroup_cpu_stat().get("nr_periods", 0) - probe.stat.get("nr_periods", 0)
             for row in rows:
                 self.sink(job | row | probe.fields() | {"started": started, "lane": self.k, "nr_periods": periods,
                                                         "probe_s": time.time() - started, "waited_s": waited})
+            return True
 
         with ThreadPoolExecutor(len(jobs)) as tp:
-            list(tp.map(one, jobs))
+            broken = [job for job, ok in zip(jobs, tp.map(one, jobs)) if not ok]
+        if broken:  # a broken pool fails every later job at once: stop this lane, leave the jobs to the others
+            self.units.put(broken)
+            raise RuntimeError(f"lane {self.k}: a lane process died; {len(broken)} jobs requeued")
 
 
-def _done() -> set[tuple]:
-    """Keys (setting, instance, method, cores, budget label[, variant]) of the current, undisturbed rows."""
+def _done(version: str | None = None) -> set[tuple]:
+    """Keys (setting, instance, method, cores, budget label[, variant]) of the current, undisturbed rows of this split
+    and, given ``version``, of that code version (a campaign resumed on other code recomputes its rows)."""
     out = set()
     for path in OUT.glob("*.jsonl"):
         for r in runtime.read_rows(path):
-            if runtime.is_current(r) and not disturbed(r):
+            if (runtime.is_current(r) and not disturbed(r) and r.get("split") == SPLIT
+                    and (version is None or r.get("git") == version)):
                 label = "stream" if r["method"] == "CONSTRUCT" else r["budget"]
                 cores = r.get("streams_job", r["cores"])
                 out.add((r["setting"], r["instance"], r["method"], cores, label) + ((r["variant"],)
@@ -410,7 +421,8 @@ def _units(settings: list[str], n: int, n_large: int, done: set[tuple], rng: ran
 def run(args, plan=None) -> None:
     os.environ.update(cd._ONE)
     OUT.mkdir(parents=True, exist_ok=True)
-    units = _units(args.settings, args.n, args.n_large, _done(), random.Random(0), max_budget=args.max_budget,
+    version = runtime.require_clean(args.allow_dirty)
+    units = _units(args.settings, args.n, args.n_large, _done(version), random.Random(0), max_budget=args.max_budget,
                    methods=args.methods, plan=plan)
     print(f"{len(units)} units, {sum(map(len, units))} jobs, {args.lanes} lanes, split {SPLIT}", flush=True)
     if not units:
@@ -419,7 +431,6 @@ def run(args, plan=None) -> None:
     lane_cpus = runtime.blocks(cpus, LANE)[:args.lanes]
     if len(lane_cpus) < args.lanes:
         raise SystemExit(f"{len(cpus)} CPUs for {args.lanes} lanes of {LANE}")
-    version = runtime.require_clean(args.allow_dirty)
     print(f"lanes pinned to {[runtime.format_cpus(c) for c in lane_cpus]}, code {version}", flush=True)
     work: queue.Queue = queue.Queue()
     for u in units:
@@ -462,12 +473,25 @@ def score(r: dict) -> float:
     return r["makespan"] if succeeded(r["success"], r["makespan"]) else FAIL
 
 
+def at_budget(r: dict) -> float | None:
+    """A run's score at its budget: its ``score`` if it ended on time. A ``late`` run is left out (None) under the
+    ``phase1b`` rule (docs/headroom-2026-09.md); under the ``c1`` rule it scores the best plan its trace had reached by
+    the budget, or a failure (200) if it had none (RL and CTAS keep no trace)."""
+    if not late(r):
+        return score(r)
+    if LATE_RULE == "drop":
+        return None
+    reached = [ms for t, ms in r.get("trace") or () if t <= r["budget_s"]]
+    return min(min(reached), FAIL) if reached else FAIL
+
+
 def load_rows(name: str, keep_disturbed: bool = False) -> dict[tuple[str, int, str], dict[int, dict]]:
     """(method, cores, budget label) -> instance -> row (current fingerprints, not ``disturbed``, planned by ``GRID``
     for that instance, no ``tune`` variants; the last row wins)."""
     s = configs.get(name)
     out: dict[tuple[str, int, str], dict[int, dict]] = {}
-    rows = [r for r in runtime.read_rows(OUT / f"{name}.jsonl") if runtime.is_current(r)]
+    rows = [r for r in runtime.read_rows(OUT / f"{name}.jsonl")
+            if runtime.is_current(r) and r.get("split", SPLIT) == SPLIT]
     if keep_disturbed:  # an undisturbed row of a cell wins over any disturbed one, else the last one
         rows.sort(key=lambda r: not disturbed(r))
     for r in rows:
@@ -479,8 +503,9 @@ def load_rows(name: str, keep_disturbed: bool = False) -> dict[tuple[str, int, s
 
 
 def gap_table(name: str, rows, bks_of: dict[int, float]) -> list[dict]:
-    """Mean gap to the BKS (%) per method, cores and budget over on-time runs, and the share of the
-    constructor-to-BKS gap closed (ratio of means over instances where both ran on time)."""
+    """Mean gap to the BKS (%) per method, cores and budget over the runs scored at their budget (``at_budget``;
+    ``on_time`` counts them, ``late`` the runs over budget), and the share of the constructor-to-BKS gap closed (ratio
+    of means over instances where both are scored)."""
     s = configs.get(name)
     labels = budgets(s)
     streams = next((c for m, c, _ in GRID(s, 0) if m == "CONSTRUCT"), LANE)  # cores of the restart-stream job
@@ -489,38 +514,39 @@ def gap_table(name: str, rows, bks_of: dict[int, float]) -> list[dict]:
         key = (method, streams if method == "CONSTRUCT" else cores, "stream" if method == "CONSTRUCT" else label)
         planned = sum(key in GRID(s, i) for i in bks_of)
         ran = {i: r for i, r in by_i.items() if i in bks_of}
-        ok = {i: r for i, r in ran.items() if not late(r)}
+        ok = {i: v for i, r in ran.items() if (v := at_budget(r)) is not None}
         if not ok:
             continue
-        gaps = np.array([100 * (score(r) - bks_of[i]) / bks_of[i] for i, r in ok.items()])
-        con = rows.get(("CONSTRUCT", cores, label), {})
+        gaps = np.array([100 * (v - bks_of[i]) / bks_of[i] for i, v in ok.items()])
+        con = {i: v for i, r in rows.get(("CONSTRUCT", cores, label), {}).items() if (v := at_budget(r)) is not None}
         both = [i for i in ok if i in con]
         closed = None
         if both and method != "CONSTRUCT":
-            c = np.mean([score(con[i]) for i in both])
-            m = np.mean([score(ok[i]) for i in both])
+            c = np.mean([con[i] for i in both])
+            m = np.mean([ok[i] for i in both])
             b = np.mean([bks_of[i] for i in both])
             closed = float((c - m) / (c - b)) if c - b > 1e-9 else None
         out.append({"setting": name, "method": method, "cores": cores, "budget": label, "budget_s": labels[label],
-                    "planned": planned, "n": len(ran), "on_time": len(ok), "gap_pct": float(gaps.mean()),
-                    "gap_sd": float(gaps.std(ddof=1)) if len(gaps) > 1 else 0.0,
-                    "mean_makespan": float(np.mean([score(r) for r in ok.values()])),
-                    "success": float(np.mean([succeeded(r["success"], r["makespan"]) for r in ok.values()])),
+                    "planned": planned, "n": len(ran), "on_time": len(ok), "late": sum(map(late, ran.values())),
+                    "gap_pct": float(gaps.mean()), "gap_sd": float(gaps.std(ddof=1)) if len(gaps) > 1 else 0.0,
+                    "mean_makespan": float(np.mean(list(ok.values()))),
+                    "success": float(np.mean([v < FAIL for v in ok.values()])),
                     "wall_s": float(np.mean([r["wall_s"] for r in by_i.values()])), "closed": closed,
-                    "cpu_share": float(np.mean([cpu_s(r) / (labels[label] * cores) for r in ok.values()]))})
+                    "cpu_share": float(np.mean([cpu_s(r) / (labels[label] * cores) for r in ran.values()]))})
     return sorted(out, key=lambda g: (METHODS.index(g["method"]), g["cores"], g["budget_s"]))
 
 
 def ratios(name: str, rows) -> list[dict]:
-    """ALNS2 / competitor, paired over instances where both ran on time."""
+    """ALNS2 / competitor, paired over instances where both are scored at their budget (``at_budget``)."""
     out = []
 
     def pair(ours, other, tag):
-        a, b = rows.get(ours, {}), rows.get(other, {})
-        common = sorted(i for i in set(a) & set(b) if not late(a[i]) and not late(b[i]))
+        a = {i: v for i, r in rows.get(ours, {}).items() if (v := at_budget(r)) is not None}
+        b = {i: v for i, r in rows.get(other, {}).items() if (v := at_budget(r)) is not None}
+        common = sorted(set(a) & set(b))
         if len(common) < 2:
             return
-        res = cd._ratio(np.array([score(a[i]) for i in common]), np.array([score(b[i]) for i in common]))
+        res = cd._ratio(np.array([a[i] for i in common]), np.array([b[i] for i in common]))
         out.append({"setting": name, "comparison": tag, "ours": "{}-{}@{}".format(*ours),
                     "other": "{}-{}@{}".format(*other), "n": len(common), **res})
 
@@ -539,7 +565,7 @@ def ratios(name: str, rows) -> list[dict]:
 def _fmt(g: dict | None) -> str:
     if g is None:
         return "      -"
-    mark = "" if g["on_time"] == g["n"] else "*"
+    mark = "" if g["on_time"] == g["n"] and not g.get("late") else "*"
     return f"{g['gap_pct']:6.2f}{mark}"
 
 
@@ -566,8 +592,10 @@ def report(args) -> None:
         share = [r["nr_throttled"] / r["nr_periods"] for r in used if r.get("nr_periods")]
         got = [r["cpu_s"] / (r["wall_s"] * r["cores"]) for r in used  # CPU received by one-process-per-core jobs
                if r["method"] in ("ALNS2", "ALNS1", "RL", "PCPSAT") and r.get("cpu_s") and r["wall_s"] > 0]
+        late_note = "late and left out" if LATE_RULE == "drop" else "late, scored at the budget by their trace or as 200"
+        versions = sorted({r.get("git", "?") for r in used})
         print(f"\n{name}  (val, n = {len(bks_all[name])} BKS; B1 = {labels['B1']:g} s)  mean gap to BKS, %"
-              "  (* = some runs late and left out)")
+              f"  (* = some runs {late_note}); code {', '.join(versions)}")
         kept = "kept" if args.keep_disturbed else "left out"
         print(f"  rows used {len(used)}, disturbed {sum(map(disturbed, every))} ({kept}); throttled share of CPU periods "
               f"in used rows: mean {np.mean(share):.3f}, max {np.max(share):.3f}; CPU received by ALNS/RL jobs: mean "
@@ -622,22 +650,27 @@ def compare(args) -> None:
     global OUT
     here = OUT
     print(f"\nSame cells in {args.compare} (paired over instances on time in both; ratio {here.name} / "
-          f"{args.compare.name})")
+          f"{args.compare.name}). RL at budgets up to {RL_FIRST_ONE:g} s is left out: its first lockstep batch "
+          "changed from 4 samples to 1 between the campaigns.")
     for name in args.settings:
         OUT = here
         mine = load_rows(name)
         OUT = args.compare
         other = _load_any(name)
-        for cell in sorted(set(mine) & set(other), key=lambda c: (METHODS.index(c[0]), c[1], budgets(
-                configs.get(name))[c[2]])):
+        labels = budgets(configs.get(name))
+        for cell in sorted(set(mine) & set(other), key=lambda c: (METHODS.index(c[0]), c[1], labels[c[2]])):
+            if cell[0] == "RL" and labels[cell[2]] <= RL_FIRST_ONE:
+                continue
             a, b = mine[cell], other[cell]
+            code = sorted({r.get("git", "?")[:7] for r in (*a.values(), *b.values())})
             common = sorted(i for i in set(a) & set(b) if not late(a[i]) and not late(b[i]))
             if len(common) < 2:
                 continue
             res = cd._ratio(np.array([score(a[i]) for i in common]), np.array([score(b[i]) for i in common]))
             print(f"  {name:17s} {cell[0]}-{cell[1]}@{cell[2]:4s} n={len(common):2d} "
                   f"{np.mean([score(a[i]) for i in common]):8.3f} vs {np.mean([score(b[i]) for i in common]):8.3f}"
-                  f"  ratio {res['ratio']:.3f} [{res['lo']:.3f}, {res['hi']:.3f}] {res['wins']}-{res['losses']}")
+                  f"  ratio {res['ratio']:.3f} [{res['lo']:.3f}, {res['hi']:.3f}] {res['wins']}-{res['losses']}  "
+                  f"code {'/'.join(code)}")
     OUT = here
 
 
@@ -675,7 +708,8 @@ def markdown_c1(gaps: list[dict], rats: list[dict], bks_all: dict) -> str:
         if x is None:
             return "-"
         return (f"{x['gap_pct']:.2f}" + ("" if x["on_time"] == x["planned"] else f" ({x['on_time']}/{x['planned']})")
-                + ("" if x["success"] == 1 else f" [solved {100 * x['success']:.0f}%]"))
+                + ("" if x["success"] == 1 else f" [solved {100 * x['success']:.0f}%]")
+                + (f" [late {x['late']}]" if x.get("late") else ""))
 
     def ratio(name, ours, other):
         x = r.get((name, ours, other))
@@ -811,12 +845,18 @@ def plot(gaps: list[dict], png: Path) -> None:
 # --- dev tuning of competitor variants ------------------------------------------------------------------------
 
 
+VARIANT_PARAMS = {"PCPSAT": ("sub_time",), "CPFULL": ("knn",)}  # what run_pcpsat / run_cpfull take
+
+
 def parse_variant(spec: str) -> tuple[str, str, dict]:
-    """``"PCPSAT:sub_time=0.5,q0=8"`` -> ``("PCPSAT", "sub_time=0.5,q0=8", {"sub_time": 0.5, "q0": 8})``."""
+    """``"PCPSAT:sub_time=0.5"`` -> ``("PCPSAT", "sub_time=0.5", {"sub_time": 0.5})``."""
     method, _, rest = spec.partition(":")
-    if method not in ("PCPSAT", "CPFULL") or not rest:
-        raise SystemExit(f"bad variant {spec!r}: expected PCPSAT:param=value or CPFULL:param=value")
+    if method not in VARIANT_PARAMS or not rest:
+        raise SystemExit(f"bad variant {spec!r}: expected PCPSAT:sub_time=S or CPFULL:knn=K")
     params = {k: json.loads(v) for k, v in (item.split("=", 1) for item in rest.split(","))}
+    if unknown := set(params) - set(VARIANT_PARAMS[method]):
+        raise SystemExit(f"bad variant {spec!r}: {method} takes {', '.join(VARIANT_PARAMS[method])}, not "
+                         f"{', '.join(sorted(unknown))}")
     return method, rest, params
 
 
@@ -859,7 +899,7 @@ def tune_report(args) -> None:
 
 
 def main() -> None:
-    global OUT, SPLIT, GRID
+    global OUT, SPLIT, GRID, LATE_RULE
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("command", choices=["run", "report", "tune", "tune-report"])
     ap.add_argument("--grid", choices=list(GRIDS), default="phase1b", help="run/report: the campaign's grid")
@@ -887,6 +927,7 @@ def main() -> None:
     OUT = args.out or (RUNS_DIR / "tune_dev" if tuning else OUT)
     SPLIT = args.split or ("dev" if tuning else "val")
     GRID = GRIDS[args.grid]
+    LATE_RULE = LATE_RULES[args.grid]
     {"run": run, "report": report, "tune": tune, "tune-report": tune_report}[args.command](args)
 
 
