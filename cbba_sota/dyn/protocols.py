@@ -48,7 +48,7 @@ Station outsiders (resolved 2026-09-28 on the real stack): spec 4.5 says robots 
 their believed routes, and their traits count toward those coalitions" (``frozen_model="anchor"``, the default). The
 day-1 toy world suggested anchoring was badly hurt by G1 key monotonicity; the C3 design pilot in the real world
 (``cbba_sota.dyn.c3world``, dev seed 2, docs/results/trackD-week1/c3.md) did not reproduce that (anchor vs head within
-0-15%, not consistent in sign), so the spec-literal anchoring and monotone keys are used. ``frozen_model="head"``
+5-16%, not consistent in sign), so the spec-literal anchoring and monotone keys are used. ``frozen_model="head"``
 (only the committed head is kept) remains available as a sensitivity.
 
 C3 liveness conventions (rule 4.6(c), ``replica.overdue_absents`` / ``replica.effective_kind``): overdue work of a

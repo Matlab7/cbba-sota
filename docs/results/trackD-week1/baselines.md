@@ -184,7 +184,7 @@ Three times the rollouts do not move RL-MPC measurably, so the K3 decision is no
   - the CBTA offer is the earliest achievable start;
   - CBTA beats CBGA on average start time;
   - B3 tiers: per-setting sub-solve counts; one sub-solve per event at Light.
-- 17 passed in 144 s. Full suite with these files: `OMP_NUM_THREADS=1 NUMBA_NUM_THREADS=1 .venv/bin/python -m pytest tests/ -q` gave 332 passed in 644 s; `ruff check cbba_sota scripts tests`: all checks passed.
+- 17 passed in 144 s. Full suite with these files: `OMP_NUM_THREADS=1 NUMBA_NUM_THREADS=1 .venv/bin/python -m pytest tests/ -q` gave 332 passed in 644 s after the campaigns, and 333 passed in 672 s at the end (another workflow had added a test); `ruff check cbba_sota scripts tests`: all checks passed.
 
 ## 6. Caveats
 

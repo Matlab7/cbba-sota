@@ -1,0 +1,833 @@
+{
+ "A": {
+  "files_written": [
+   "/home/jovyan/dev/cbba-sota/cbba_sota/dyn/env.py",
+   "/home/jovyan/dev/cbba-sota/cbba_sota/dyn/perturb.py",
+   "/home/jovyan/dev/cbba-sota/scripts/trackD_run.py",
+   "/home/jovyan/dev/cbba-sota/tests/test_dyn_env.py",
+   "/home/jovyan/dev/cbba-sota/tests/test_dyn_perturb.py",
+   "/home/jovyan/dev/cbba-sota/runs/trackD/campaign/rows_A_day1.jsonl (data, git-ignored: 6400 day-1 rows)",
+   "/root/.cache/cbba-sota/pinned-4cf5e04 (git archive of the pinned ALNS v2 commit, used by the tests; created on first test run)"
+  ],
+  "tests": "Two new test files: tests/test_dyn_env.py (38 tests) and tests/test_dyn_perturb.py (24 tests). Together: 62 passed in 176 s (OMP_NUM_THREADS=1 NUMBA_NUM_THREADS=1 .venv/bin/python -m pytest tests/test_dyn_env.py tests/test_dyn_perturb.py -q).\n\nFull suite: 251 passed in 395 s. Command: PYTHONPATH=/tmp/trackD_A OMP_NUM_THREADS=1 NUMBA_NUM_THREADS=1 .venv/bin/python -m pytest tests/ -q -p capplugin. The -p capplugin flag is a small out-of-tree plugin that lowers test_hetero_core's WORKERS from 15 to 10 at collection time, so the run stays under my 12-process cap. No test file of another workflow was edited.\n\n`ruff check cbba_sota scripts tests` is clean on the whole tree.\n\nBeyond the tests, two out-of-tree runs:\n- A 10-worker invariant stress sweep (/tmp/trackD_A/stress.py): 4 primary settings x 5 dev instances x 2 seeds x 13 cells x 3 drivers (a test-only list-scheduling controller, RL(g.), greedy) = 1560 episodes. All 1560 held every invariant, with no exceptions and no hangs. Checks: each finished coalition covers its task, start >= release and >= member arrivals, finish = start + realized duration, no failed robot in a coalition while it worked, no trip home before H, every live robot home at the makespan.\n- A day-1 campaign through scripts/trackD_run.py: 6400 rows, all status completed.",
+  "key_numbers": [
+   "D1 static reduction (every case bit-identical). RL: greedy decode plus 2 sampled seeds on 5 dev instances (MA-AT-25-5-50 #0/#1, MA-AT-50-5-50 #0, SA-AT-50-5-50 #0, SA-BT-50-5-50 #0), both through rl.rollout on the subclass and through run_policy(RLPolicy). Greedy on the same 5 instances. Plan replay of constructor, random, random-greedy and pinned ALNS v2 plans (git archive 4cf5e04, max_iters=150) on the same 5 instances, under both coalition rules, and equal to evaluate().",
+   "D2: 15 RL rollouts (MA-AT-25-5-50 dev 0-4, greedy + 2 sampled each) pruned to minimal covers replay bit-identically under arrival order.",
+   "D2 finding: the RL policy itself is NOT identical under arrival order on MA-AT (MA-AT-25-5-50 dev 0 RL(g.): 44.54 native vs 39.66 arrival). It is identical on SA-BT-50-5-50 and SA-AT-50-5-50.",
+   "D3, RL(g.) oracle/causal paired geometric-mean ratio, 80 instance clusters, bootstrap 95% CI: F0 1.003 [0.999, 1.008], F1 0.997 [0.994, 1.001], F2 0.995 [0.985, 1.004]. The spec's pilot range was 0.98-1.02.",
+   "Day-1 campaign (dev, 4 primary settings x 20 instances x 2 CRN seeds, world DynTaskEnvX@4b70840e7e): 6400/6400 rows completed, 0 failure realizations excluded.",
+   "Campaign, RL(g.)/greedy paired GM ratio (pairs where both succeed): F0 0.859 [0.836, 0.881], F1 0.898 [0.872, 0.924], F2 0.898 [0.869, 0.926], F3 0.838 [0.811, 0.864].",
+   "Campaign, open-loop constructor (8 restarts) / RL(g.) on F0: 0.875 [0.865, 0.886].",
+   "Campaign, RL(s.1)/RL(g.): F0 1.007, F1 1.002, F2 0.995, F3 1.011.",
+   "RL(g.) success rate: 100% on F0-F2 and F3-pf0.1; 98.8% on F3-pf0.2; 99.4% on F3-pf0.2-R2. RL (g.+s.1) failed 5 of 480 F3-pf0.2 episodes, all policy deadlocks (see caveats). Greedy success 86.9%-96.3% per cell.",
+   "F3-pf0.2, RL(g.) per episode: 15.2 abandons and 3.05 aborted-task restarts. Mean structural events per RL episode: F1-R2 18.6, F1-R3 30.5, F3-pf0.2 24.9, F3-pf0.2-R2 43.2.",
+   "CPU per RL decision (observation + forward pass): p50 6.80 ms, p95 7.97 ms over 539,707 decisions, measured on the loaded shared host with 10 workers (not a quiet pinned core).",
+   "Episode wall time: median 1.72 s, max 5.70 s.",
+   "Release window H = 0.5 x published RL(g.) makespan: MA-AT-25-5-50 25.079, MA-AT-50-5-50 14.812, SA-AT-50-5-50 19.7135, SA-BT-50-5-50 12.1165 (the pilots rounded to 25/15/20/12). R1 H = 20 for 50 tasks, 90 for 200 tasks.",
+   "LoRR delays: calendar stall fraction matches a transcription of Start-Kit nextTick and the renewal expectation within 10% (300 agents x 4000 ticks, N1/N3/N4). Continuous arrival vs brute tick integration: max error < 1e-3 time units."
+  ],
+  "api_summary": "Everything below is in cbba_sota.dyn.env unless noted.\n\nBuilding an env\n- make_env(source: TaskEnv | Instance | path, real: Realization | None = None, *, coalition=\"auto\"|\"arrival\"|\"decision\", obs=\"causal\"|\"oracle\", lease_L=200.0, abandon_on_failure=True) -> DynTaskEnvX\n  - DynTaskEnvX is a class swap onto a copy of the TaskEnv (third_party is not edited).\n  - The default realization is perturb.static_realization, i.e. the static env.\n  - coalition=\"auto\" means arrival order in run_plan and decision order in policy and native loops.\n\nRunning an episode\n- DynTaskEnvX.run_plan(controller: Controller | None = None, routes: list[list[int]] | None = None, *, max_time=200.0, skip_finished=True) -> Episode\n  - Plan following in the env's own loop. Routes use 0-based task ids.\n- DynTaskEnvX.run_policy(policy: Policy, *, shuffle_seed: int | None = None, max_time=200.0, observer=None) -> Episode\n  - Mirrors rl._episode (Worker.run_episode).\n- The native loops also work on the subclass: rl.rollout, greedy._run_nearest, execute_by_route. Failure onsets and detections are processed inside next_decision, so a native driver gets D6 too. Agent D's run_b1 drives run_policy and gives episodes identical to my RLPolicy.\n\nController and policy protocols\n- Controller.on_events(env, t, events: list[Event]) -> bool | None\n  - Called once per epoch that has events. Return True if it re-planned.\n  - Event(kind, t, tasks, agents, info) with .structural and .get(key).\n  - Structural kinds: release, failure, abandon, idle, membership.\n  - Noise kinds: finish, wasted, window_end, wakeup.\n- Policy.selectable(env, i) -> bool and Policy.act(env, i) -> int (1-based task id, 0 = depot).\n- Provided policies:\n  - RLPolicy(net, *, sample=False, seed=0, device=\"cpu\"). It deletes known-failed agent rows via drop_failed_rows(env, agent_id, task_obs, agent_obs, mask).\n  - NearestPolicy(max_waiting=True): the paper greedy.\n\nActions and views for controllers\n- set_route(i, tasks) -> bool (released tasks only, 0-based) and route(i) -> list[int]\n- abandon(i) -> bool\n- request_wakeup(t)\n- post_event(Event)\n- drain_events() -> list[Event]\n- state() -> StateView, the causal snapshot. Fields: t, H, released, finished, started, start, committed, present, residual[T,K], alive, mode (home|to_home|travel|wait|work|idle|failed), target, pos, dep, tau, stall, eta, routes, dur_nom.\n- nominal_instance() -> Instance (nominal durations; Instance.from_env would read the realized ones).\n- predict_ready(view, kappa=1.0) -> (ready[A], at[A], task_finish[T]), the Section 4.1 predictor.\n- position(i, t=None) -> xy, stall-aware and frozen at failure.\n- known_failed() and is_failed(i), the contract agent D's driver uses; realization property; may_go_home().\n- legs[i]: list of (decided, departure, nominal_tau, target_id) per agent.\n- signature() and world (a string with the rule in force and the env code hash; code_hash() gives the hash alone).\n\nEpisode fields\n- world, makespan (None if the episode never ended), success, completion, env_finished\n- travel, wait, wasted_trips, abandons, restarts, failures, detected, decisions\n- controller_calls, replans, route_versions, structural_events, epochs\n- cpu_event_s: per controller call with a structural event, or per policy decision\n- cpu_total_s\n- property makespan_or_cap\n\ncbba_sota.dyn.perturb\n- crn_rng(setting_index, instance_key, crn_seed, stream, entity=0). Streams: DELAY=1, DUR=2, RELEASE=3, FAIL=4; CHANNEL=5 is reserved for C.\n- DelayModel(p, min_ticks, max_ticks) with .expected_stall_fraction() and .kappa(). N1, N3, N4.\n- Cell(name, family, release, delay, dur_model, dur_sigma, p_fail, primary); CELLS, FAMILIES, cell(name).\n  - Frozen cells: F0-N1, F0-N2, F0-N3; F1-R1, F1-R2, F1-R3; F2-R2N3; F3-pf0.1, F3-pf0.2, F3-pf0.2-R2; static.\n  - Secondary cells: S-N4, S-R2-durexp, S-R2-durunif.\n- Realization(setting, instance_key, crn_seed, cell, release, H, dur_nom, dur_real, delays, fail_onset, detect_after=0.5, excluded, meta) with .kappa() and .summary().\n- realize(setting, instance_key, crn_seed, cell, req, ab, dur_nom) and realize_instance(setting, split, i, crn_seed, cell); the test split is refused.\n- static_realization(req, dur, n_agents), published_rl_makespan(setting), release_window(setting, cell, T)\n- r1_release_times, dod_release_times, realized_durations, delay_calendar, failure_calendar, survivors_cover\n- PRIMARY_SETTINGS, SECONDARY_SETTINGS\n\nscripts/trackD_run.py\n- Flags: --settings, --instances 0-19, --seeds 0-1, --cells/--families, --methods, --tier native|light|heavy, --coalition, --obs, --lease-L, --no-abandon-on-failure, --workers (capped at 12), --rows, --any-code, --limit, --dry.\n- Built-in methods: RL(g.), RL(s.1), greedy, OL-construct.\n- Plug-in methods: 'ctrl:<module>:<factory>?k=v' and 'pol:<module>:<factory>?k=v', where factory(env, realization, tier, seed, **params) returns a Controller or a Policy.\n- Output: runs/trackD/campaign/rows*.jsonl, resumable by case_id plus the current env code hash.\n- Row fields:\n  - identity: setting, instance, seed, cell, family, method, tier, options, case_id, method_seed\n  - outcome: makespan, success, completion, makespan_or_cap (the P90 input)\n  - CPU: cpu_ms_p50, p95, max, the per-event list, cpu_method_s\n  - counters: replans, route_versions, wait, wait_per_agent, abandons, wasted_trips, restarts, failures, detected, structural_events\n  - provenance: world, code_hash, git, git_dirty_dyn, wall_s, cpu_s",
+  "gates": [
+   {
+    "gate": "D1 static reduction (all releases at 0, no noise) bit-identical: RL, greedy, ALNS plan replay",
+    "status": "pass",
+    "evidence": "tests/test_dyn_env.py::test_static_reduction_{rl,greedy,plan_replay} on 5 dev instances. Plans: constructor, random, and pinned-4cf5e04 ALNS run in a subprocess, which asserts that the pinned package executed. Greedy caveat: bit-identical for every natively successful episode; in natively failing episodes only legs decided after t=200 differ (see caveats)."
+   },
+   {
+    "gate": "D1 zero row == deleted row",
+    "status": "pass",
+    "evidence": "test_zero_row_equals_deleted_row: F1-R1 on MA-AT-25-5-50 dev 2, every decision with hidden tasks has the same argmax and max |dp| < 1e-5."
+   },
+   {
+    "gate": "D2 arrival order == decision order for consistent minimal covers (plan replay and 15 RL rollouts)",
+    "status": "partial",
+    "evidence": "Pass for plan replay, including under F0-N3 and N4 noise, and for 15 RL rollouts converted to pruned minimal-cover plans. Not identical for the RL policy run live on MA-AT: its coalitions are non-minimal. Hence coalition='auto' (decision order for policies), recorded in world."
+   },
+   {
+    "gate": "D3 causal observations",
+    "status": "pass",
+    "evidence": "The static RL rollouts are bit-identical with causal observations. No-leak test: changing only post-tau durations and stalls leaves every pre-tau decision identical under causal obs and changes them under oracle obs. Campaign oracle/causal GM ratios are 0.995-1.003."
+   },
+   {
+    "gate": "D4 back-dating cap",
+    "status": "pass",
+    "evidence": "test_backdating_is_capped_at_the_information_epoch: the cap binds under R1/R2/R3, no leg leaves before its task's release, the native flashforward is kept when static, and home trips are not back-dated when H > 0."
+   },
+   {
+    "gate": "D5 causal lease",
+    "status": "pass",
+    "evidence": "The native covered-branch rule drops an early member at t=0 from the realized arrival spread, while DynTaskEnvX starts the task at 10.0 with both members. The lease timeout uses only the robot's own waiting time. With lease 200 and no failures, results are identical (D1)."
+   },
+   {
+    "gate": "D6 fail_agent",
+    "status": "pass",
+    "evidence": "A robot failing mid-work aborts its task, which restarts from scratch with the full duration. A halted robot's observation rows are equal to those of a stalled robot until detection. Detection comes at onset + 0.5 with abandon and failure events, and the failed robot is excluded from the makespan. The native loop processes failures. With no failures, results are identical (D1)."
+   },
+   {
+    "gate": "D7/D8 termination and wait in place",
+    "status": "pass",
+    "evidence": "test_window_end_termination_and_wait_in_place (RL and greedy under F1-R2) and test_idle_agents_wait_until_the_window_ends. With H=0, results are identical (D1)."
+   },
+   {
+    "gate": "Perturbations: LoRR Start-Kit semantics verified in source; CRN; R1/R2/R3; durations; failures",
+    "status": "pass",
+    "evidence": "Source checked: MAPF-Competition/Start-Kit@9bc75d9 (DelayGenerator.cpp, last changed in 77bad9a; Simulator.cpp). tests/test_dyn_perturb.py: 24 passed."
+   },
+   {
+    "gate": "Invariant stress (all 13 cells x 3 drivers, 1560 episodes)",
+    "status": "pass",
+    "evidence": "/tmp/trackD_A/stress.py: 1560 ok, 0 errors, 0 hangs."
+   },
+   {
+    "gate": "Full test suite + ruff",
+    "status": "pass",
+    "evidence": "251 passed in 395 s (with WORKERS capped to 10 by an out-of-tree plugin); ruff clean on the whole tree."
+   },
+   {
+    "gate": "K0 executor-vs-env equivalence (Day 2, A+B)",
+    "status": "not_run",
+    "evidence": "Day-2 gate, not in the Day-1 scope. Agent B's cbba_sota/dyn/executor.py uses its own Realization and CRN keys, not perturb.Realization."
+   }
+  ],
+  "issues_and_caveats": [
+   "D2 versus RL: the spec's regression '15 RL rollouts identical under arrival order' holds only for plans made from RL rollouts, not for the live RL policy on MA-AT. Its coalitions are non-minimal, so a redundant late member leaves early and the whole rollout changes, often to RL's benefit (3 of 4 samples in my smoke test). Default coalition='auto' uses decision order for policies (the native, bit-identical choice) and arrival order for plan following (identical under good comms with minimal covers). Arrival-order RL is available as a sensitivity via --coalition arrival; recommend reporting it for B1 fairness (K3).",
+   "Native greedy quirk: in natively failing greedy episodes (e.g. MA-AT-25-5-50 dev 1, makespan 200.46), the native env's lease removes a waiting member at t >= 200, and native back-dating then departs it at time 0 (the uncovered task's time_finish). D4 back-dates only agents that worked on their previous task, so only such post-cap legs differ.",
+   "Failed robots' agent rows are deleted, not zeroed. Agent D found that a zero row 0 makes the released network return NaN. RLPolicy and D's B1Policy delete rows identically and gave identical episodes on F1-R2, F3-pf0.2 and F3-pf0.2-R2.",
+   "Two D4 generalizations: the cap uses the latest release or failure-detection epoch, and when H > 0 trips home are never back-dated. The second was found by a failing test: RL agents were back-dated home before the last task finished. Both are no-ops when static.",
+   "B1 policy deadlock under F3: 5 of 480 RL episodes (MA-AT-25-5-50 dev 12 and 19, seed 1) end with every live robot waiting at a different uncovered task. With the good-comms 'detector' lease nobody gives up, so no epoch remains and the episode fails. This is a policy outcome, not an env defect. The lease_L option exists; the spec's shared lease grid should be tuned for B1 on dev (agent D).",
+   "Failure detection is global (good comms: onset + 5 ticks), and the env does the physical cleanup at detection: coalition removal, and reset of an aborted task, which restarts from scratch. For C3 (agent C) a comm-dependent detection would need an option to decouple knowledge from this cleanup; not implemented.",
+   "Not implemented: a rally/goto-waypoint action (needed by C3; legs are atomic as in the native env, with no mid-leg redirection), the Start-Kit Poisson event model and Gaussian delay lengths, and noise events other than finish and wasted (no start/arrival/stall events).",
+   "Delay calendars match the Start-Kit semantics in distribution (tested against a transcription of nextTick), but use numpy PCG64 per robot rather than the Start-Kit's shared mt19937 stream.",
+   "The failure exclusion rule is conservative and method-independent: the robots that never fail must cover every task. No dev F3 realization in the campaign was excluded (0 of 240).",
+   "D7 as specified ('home only when t >= H and every known task is finished') keeps idle robots in the field until the last finish, which lengthens makespans compared with the native 'all covered' rule when H > 0. It applies equally to all methods, in any driver, because agent_step enforces it.",
+   "The idle event fires only on the transition to idle. With H = 0 (F0, F3 without release) robots with an empty route go home natively, so no idle events occur there; the failure event is the re-plan trigger.",
+   "OL-construct (open-loop constructor, descriptive smoke only) fails under F3 by design, since it has no repair.",
+   "Campaign CPU numbers come from a loaded shared host with 10 workers, not the spec's quiet pinned core. The rows record git 4cf5e049b6c2 with uncommitted cbba_sota/dyn (git_dirty_dyn=true) and env code hash 4b70840e7e; the runner treats rows as done only when the env hash matches.",
+   "The validation split of the spec is not generated (configs.SPLITS has only test and dev), so the runner is dev-only. The test split is refused in perturb.realize_instance and in the runner.",
+   "My tests add about 3 minutes to the suite (RL static-identity tests dominate). The pinned-ALNS fixture extracts `git archive 4cf5e04` to ~/.cache/cbba-sota/pinned-4cf5e04 and runs it in a subprocess.",
+   "Other agents created files in cbba_sota/dyn concurrently (executor.py, planner.py, rh_kernels.py, sparc.py, comm.py, replica.py, protocols.py, stats.py, baselines/rl_online.py). I did not edit them. Nothing was committed, no other agent was messaged, and cbba_sota/solvers, hetero and bench were only read.",
+   "Scratch files are in /tmp/trackD_A: smoke and stress scripts, the pytest cap plugin, logs, and the campaign summary script summ.py. The day-1 rows are in runs/trackD/campaign/rows_A_day1.jsonl."
+  ]
+ },
+ "B": {
+  "files_written": [
+   "/home/jovyan/dev/cbba-sota/cbba_sota/dyn/rh_kernels.py",
+   "/home/jovyan/dev/cbba-sota/cbba_sota/dyn/planner.py",
+   "/home/jovyan/dev/cbba-sota/cbba_sota/dyn/sparc.py",
+   "/home/jovyan/dev/cbba-sota/cbba_sota/dyn/controller.py",
+   "/home/jovyan/dev/cbba-sota/cbba_sota/dyn/executor.py",
+   "/home/jovyan/dev/cbba-sota/cbba_sota/dyn/baselines/constructor_rh.py",
+   "/home/jovyan/dev/cbba-sota/cbba_sota/dyn/baselines/ditags.py",
+   "/home/jovyan/dev/cbba-sota/cbba_sota/dyn/baselines/cpsat_rh.py",
+   "/home/jovyan/dev/cbba-sota/scripts/trackD_kernel_check.py",
+   "/home/jovyan/dev/cbba-sota/scripts/trackD_pilot.py",
+   "/home/jovyan/dev/cbba-sota/scripts/trackD_static_gate.py",
+   "/home/jovyan/dev/cbba-sota/tests/test_dyn_planner.py",
+   "/home/jovyan/dev/cbba-sota/tests/test_dyn_baselines.py",
+   "/home/jovyan/dev/cbba-sota/runs/trackD/pilot_b_day1.jsonl",
+   "/home/jovyan/dev/cbba-sota/runs/trackD/pilot_b_day1_f3stress.jsonl",
+   "/home/jovyan/dev/cbba-sota/runs/trackD/pilot_b_day1_200.jsonl"
+  ],
+  "tests": "Full suite: `OMP_NUM_THREADS=1 NUMBA_NUM_THREADS=1 .venv/bin/python -m pytest tests/ -q` gives 251 passed in 397 s, exit 0 (run at the end, with agents A/C/D's tests included). `ruff check cbba_sota scripts tests` passes repo-wide.\n\nMy tests:\n- tests/test_dyn_planner.py (11 tests, about 40 s together with the next file):\n  - static plan is exact: planner prediction == hetero.evaluate == env replay, minimal cover, acyclic;\n  - same belief and event index give the same plan (G3);\n  - day-1 static noise-free gate, 4 variants (idle rule env/eager x keys monotone/relaxed);\n  - R2+N3 and F3 runs (2 key modes): every plan passes check_plan, every episode completes, no re-plan on noise-only events;\n  - hand-built residual: survivors stay locked and first in their routes, extras are minimal, committed key kept.\n- tests/test_dyn_baselines.py (22 tests), all on the ground-truth DynTaskEnvX through PlanController:\n  - SPARC, insertion-only, every-event, B4, B5 and B3 on F1-R2 and F3-pf0.2: valid plans, success, trigger rule;\n  - determinism;\n  - static env run == plan == surrogate executor;\n  - constructor restarts never worse;\n  - D-ITAGS region is local;\n  - 4 regression realizations from the pilot (released commitments, stale snapshot, re-locking).",
+  "key_numbers": [
+   "Pinned kernel: dyn/rh_kernels.py reduces to the 4cf5e04 ALNS kernel bit for bit on static problems. Checked on 15 dev instances (4 primary settings + MA-AT-50-5-200, 3 each): arrays 0-11, schedule of 5 random plans, seeded construct, 1500-iteration run_batch (best plan, stats, weights, counters). Re-run on 10 instances after the last kernel edit: all identical. Cmd: .venv/bin/python scripts/trackD_kernel_check.py --n 3 --iters 1500",
+   "Static noise-free prediction is exact: planner makespan == hetero.evaluate == env replay on MA-AT-25-5-50 dev 0 (36.178 floor, 32.532 after 300 it, 29.451 after 3000 it). Timing on the loaded host: 3000 iterations 0.30 s, regret floor for 50 tasks 14 ms.",
+   "Day-1 gate, env idle semantics (with H=0 a robot out of work goes home, so no idle trigger): SPARC == open-loop exactly (ratio 1.0, 1 re-plan) on 8 dev instances. In the env world, a static SPARC run == its plan == env replay.",
+   "Day-1 gate, eager-idle stress (surrogate executor, 20 dev instances, iters0=2000): spec monotone keys give GM SPARC/open-loop 1.0137 (max 1.0823, min 0.9772), failing 1%; relaxed keys give GM 0.9974, max 1.0000 (never worse). Cmd: .venv/bin/python scripts/trackD_static_gate.py --n 5 --iters0 2000 --procs 10",
+   "Same stress at iters0=1000 (same code, run from /tmp/trackD_b/static_cmp.py, not the repo script): monotone GM 1.0050 (max 1.0803); relaxed GM 0.9887 (max 1.0000).",
+   "Main pilot, world DynTaskEnvX (ground truth), dev: 4 settings x 5 inst x 2 CRN x {F1-R2, F2-R2N3, F3-pf0.2} x 7 methods = 840 episodes, 100% success, 0 plan-contract violations (--check). Cmd: .venv/bin/python scripts/trackD_pilot.py run --n 5 --seeds 2 --procs 10 --restarts 12 --check --out runs/trackD/pilot_b_day1.jsonl, then `summary` for the tables.",
+   "Main pilot pooled GM SPARC-L/method [instance-cluster bootstrap 95% CI, 20 clusters]: B4-L (constructor, 12 restarts) 0.9559 [0.9460, 0.9662], wins 86/120; B5-L (D-ITAGS-style) 0.9820 [0.9701, 0.9937]; ins-only 0.8430 [0.8084, 0.8771]; every-L 1.0065 [0.9965, 1.0162]; SPARC-H (3000 it) 1.0112 [0.9981, 1.0249]; SPARC-L relaxed keys 1.0042 [0.9880, 1.0213].",
+   "Main pilot vs B4-L per cell: F1-R2 0.9788 [0.9607, 0.9982]; F2-R2N3 0.9649 [0.9504, 0.9814]; F3-pf0.2 0.9249 [0.8983, 0.9515].",
+   "Main pilot vs B4-L per setting: MA-AT-25 0.945 [0.930, 0.959]; MA-AT-50 0.963 [0.947, 0.980]; SA-AT-50 0.947 [0.922, 0.970]; SA-BT-50 0.968 [0.951, 0.989].",
+   "Main pilot vs SPARC-H per setting: SA-AT-50 1.044 [1.020, 1.069], so Light is not within 2% there. Other settings: 1.011, 0.985, 1.005.",
+   "Main pilot vs ins-only on F3-pf0.2: 0.8030 [0.7674, 0.8396].",
+   "F3 stress, DynTaskEnvX, dev: 4 settings x 10 inst x 3 CRN x {F3-pf0.1, F3-pf0.2, F3-pf0.2-R2} x 6 methods = 2160 episodes, 100% success, 0 violations. Pooled GM SPARC-L/method: B4-L 0.9522 [0.9423, 0.9623]; B5-L 0.9910 [0.9818, 1.0001]; ins-only 0.8176 [0.7980, 0.8386]; every-L 1.0127 [1.0021, 1.0232] (every-event slightly better); relaxed keys 1.0142 [1.0009, 1.0280] (relaxed 1.4% better; 1.050 [1.024, 1.079] on MA-AT-25). Cmd: trackD_pilot.py run --n 10 --seeds 3 --procs 10 --restarts 12 --check --cells F3-pf0.1 F3-pf0.2 F3-pf0.2-R2 --methods SPARC-L SPARC-L-rk ins-only every-L B4-L B5-L --out runs/trackD/pilot_b_day1_f3stress.jsonl",
+   "Secondary MA-AT-50-5-200 (only 3 inst x 1 CRN x {F1-R2, F3-pf0.2}, descriptive): SPARC-L/SPARC-H 1.093 (F1) and 1.103 (F3); SPARC-L/B4-L 1.024 (F1) and 1.081 [1.029, 1.131] (F3), i.e. B4 is better at 200 tasks with 300 iterations. Cmd: trackD_pilot.py run --settings MA-AT-50-5-200 --n 3 --seeds 1 --cells F1-R2 F3-pf0.2 --methods SPARC-L SPARC-H ins-only B4-L B5-L --check --out runs/trackD/pilot_b_day1_200.jsonl",
+   "Per-event planner CPU (process time, loaded shared host, load ~55; descriptive only). 50 tasks: SPARC-L median of per-episode p50 12.7 ms, median per-episode p95 26 ms, max per-episode p95 66 ms (main pilot) and 304 ms (F3 stress); SPARC-H p50 128 ms; ins-only 1.0 ms. 200 tasks: SPARC-L p50 48 ms / p95 159 ms; SPARC-H p50 421 ms / p95 642 ms.",
+   "B4 budget calibration (loaded host, F1-R2, 2 inst/setting): 300 SPARC iterations cost 13.0 / 10.4 / 15.5 / 4.4 ms per event (MA-AT-25 / MA-AT-50 / SA-AT / SA-BT). One cold construction is about 0.8 ms, so equal CPU means about 15 / 12 / 15 / 5 restarts; the pilot used 12. Cmd: .venv/bin/python scripts/trackD_pilot.py calibrate --n 2 --procs 8",
+   "Surrogate-executor stress (/tmp harness, pilot formulas, 142 feasible dynamic runs): every plan valid. 489 residual repairs, 3 demotions, 1 release (G4 fallback).",
+   "K0 preview, SPARC-L, executor vs env on the same perturb draws, 8 episodes per cell: static 8/8 and F0-N3 8/8 exact. F1-R1 0/8 (max diff 1.88), F1-R2 0/8 (5.91), F3-pf0.2 0/8 (8.18). Run as an inline command, no script.",
+   "CP-SAT-LNS (B3) on the static MA-AT-25 dev 0 floor: 36.178 to 34.906 with dtime 10 (11 sub-solves, 30 s wall), about 3-6 s wall per unit of deterministic time on this host."
+  ],
+  "api_summary": "Package cbba_sota.dyn. Pinned kernel commit 4cf5e04; `__init__.py` files not edited.\n\nBelief and planner (cbba_sota.dyn.planner):\n- `PlanState(inst, now, released[T], done[T], started[T], committed[T], members: list[tuple], keys[T], alive[A], ready[A], pos[A,2], pos_task[A] (task id | AT_DEPOT=-2 | AT_POINT=-1), head[A] (committed task the robot travels to or waits at, -1 none), kappa=1.0, est=None, key_floor=-1.0)`\n  - `PlanState.static(inst)`: time 0, all tasks released, robots at depots.\n  - `.open_tasks()`.\n- `SearchConfig(...)`: pinned v2 ALNS defaults, plus `floor=\"regret\"|\"insert\"` and `keys=\"monotone\"|\"relaxed\"` (default monotone = spec 4.1).\n- `RHPlanner(cfg).plan(state, incumbent=None, scope=None, seed=0, iters=300, removable=None|bool[T]|callable(prob, sol, warm)->bool[Tk], warm=True, restarts=0, restart_noise=0.2, return_problem=False) -> DynPlan`\n  - `iters=0` is insertion-only.\n- `RHPlanner.evaluate(state, plan)` and `RHPlanner.extract(prob, sol, like, cpu)`.\n- `DynPlan`: `members[T]`, `keys[T]` (nan = not planned), `makespan` (predicted), `unplaced`, `residual`, `demoted`, `released`, `iterations`, `seed`, `cpu_s`, `floor_makespan`, `n_open`, `n_anchored`, `routes_for(n_agents)`.\n- `check_plan(state, plan, scope=None, relaxed=False) -> list[str]`: the plan contract (minimal covers, frozen members, key monotonicity or committed order, head-first, failed robots unrouted).\n- Also: `state_digest(state) -> bytes`, `Problem(state, scope, relaxed)` (kernel instance), `travel_from`.\n\nKernels (cbba_sota.dyn.rh_kernels): state-start ALNS (ready/dout/dhome, est, fixed members, modes 0 free / 1 anchored / 2 residual, removable mask, head locks, unplaced penalty). Reduces bit for bit to 4cf5e04.\n\nSPARC (cbba_sota.dyn.sparc):\n- `RollingPolicy(triggers=STRUCTURAL, seed_base=0)`:\n  - `.triggered(kinds)`;\n  - `.replan(state, scope=None, event_index=None) -> DynPlan` is the comm-layer hook: seed = derive_seed(state_digest(state), event_index, seed_base); updates `.incumbent`;\n  - `.on_event(executor, t, kinds)`, `.decisions` log.\n- `SPARCConfig(iters=300, iters0=None, triggers=STRUCTURAL, seed_base=0, search=SearchConfig(), warm=True)`; `SPARC(config, name=None)`.\n- `insertion_only()`, `every_event_rh(iters=300)` (structural + finish), `OpenLoop(iters0)`, `derive_seed(digest, event_index, seed_base)`.\n- STRUCTURAL = {release, orphan, idle, membership}; NOISE_KINDS = {finish, start, arrive, stall}.\n\nWorlds:\n- `cbba_sota.dyn.controller`:\n  - `PlanController(policy, inst, kappa)` is a `DynTaskEnvX.run_plan` Controller. It keeps commitments frozen at first departure plus residual extras, drops abandoned / failed / wasted members, handles leave-on-arrival for released commitments, and builds beliefs from `env.state()`.\n  - `run_env(policy, inst, real, **env_options) -> (Episode, PlanController)`.\n- `cbba_sota.dyn.executor`:\n  - `Executor(inst, Realization, detect_h=0.5, idle=\"env\"|\"eager\").run(policy) -> dict` (world label 'executor (surrogate, pre-K0)');\n  - `Realization.from_perturb(perturb.Realization)`; `make_realization(...)` (pilot formulas).\n\nBaselines (cbba_sota.dyn.baselines):\n- `constructor_rh.ConstructorRH(restarts=8, restarts0=None, seed_base=0, search=None, noise=0.2)`: B4.\n- `ditags.DITAGS(iters=300, iters0=None, near_k=5)` and `event_region(prob, sol, warm, near_k)`: B5.\n- `cpsat_rh.CPSATRH(CPSATConfig(dtime=0.2, dtime0=None, sub_dtime=0.05, workers=1, q0=12, q_min=4, q_max=40, per_species=4))` and `lns(prob, sol, cfg, seed, lam, dtime)`: B3, deterministic time, `interleave_search` when workers > 1, monotone keys only.\n\nScripts:\n- `scripts/trackD_pilot.py {run|summary|calibrate}`: env ground truth, resumable JSONL, `--check`.\n- `scripts/trackD_static_gate.py`.\n- `scripts/trackD_kernel_check.py`.",
+  "gates": [
+   {
+    "gate": "Pinned port: state-start kernel == ALNS v2 at 4cf5e04 on static problems",
+    "status": "pass",
+    "evidence": "scripts/trackD_kernel_check.py: all 15 dev instances identical (arrays, schedule, construct, 1500-iteration run_batch incl. stats/weights/counters); re-run on 10 instances after the last kernel edit also identical. solvers/, hetero/, bench/ not edited; the kernel is a copy from git show 4cf5e04."
+   },
+   {
+    "gate": "Day-1 unit test: noise-free static SPARC within 1% of open-loop ALNS",
+    "status": "partial",
+    "evidence": "Under the env's trigger semantics SPARC == open loop exactly (8/8), and SPARC in DynTaskEnvX == its plan == env replay. Under the eager-idle planner stress, the spec's monotone key rule fails on 20 dev instances (GM 1.0137, worst +8.2%, iters0=2000) and passes at iters0=1000 (GM 1.0050, worst +8.0%). Relaxed keys never lose (max ratio 1.0000)."
+   },
+   {
+    "gate": "Plans are minimal covers and key-ordered (plus frozen commitments, head-first)",
+    "status": "pass",
+    "evidence": "check_plan on every re-plan: 0 violations in 840 + 2160 + 30 env episodes (--check) and 142 executor stress runs; unit tests assert it. Found and fixed 4 bookkeeping bugs on the way (regression tests added)."
+   },
+   {
+    "gate": "K0 fidelity (executor vs env replay), day 2 A+B",
+    "status": "partial",
+    "evidence": "Exact on static 8/8 and F0-N3 8/8. Diverges on F1-R1 (max 1.88), F1-R2 (5.91), F3-pf0.2 (8.18). Env-side cause found: run_plan made no controller epoch at release times 0.2425 and 3.2997 while all robots were busy (release first reported at 1.4811). Failure/abort details also differ. All pilot numbers therefore come from DynTaskEnvX, not the executor."
+   },
+   {
+    "gate": "K1 / T1 preview (SPARC vs B4 at Light, F1-F3)",
+    "status": "pass",
+    "evidence": "Dev pilot: pooled 0.9559 [0.9460, 0.9662] (<= 0.97, CI upper < 1); < 1 with CI upper < 1 on 4/4 settings (0.945-0.968). F3 stress 0.9522 [0.9423, 0.9623]. Provisional: B4 untuned; 12 restarts calibrated on a loaded host (SA-BT equal-CPU is about 5)."
+   },
+   {
+    "gate": "K2 preview (no dynamic separation)",
+    "status": "pass",
+    "evidence": "Not triggered. SPARC/insertion-only on F3-pf0.2 = 0.8030 (needs > 0.98 to trigger); SPARC/B4 on F1-R2 = 0.9788 (needs > 0.97)."
+   },
+   {
+    "gate": "C2/E2a preview (Light within 2% of Heavy)",
+    "status": "fail",
+    "evidence": "Pooled SPARC-L/SPARC-H 1.0112 [0.9981, 1.0249]: the CI upper bound exceeds 1.02, so the 2% margin is not shown at this n. SA-AT-50: 1.044 [1.020, 1.069]. MA-AT-50-5-200: about 1.09-1.10 (n = 3)."
+   },
+   {
+    "gate": "K8 compute (quiet pinned core)",
+    "status": "not_run",
+    "evidence": "Only loaded-host process CPU so far. Light at 50 tasks: median p50 12.7 ms, median per-episode p95 26 ms, max per-episode p95 66 ms (main) / 304 ms (F3 stress). 200 tasks: SPARC-H p50 421 ms, p95 642 ms."
+   },
+   {
+    "gate": "Baselines B3/B4/B5 + insertion-only + every-event RH implemented and run in env",
+    "status": "partial",
+    "evidence": "B4, B5, insertion-only and every-event are piloted in the env. B3 (CP-SAT-LNS) is implemented and tested in the env with a tiny budget, but not piloted: at Light-equivalent CPU (about 10-25 ms/event) it cannot build one sub-model, and its deterministic-time calibration is pending."
+   },
+   {
+    "gate": "Full test suite and ruff",
+    "status": "pass",
+    "evidence": "251 passed (exit 0, 397 s); `ruff check cbba_sota scripts tests`: all checks passed."
+   }
+  ],
+  "issues_and_caveats": [
+   "Spec 4.1 key monotonicity (repaired keys > every committed key) has a measurable cost. In the eager static stress it loses up to 8% per instance, where relaxed keys never lose. In the env F3 stress, relaxed keys are 1.4% better pooled ([0.1%, 2.8%]; 5% on MA-AT-25); in the main pilot they tie. The relaxed rule keeps committed relative order plus head-first, which still gives G1 its precondition (one consistent order, minimal covers). SearchConfig(keys='relaxed') is implemented for SPARC/B4/B5, not for CP-SAT. The default stays monotone per the spec; the orchestrator should decide.",
+   "The env's world label may not match the code actually executed. DynTaskEnvX's code_hash() hashes env.py at result time, and agent A edited env.py during my runs, so rows written after an edit carry the new hash while pool workers run the version they imported. The final main pilot carries two hashes (4b70840e7e, 9fb7cc8ac4). Suggest computing the hash at import.",
+   "K0 is not met: the surrogate executor matches the env only on static and noise-only cells. Env-side question for agent A: release epochs are not controller epochs when every robot is busy, while spec 5.1 says a release is known at the station on release.",
+   "Choices where the spec is silent (for the orchestrator):\n  - the first plan's budget (iters0) defaults to the per-event budget (300 for Light);\n  - the controller's idle trigger uses the spec's open-task definition (released, uncommitted), not the env's open_tasks count, which also counts committed tasks.",
+   "G4 fallback is my design. A residual that cannot be covered at its rank is first moved behind the committed prefix (demoted). If a locked member has other committed tasks, its frozen members are released instead, and travelling members leave on arrival. This departs from 'members frozen' only in that case (rare: 3 demotions and 1 release in 489 residual repairs, executor stress).",
+   "Under good comms the env abandons present survivors at failure detection (lease = failure detector), so residual repair mostly applies to en-route members.",
+   "B4's restart budget (12) was calibrated on a loaded host: equal-CPU restarts are about 15 on MA-AT-25 and SA-AT, 12 on MA-AT-50, and 5 on SA-BT. Per-method tuning (<= 12 configurations) is not done, so the T1 margin is provisional.",
+   "B5 (D-ITAGS-style) is an in-house reading. The event region is: floor-placed tasks, plus the 5 nearest open tasks of each idle robot, closed once under shared membership.",
+   "B3 (CP-SAT-LNS) implements monotone keys only and takes residuals from the floor. Deterministic-time to CPU calibration is still needed. It is too slow to be meaningful at the Light tier.",
+   "Every-event re-planning was slightly better than structural-only in the F3 stress (SPARC-L/every-L 1.0127 [1.0021, 1.0232]), contrary to the S8 prior; T2 is descriptive.",
+   "At 200 tasks, 300 iterations per event are too few: SPARC-L is about 9-10% behind SPARC-H and 8% behind B4 on F3 (n = 3, descriptive).",
+   "All CPU numbers come from a loaded shared host (load about 55) and are descriptive only. I used at most 11 concurrent processes; no background processes are left running.",
+   "Dev split only; I did not commit and did not message other agents. Pilot rows are in runs/trackD/*.jsonl, which appears to be gitignored (not listed in git status)."
+  ]
+ },
+ "C": {
+  "files_written": [
+   "/home/jovyan/dev/cbba-sota/cbba_sota/dyn/comm.py",
+   "/home/jovyan/dev/cbba-sota/cbba_sota/dyn/replica.py",
+   "/home/jovyan/dev/cbba-sota/cbba_sota/dyn/protocols.py",
+   "/home/jovyan/dev/cbba-sota/tests/test_dyn_comm.py",
+   "/home/jovyan/dev/cbba-sota/scripts/trackD_comm_crosscheck.py"
+  ],
+  "tests": "tests/test_dyn_comm.py: 40 passed in 26.5 s. Command: OMP_NUM_THREADS=1 NUMBA_NUM_THREADS=1 .venv/bin/python -m pytest tests/test_dyn_comm.py -q\n\nWhat the tests cover:\n- CRDT merge laws: commutative, associative, idempotent; bottom is the identity (200 random triples). Any order of the same deltas gives identical replicas and identical seeds (G3).\n- ACBBA route rule: last writer wins on (Lamport epoch, author). Task events are monotone facts.\n- CRN determinism: the Bernoulli and Gilbert-Elliott calendars depend only on (key, tick), whatever the query order. The delivered-hop matrices are identical under different traffic. GE stationary loss is 0.2 and lag-1 correlation is 0.8. Rayleigh calibration hits the target mean drop.\n- Ideal-comm reduction: every replica equals global knowledge at every tick, both at transport level and inside a full toy-world FULL episode (checked at every planning phase). With unlimited range, no loss and no budget, T2 delivers every write to every node one tick later.\n- One tick per hop on a 6-node line. The byte budget is never exceeded and the backlog drains. Beacon and oracle hooks work.\n- Leader election (station, else lowest id heard).\n- Patient and detector leases, including absent records (rule 4.6a).\n- Failure declaration needs both silence of at least h_f and an absent record (4.6b).\n- Arm scopes under a partition for CEN-F, SPARC, REP-clamp, INF-r, HYB, DS and the T5 factorial. planning_view: clamp, frozen and absent.\n- Toy-world end-to-end runs for all arms under T2. Failure detection plus recovery under ideal comms. The whole stack is deterministic given the CRN key.\n- SPARC with ideal comms makes decisions identical to FULL. Shadow-arm (T4) logging. The idle trigger fires again when a robot goes idle again. Writes outside the scope are rejected.\n- Agent B's RHPlanner driven through the runner on MA-AT-25-5-50 dev env_0 (FULL, SPARC at rho 1, CEN-F at rho 0.5, CEN-F head-model at rho 1): B's own check_plan reports zero violations and every episode completes.\n- The cbja cross-check runs as a subprocess under the cbja venv.\n\nFull suite (OMP_NUM_THREADS=1 NUMBA_NUM_THREADS=1 .venv/bin/python -m pytest tests/ -rfEs --durations=15): 250 passed, 1 failed, 401.6 s. The failure is agent B's tests/test_dyn_planner.py::test_noise_free_static_sparc_matches_open_loop[eager-monotone]. It is a strict xfail that now passes (XPASS(strict)), probably after B's concurrent planner edits. It imports only B's modules (executor, planner, sparc), and no file outside mine imports my modules. An earlier full run, before my final edits and before the other agents' new tests landed, gave 150 passed.\n\nRuff: `ruff check cbba_sota scripts tests` is clean across the whole tree, including my 5 files.",
+  "key_numbers": [
+   "Cross-check against cbja/network.py: 5 cases (6 rows, case 2 has two variants), all match. Command: /home/jovyan/dev/cbja/.venv/bin/python scripts/trackD_comm_crosscheck.py",
+   "Case 1, static pair in range: 30/30 hops succeed in both",
+   "Case 2, approach: first successful tick 10 vs 10 (entering range at t=1.0) and 11 vs 11 (entering at t=1.05, mid-tick); hop-by-hop identical",
+   "Case 3, pass-by (leaves range mid-flight at t=2.05): last successful tick 19 vs 19; cbja drops the in-flight packet exactly where T2 predicts",
+   "Case 4, two-hop relay: arrival 1.2 in cbja and 1.2 in T2 on established links. On a new contact T2 arrives at 1.3: one digest-handshake tick, a declared protocol difference",
+   "Case 5, loss (10000 probes): Bernoulli p=0.3 gives loss 0.3011 (cbja) vs 0.3018 (T2); GE p=0.2, rho=0.8 gives 0.223 vs 0.2165, mean loss burst 7.19 vs 6.33 ticks (theory 6.25). cbja needs loss_bad=0.999, because loss 1 marks the link down, which is a different semantics",
+   "Rayleigh calibration: sensitivity S = -78.09 dBm gives mean in-disk drop 0.2 at R = r_c(51) = 0.1567 with 1000 m per unit. CV_MRTA's own thresholds (-59.40 to -32.58 dBm at 1 m/cell, fetched from arxiv.org/html/2609.13711) are calibrated to its arena and cannot be reused as-is",
+   "Overhead benchmark (50 robots, 50 tasks, 1000 ticks, random-walk positions, SPARC with a no-op planner, host load about 50): transport 2.0-3.1 ms/tick, runner 0.5-1.9 ms/tick. Bytes per node per time unit about 4.6-5.2k, of which deltas 1.0-1.6k; the rest is the fixed digest of 361 B per frame",
+   "Stack timing check, NOT a result: toy-world physics from the test harness (surrogate, no noise, pre-K0) with B's RHPlanner at 300 iterations; MA-AT-25-5-50 and SA-BT-50-5-50 dev instances 0-1; FULL plus 5 arms x rho {2, 1, 0.5}; 64 episodes. Wall time 1.5-45.9 s per episode; planner 5.4-19.6 ms CPU per call on the loaded host; up to 2250 planner calls per episode (HYB, MA-AT-25, rho 0.5). Two episodes hit the 200 cap: MA-AT-25 instance 1, CEN-F and HYB at rho 0.5. Command: .venv/bin/python /tmp/agentC/c3_timing.py (8 processes)",
+   "Diagnosis, same toy-world caveat (MA-AT-25-5-50 dev env_1, my own R2-like release draw, GE p=0.2): FULL 45.5; CEN-F on T2 at rho=inf 47.7; CEN-F at rho=2, no loss, 64.2; the same without membership triggers 51.6; FULL with V1 triggers (111 plans) 47.7. Script: /tmp/agentC/diag.py a|b|g",
+   "Frozen-outsider model, same caveat and instance: spec-literal anchoring vs head-only gives CEN-F rho=1 166.7 vs 96.9, SPARC rho=1 153.5 vs 85.7, CEN-F rho=2 61.5 vs 52.6. Script: /tmp/agentC/diag.py h"
+  ],
+  "api_summary": "Nodes are robots 0..A-1 plus the station, node A (N = A+1). TICK = 0.1.\n\ncbba_sota/dyn/replica.py (numpy only):\n- Layout(n_robots, n_tasks, n_traits). Segments TASK, REC, ROUTE, LOG; bottom().\n- join(a, b) = elementwise max. The whole replica is one int64 version vector per node, so the lattice is a product of total orders (G3). Content lives in an append-only FactStore.\n- KnowledgeBase(layout, HeartbeatConfig(period)), with v of shape [N, D].\n- Writes by the world:\n  - task_event(j, kind in RELEASE|START|FINISH|ABORT, time, members=(), observers=()) -> seq\n  - observe_task(nodes, j)\n  - heartbeat(b, now, mode, target, t_ref, pos, route_key, route, hub_frac, force=False): writes a record on state change or when the heartbeat is due.\n  - append_log(author, ABANDON|ABSENT|DECLARE_FAILED, robot, task, time)\n  - author_routes(author, now, {robot: tasks}, keys={robot: float keys}) -> epoch. Last writer wins on (Lamport epoch, author).\n  - sync(nodes), global_view(), heard_matrix()\n- belief(node, now) -> Belief, an immutable snapshot. Accessors: task_kind(), released, open_tasks(), started(), finished(), record(b), heard_time(), route(b), remaining_route(b), log_events(), abandons(), absents(), digest(), seed(event_index).\n- Failure and lease functions:\n  - suspected(belief, b, timeout): good-comms detector.\n  - declared_failed(belief, b, h_f=10): rule 4.6b.\n  - failed_set(belief, rule 'detector'|'suspicion'|'none')\n  - LeaseConfig(mode 'patient'|'detector', grace g, max_wait L, detector_timeout, silence); LeaseConfig.grid() gives the 3x3 (g, L) grid.\n  - lease_check(belief, robot, task, wait_since, present, cfg, failed) -> LeaseDecision(abandon, reason, absent members)\n  - publish_abandon(kb, robot, task, now, decision): writes the abandon record and the 4.6a absent records.\n- Modes: TRAVEL, WAIT, WORK, HOMING, IDLE, RALLY, FAILED, STATION.\n\ncbba_sota/dyn/comm.py (numpy only; also importable under the cbja venv):\n- connectivity_radius(n), comm_range(rho, n_robots), components(pos, R, alive), in_range(pos_k, pos_k1, R): a hop is up iff distance <= R at both ends of the tick.\n- CRNKey(setting_index, instance_key, crn_seed). Draws use default_rng([setting, instance, seed, 5 (STREAM_CHANNEL, reserved in perturb.py), substream, tick]).\n- Loss models: NoLoss, Bernoulli(p), GilbertElliott(p, rho), Rayleigh(sens_dbm, ...), Rayleigh.calibrated(p, R); make_loss(name, p, rho, R).\n- Transports: IdealTransport(kb) and GossipTransport(kb, R, loss, key, budget=1500 bytes per node per tick, byte_model, relay, oracle, beacon), both with deliver(k, pos, alive), send(k, pos, alive), sync(), warm_start(k). Beacon(period, loss, budget=222). Oracle hooks 'agent', 'know', 'release'. CommStats counts frames, bytes, delta_bytes, entries and truncated frames.\n- make_transport(kb, ideal, R, loss, p, rho_ge, key, budget, oracle, beacon_period, relay).\n\ncbba_sota/dyn/protocols.py:\n- ArmSpec fields: station_scope, station_outsiders, stranded, stranded_outsiders, station/stranded_trigger ('structural'|'v1'|'v3'), theta, per_robot, oracle, membership ('heartbeat'|'oracle'), rally, relay.\n- ARMS: FULL, CEN-F, HYB, REP-clamp, INF-r, SPARC, PER-ROBOT, REP-TO, REP-KO. Helpers: arm(name, **overrides), sparc('V1'|'V2'|'V3', theta), deployment_switch(rho, rho_star), factorial_arms() (the 16 T5 arms).\n- Planner interface: planner(scope: PlanScope, belief: Belief) -> {robot: full key-ordered route} or PlanOutput(routes, keys). The planner must be a pure function of (scope, belief).\n- PlanScope fields: node, now, tick, seed, is_station, component, writable, frozen, clamped, stale, head_only, failed, failure_rule, reason.\n- planning_view(scope, belief, inst) -> PlanningView (ready, pos, fixed, avail, open, committed, resid), a planner-agnostic array view.\n- Adapter to agent B's planner:\n  - plan_state(scope, belief, inst, kappa, frozen_model='anchor'|'head') -> (planner.PlanState, scope_mask, incumbent DynPlan). It rebuilds one consistent committed key order from possibly conflicting route versions: a merged DAG, freshest versions first.\n  - rh_planner(inst, iters=300, kappa=1.0, config=None, frozen_model='anchor') is the ready-made callback.\n- ProtocolRunner(kb, transport, arm, planner, cfg=ProtocolConfig(member_window=1.5, failure_rule, detector_timeout=0.5, h_f=10, v1_period=1.0, membership_debounce=0.5), comm_R, shadow=(arms,)). ProtocolConfig.good_comms() sets the ideal-comm configuration.\n- Per-tick protocol: deliver(k, t, pos, alive) -> briefing(...) at k=0 only -> plan(...), which returns PlanCall records (tick, node, reason, authored, epoch, shadow) -> adoptions(alive), a {robot: RouteVersion} map the world applies (keep the committed head, drop the old suffix) -> world leases and rally -> send(...).\n- Other helpers: summary(), reach_matrix, leaders, outside_station_component (rally test), hub_fraction (V3 input).\n- make_stack(n_robots, n_tasks, n_traits, arm, planner, rho, loss='ge', p=0.2, key, budget, beacon_period, cfg, shadow) -> (kb, transport, runner). The heartbeat period is one tick with ideal comms (the detector sees every tick) and 1.0 under T2.\n\nscripts/trackD_comm_crosscheck.py [--json] runs under /home/jovyan/dev/cbja/.venv/bin/python (simpy).",
+  "gates": [
+   {
+    "gate": "Day-1 C: T2 CommLayer (unit-disk range rho*r_c(n), Bernoulli/GE/Rayleigh per CV_MRTA, 1 tick per hop, byte budget, CRN calendars)",
+    "status": "pass",
+    "evidence": "comm.py. The CRN, one-tick-per-hop and byte-budget tests pass. GE and Rayleigh parameters come from arXiv 2609.13711 (HTML fetched 2026-09-28): rho 0.8, pGG/pBB, L0 40 dB, eta 3, Ptx 30 dBm, d0 1 m. Rayleigh sensitivity is recalibrated to our arena (declared)."
+   },
+   {
+    "gate": "Day-1 C: cross-check against cbja network.py on 5 small cases",
+    "status": "pass",
+    "evidence": "All 6 rows match (case 2 has two variants); geometric cases match tick for tick, loss cases statistically. The only difference is the declared one-tick handshake at a new contact."
+   },
+   {
+    "gate": "Day-1 C: CRDT replica with the ACBBA timestamp rule, heartbeats, leases, 4.6 suspicion rule",
+    "status": "pass",
+    "evidence": "replica.py; merge-law, ordering, lease and suspicion tests pass."
+   },
+   {
+    "gate": "Day-1 C: leader election and the Section 5.3 protocol arms (incl. DS and beacon factor)",
+    "status": "pass",
+    "evidence": "protocols.py arms plus comm.Beacon; scope tests; every arm completes toy episodes under T2."
+   },
+   {
+    "gate": "Ideal-comm reduction to global knowledge",
+    "status": "pass",
+    "evidence": "Every replica equals global_view() at every planning phase of a FULL episode; with ideal comms, SPARC's decisions are identical to FULL's."
+   },
+   {
+    "gate": "Full test suite passing",
+    "status": "partial",
+    "evidence": "250 passed, 1 failed. The failure is agent B's strict xfail that now passes (tests/test_dyn_planner.py); it does not import my modules."
+   },
+   {
+    "gate": "ruff check cbba_sota scripts tests",
+    "status": "pass",
+    "evidence": "All checks passed (whole tree at the time of the last run)."
+   },
+   {
+    "gate": "K5/K6/K7 (C3 map with real planner and env)",
+    "status": "not_run",
+    "evidence": "Day 4-5 work. Only toy-world timing and plumbing checks were run; no env (DynTaskEnvX) C3 run yet."
+   }
+  ],
+  "issues_and_caveats": [
+   "Decision needed before the C3 map (day 4-5), affecting K5/K6. Spec 4.5 says outsiders of the station component keep their believed routes and their traits count. Fed literally to agent B's key-monotone kernel (frozen_model='anchor', the default), an outsider's whole future route becomes residual anchors, which G1 places ahead of every repaired task; in-scope robots added to them then idle until the outsider arrives. On one toy-world instance: CEN-F at rho=1 gives 166.7 with anchoring vs 96.9 with frozen_model='head' (FULL 45.5), and SPARC at rho=1 gives 153.5 vs 85.7. This touches every arm with station anchoring (CEN-F, HYB, SPARC, DS). A faithful fix needs B's kernel to support pinned members with ready times outside the committed prefix; the pilots' list scheduler interleaved such tasks by start time. Single instance, surrogate physics: a signal, not an effect size.",
+   "Membership-triggered re-plans are costly under partial knowledge. Toy world, rho=2: 64.2 with membership triggers vs 51.6 without. Under ideal comms, 3x more re-plans cost only 45.5 -> 47.7. I added membership_debounce=0.5, matching the pilots' rate limit; it is a new tunable parameter not in spec 4.7 and should be frozen or declared.",
+   "Trigger defaults are my reading of Section 5.3: structural (V2) for CEN-F, REP-clamp, INF-r and SPARC; V1 for HYB's stranded components. They are ArmSpec fields and should be frozen with the spec.",
+   "Convention choices to freeze with the spec: per-node budget of 1500 B per tick; ByteModel sizes; the digest is the whole version vector (361 B per frame at 50/50), which dominates total bytes, so C3 byte metrics should report delta_bytes separately; beacon budget 222 B (LoRa SF7 maximum payload); member_window 1.5; T2 heartbeat period 1.0 vs one tick with ideal comms; Rayleigh sensitivity calibrated to a mean in-disk drop of p at a declared 1000 m per unit.",
+   "Link-up is checked at both ends of each tick. This is exact for straight legs (convexity) and approximate when a robot turns inside a tick (at most 0.02 distance).",
+   "GE advances per tick per directed link (CV_MRTA advances per message). They coincide because every node broadcasts once per tick, and it keeps CRN.",
+   "New contacts cost one extra digest-handshake tick (anti-entropy design); cbja relays such a message one tick faster.",
+   "Compute for the C3 map: at rho=0.5, stranded leaders re-planned up to 2250 times per episode in the toy world (HYB, MA-AT-25), and one episode took 46 s of wall time at 300 iterations on the loaded host. The full grid (arms x rho x families x 80 instances x 2 seeds) needs a budget plan within the 8-process cap.",
+   "All toy-world numbers come from the test-harness ToyWorld in tests/test_dyn_comm.py (surrogate, no noise, own release draw, pre-K0), not from DynTaskEnvX. They are plumbing, timing and diagnosis only and must not be reported as results. Scratch scripts are in /tmp/agentC (not in the repo).",
+   "The PlanState adapter (plan_state, rh_planner) depends on agent B's current PlanState/DynPlan/RHPlanner API (lazy import). If B changes it, the 4 integration tests in test_dyn_comm.py will flag the drift.",
+   "Not done on day 1: the C3 world integration with agent A's env (per-robot beliefs driving DynTaskEnvX decisions at tick granularity). The per-tick protocol is documented in protocols.py for A and B.",
+   "No git commit made; no other agent's files edited; all processes I started have finished (no stray processes)."
+  ]
+ },
+ "D": {
+  "files_written": [
+   "/home/jovyan/dev/cbba-sota/cbba_sota/dyn/stats.py",
+   "/home/jovyan/dev/cbba-sota/cbba_sota/dyn/baselines/rl_online.py",
+   "/home/jovyan/dev/cbba-sota/cbba_sota/dyn/__init__.py (created minimal docstring-only; later files by other agents)",
+   "/home/jovyan/dev/cbba-sota/cbba_sota/dyn/baselines/__init__.py (docstring only)",
+   "/home/jovyan/dev/cbba-sota/tests/test_dyn_stats.py",
+   "/home/jovyan/dev/cbba-sota/tests/test_dyn_rl_online.py",
+   "/home/jovyan/dev/cbba-sota/scripts/trackD_rl_online.py",
+   "/home/jovyan/dev/cbba-sota/docs/trackD-novelty.md",
+   "/home/jovyan/dev/cbba-sota/runs/trackD/rl_online/rows.jsonl (6720 B1 rows, DynTaskEnvX@4b70840e7e, authoritative)",
+   "/home/jovyan/dev/cbba-sota/runs/trackD/rl_online/summary.txt",
+   "/home/jovyan/dev/cbba-sota/runs/trackD/rl_online/rows_pilot_day1.jsonl + summary_pilot_day1.txt (2400 rows, pilot env, superseded record)",
+   "/home/jovyan/dev/cbba-sota/runs/trackD/rl_online/rows_x_stale_env_0401.jsonl + summary_x_stale_env_0401.txt + recheck_stale_vs_4b70840e7e.txt (STALE: env edited mid-run; do not use)"
+  ],
+  "tests": "Full suite: `OMP_NUM_THREADS=1 NUMBA_NUM_THREADS=1 .venv/bin/python -m pytest tests/ -q`: 252 passed in 384 s, after all my runs had finished. `ruff check cbba_sota scripts tests`: all checks passed.\n\nMy tests:\n- **tests/test_dyn_stats.py (14 tests):**\n  - cluster weighting\n  - reproducibility with seed 0\n  - the cluster CI is wider than the naive CI under intra-cluster correlation\n  - coverage simulation: 300 sims, CI coverage must be in [0.89, 0.99]\n  - the two-stage bootstrap equals the one-stage bootstrap on singletons\n  - stratified bootstrap\n  - Hodges-Lehmann on known values\n  - Holm and holm_family on a known example\n  - TOST p-values against a manual t computation\n  - exact McNemar on known binomial values (20/512, 10/512)\n  - success non-inferiority\n  - pair_rows with drop, impute and duplicate detection\n  - clear_margin\n  - max_regret_test on synthetic arms, including a missing-cell error\n  - compare(), the gate view\n- **tests/test_dyn_rl_online.py (10 tests):**\n  - Static reduction is bit-identical to `cbba_sota.solvers.rl.rollout`, greedy and sampled, on SA-BT-25-5-20 and MA-AT-25-5-50. This holds on the plain env, the pilot world and DynTaskEnvX run_policy.\n  - A deleted agent row equals a zeroed row (max |dp| < 1e-5), except row 0, whose zero row gives NaN.\n  - Oracle observations are refused.\n  - The pilot world uses the perturb CRN draws, realized durations and releases.\n  - The test split is refused.\n  - failure_view contract.\n  - A notified failed robot never decides and is removed from later observations; the livelock guard fires on an env without D6/D7.\n  - Policy seeds are keyed by (instance, CRN seed, method).\n  - DynTaskEnvX F3 failures are notified: n_known_failed equals the detected robots.",
+  "key_numbers": [
+   "All B1 numbers are dev split, 4 primary settings x 20 instances x 2 CRN seeds (static: 1 seed). World: DynTaskEnvX[{decision|arrival},causal,L=200,det]@4b70840e7e, import-time env hash, 0 rows with env drift. Command: `OMP_NUM_THREADS=1 .venv/bin/python scripts/trackD_rl_online.py --variants x-decision x-arrival --procs 7` (6720 episodes, 2551 s). Full table: runs/trackD/rl_online/summary.txt",
+   "B1 static sanity. Dev mean makespan of RL(g.) (x-decision) vs the paper's RL(g.) on the test split: MA-AT-25-5-50 51.65 vs 50.16; MA-AT-50-5-50 30.45 vs 29.62; SA-AT-50-5-50 39.23 vs 39.43; SA-BT-50-5-50 24.39 vs 24.23",
+   "Cost of dynamics to RL(g.), x-decision. GM of makespan(cell) / makespan(static) on the same instance; cluster bootstrap over 80 instances, strata = settings: F0-N1 1.022 [1.012,1.032]; F0-N2 1.005 [0.996,1.015]; F0-N3 1.245 [1.230,1.259]; F1-R1 1.218 [1.199,1.237]; F1-R2 1.107 [1.096,1.119]; F1-R3 1.142 [1.128,1.157]; F2-R2N3 1.341 [1.325,1.357]; F3-pf0.1 1.135 [1.118,1.153]; F3-pf0.2 1.233 [1.211,1.256]; F3-pf0.2-R2 1.312 [1.287,1.338]",
+   "Coalition rule for B1, RL(g.), D2 arrival order / native decision order, pooled: 0.986-0.998 across cells. Per MA-AT setting it goes down to 0.967 (MA-AT-50, F0-N1); RL(s.1) on MA-AT-25 F3-pf0.2 is 0.957. SA-AT and SA-BT are exactly 1.000. Single-instance example (MA-AT-25 dev 1, seed 0): F0-N3 69.11 vs 77.15; F2-R2N3 66.07 vs 74.52",
+   "RL(s.1)/RL(g.): 0.995-1.016 pooled, mostly CIs covering 1. RL(s.1) is not better than greedy online",
+   "B1 success: 5/3360 unsuccessful (x-decision) and 2/3360 (x-arrival). All are in MA-AT-25 F3-pf0.2 or F3-pf0.2-R2 cells, and all are livelocks to the 200 cap. Survivors wait at tasks that lack a trait whose surviving carriers are themselves waiting elsewhere; the good-comms lease (= failure detector) never releases them. The same 7 episodes fail under both env versions",
+   "B1 per-decision CPU (observation + forward pass, 1 thread, loaded host load ~60, not quiet-core): p50 5.9-6.8 ms, median episode p95 6.3-7.7 ms; 231-389 decisions per episode. This is consistent with the spec's 'about 6 ms'",
+   "Pilot-world B1 (2400 episodes, runs/trackD/rl_online/summary_pilot_day1.txt) matches DynTaskEnvX-decision bit for bit on MA-AT-25 dev 1 in 4 non-failure cells (/tmp/k9/cmp_worlds.py). It has since been superseded",
+   "Env drift. The first DynTaskEnvX run spanned an env.py edit by agent A (04:19:59). Rechecked under the current code, 26/67 sampled episodes differed (release cells +0.2% to +8% makespan). That run is archived as stale and was rerun on a single version",
+   "Network pitfall: a zeroed agent row 0 makes the released AttentionNet return NaN, because encoding_agents pools with the padding mask of row 0. For any other row, zero equals deletion (max |dp| 1.8e-7 to 2.5e-7). Failed robots are therefore deleted, not zeroed",
+   "K9 screen: 62 HeteroMRTA citers (Semantic Scholar 42 ∪ OpenAlex 51). 48 abstracts read, 14 screened by title or Google Scholar snippet. Google Scholar full text for \"HeteroMRTA\" returns 2 documents (SADCHER and the original). K9 hits: 0",
+   "Demiray et al. arXiv v1: re-optimizing on every arrival (beta_task=1) gives the lowest TWTT in 39 of 40 rows of their Tables 5-6"
+  ],
+  "api_summary": "**cbba_sota.dyn.stats** (numpy/scipy; re-exports `holm` from cbba_sota.stats)\n- `cluster_means(values, clusters) -> (means, labels)`\n- `cluster_bootstrap(values, clusters, *, stat=None, reps=10000, seed=0, strata=None, two_stage=False) -> np.ndarray`\n- `hodges_lehmann(x) -> float`\n- `gm_ratio(log_r, clusters, *, reps=10000, seed=0, alpha=0.05, strata=None, two_stage=False) -> GMRatio`\n  - Fields: ratio, lo, hi, median_ratio, hl_ratio, p_less (one-sided t on instance means), p_two, n_clusters, n_obs, sd_log, wins, losses, ties, obs_wins, obs_losses.\n- `tost(log_r, clusters, margin_log=TOST_MARGIN_2PCT (=log 1.02), *, alpha=0.05, reps, seed, strata) -> Tost`\n  - Both the t-based and the bootstrap 90% CI versions.\n- `holm_reject(p, alpha)` and `holm_family({name: p}, alpha) -> {name: {p, p_holm, reject}}`\n- `exact_mcnemar(succ_a, succ_b) -> dict`\n- `success_test(succ_a, succ_b, clusters, *, margin=None) -> SuccessTest`\n  - Observation-level McNemar, cluster sign test, bootstrap CI of the rate difference, and non-inferiority when a margin is given.\n- `pair_rows(rows, a, b, *, value='makespan', pair_keys=('setting','inst','family','seed'), cluster_keys=('setting','inst'), method_key='method', failure='drop'|'impute', where=None) -> dict`\n  - Keys: log_r, clusters, strata, success_a/b, all_clusters, keep, ...\n- `clear_margin(pooled, per_setting, bound=0.97, min_settings=3, require_ci=False) -> bool`\n- `compare(rows, a, b, ...) -> Comparison`\n  - Fields: pooled, per_setting, success, imputed, clear_margin, t1_pass.\n- `max_regret_test(rows, *, arms_fixed, test_arm, comparators, cell_keys=('family','rho'), cluster_keys=('setting','inst'), reps=10000) -> MaxRegret`\n  - E3a, with a simultaneous cluster bootstrap. Fields: max_regret, regret, comparator, diff, diff_hi, diff_log, diff_log_hi.\n\n**cbba_sota.dyn.baselines.rl_online**\n- `load_policy(device='cpu')`: the released checkpoint. Loader copied from solvers/rl.py @ 4cf5e04, which is identical to the current rl.py.\n- `policy_seed(instance_key, crn_seed, method)`: the same derivation as scripts/trackD_run.py.\n- `make_world(setting, split, i, crn_seed, cell, *, world='x'|'pilot', obs='causal', coalition='decision'|'arrival', **env_options) -> (env, label|None)`\n  - Refuses the test split. The pilot world refuses F3.\n- `run_b1(env, net, *, sample, seed, method=None, world=None, max_time=200) -> OnlineResult`\n  - DynTaskEnvX: `B1Policy` runs inside `env.run_policy`.\n  - Other TaskEnv: `run_online`, the native loop, which refuses DynTaskEnvX and oracle observations.\n  - `OnlineResult.row()` fields: makespan, success, completion, n_decisions, cpu_ms_p50/p95, travel, abandons, n_known_failed, stuck, policy_seed. Extra fields on X: wasted_trips, restarts, failures, wait, epochs, structural_events.\n- `B1Policy(net, *, sample, seed)` implements `selectable`/`act`, the Policy protocol of cbba_sota.dyn.env.\n- `drop_rows(agent_obs, rows, agent_id) -> (obs, index)` deletes known-failed robots' rows. `zero_rows` is kept for the equivalence tests only.\n- Failure contract read from the env: `known_failed(t)`, `is_failed(i, t)`, or `realization.fail_onset` plus `detect_after`. Agent A's env implements this contract.\n\n**scripts/trackD_rl_online.py**\n- `--variants x-decision x-arrival [pilot] --cells ... --seeds 0 1 --procs 7 [--summary-only]`\n- Resumable JSONL keyed by `setting|inst|cell|seed|method|variant`.\n- Rows record the world, the import-time env code hash, `env_code_drift` and the commit.",
+  "gates": [
+   {
+    "gate": "K9 novelty",
+    "status": "pass",
+    "evidence": "Decision: pass, with a narrowed claim; full record in docs/trackD-novelty.md.\n- No HeteroMRTA citer evaluates HeteroMRTA's benchmark or policy under release, noise or failures against a rolling optimizer. Screened 62 citers: 48 abstracts, 14 by title and Scholar snippets. A Google Scholar full-text search for \"HeteroMRTA\" returns 2 documents: SADCHER (static) and the original paper.\n- DODRL-HMRTA (doi 10.1016/j.neucom.2026.135060) is dynamic heterogeneous-MRTA prior art. It covers failures, insertions, cancellations and overruns, with a DQN-family priority-rule hyper-heuristic plus partial rescheduling. It runs on its own HMRTA-TO instances against GA, GA-PSO and ACO, reaching 92% of their quality. No code was found.\n- Therefore any 'first dynamic HMRTA / coalition MRTA' wording is dead. Only 'first evaluation of the HeteroMRTA benchmark and released policy under release, delays and failures against rolling optimizers' survives.\n- Residual: DODRL's full text is unread (paywalled; no open abstract). The evidence is 17 or more Scholar full-text snippets plus its Crossref reference list.\n- The other named papers were read: CSCWD SPA-CBPA (Hu & Ma), RA-L LLM-MILP (10.1109/LRA.2026.3723332), Demiray et al. (arXiv 2309.09321 full text; C&IE 10.1016/j.cie.2026.112203) and Calvo & Capitán (T-RO 10.1109/TRO.2025.3626651, arXiv 2411.02062 full text, MIT code multirobot-use/mrta_heuristic_planner). None is a K9 hit, and none changes the Section 5.2 baselines."
+   },
+   {
+    "gate": "Day-1 D: statistics module",
+    "status": "pass",
+    "evidence": "cbba_sota/dyn/stats.py provides:\n- cluster bootstrap over instances with seeds nested (one- and two-stage, stratified)\n- Holm and a Holm family\n- TOST (t-based and bootstrap)\n- exact McNemar and a cluster sign test\n- geometric-mean paired ratios with Hodges-Lehmann estimate, median and win counts\n- pair_rows with the drop/impute failure rule\n- the E3a max-regret test and the compare() gate view\nAll 14 tests pass."
+   },
+   {
+    "gate": "Day-1 D: RL online baseline B1 on DynTaskEnvX",
+    "status": "pass",
+    "evidence": "run_b1 drives DynTaskEnvX.run_policy with causal observations, release masking and failure notices (known-failed rows deleted).\n- The static reduction is bit-identical to solvers.rl.rollout, covered by tests and by a 3-instance check.\n- 6720 dev episodes were run on a single env code version, 4b70840e7e. Numbers are in key_numbers; rows are in runs/trackD/rl_online/rows.jsonl."
+   },
+   {
+    "gate": "K3 RL anomaly (B1/B2 within 5% of SPARC)",
+    "status": "not_run",
+    "evidence": "No SPARC rows exist yet. B1 rows are ready for pairing: the id and keys match scripts/trackD_run.py seeds (setting, inst, cell, seed, method). The coalition rule used for B1 shifts it by 1-4% on MA-AT, which is comparable to the 5% K3 threshold, so it must be fixed before K3 is evaluated."
+   },
+   {
+    "gate": "Full test suite + ruff",
+    "status": "pass",
+    "evidence": "252 passed (384 s). `ruff check cbba_sota scripts tests`: all checks passed."
+   }
+  ],
+  "issues_and_caveats": [
+   "The coalition rule for B1 is a freeze decision. DynTaskEnvX's default for policies is decision order (native, bit-identical static reduction), while plan-following methods are scored under D2 arrival order. On MA-AT the released RL forms non-minimal coalitions, and arrival order improves it by 1-3% pooled (up to 4.3% in a cell, 10-11% on single episodes). Spec 5.1 says every method shares the arrival-order executor, so B1 should probably be reported under arrival order, or under both. The spec's D2 regression claim of '15 RL rollouts identical' is false on MA-AT (agent A found the same).",
+   "Env provenance hazard. `DynTaskEnvX.world` hashes env.py and perturb.py on disk at call time. My first X run spanned an env.py edit, so its labels showed 7 hashes while workers executed the code they had imported. That run is archived as stale (runs/trackD/rl_online/*stale*), and the recheck showed up to 8% differences. My runner now records the import-time hash and a drift flag. Agent A should compute code_hash once at import time.",
+   "All B1 numbers are provisional until K0 (executor vs env) passes and the env is frozen. They come from DynTaskEnvX@4b70840e7e, a day-1 env, and not from a hand-written executor.",
+   "B1 livelocks under failures: 7 of 6720 episodes, all MA-AT-25 F3, stuck until the 200 cap. This is a property of the released policy under the good-comms lease rule (it waits indefinitely at under-covered tasks). The primary ratio drops such pairs; the success test must report them.",
+   "The released network returns NaN if agent row 0 is zeroed, so the spec's 'zero rows for failed robots' must be implemented as row deletion. Both my B1Policy and A's RLPolicy delete rows.",
+   "The CPU timings come from a shared host with load average ~60. They are not quiet-core numbers.",
+   "DODRL-HMRTA's full text was not read. Before freeze, confirm (via library access or an email to the authors) that its HMRTA-TO instances are not generated with HeteroMRTA's generator. If they are, narrow the claim to 'first against rolling optimizers'. The Demiray C&IE journal version ('anticipated tasks') was not read either; the arXiv v1 was.",
+   "Citation fix for spec 3.3. The degree of dynamism is Lund et al. (1996), δ = n_dyn/n_tot. The effective degree of dynamism is Larsen (2001). Both were verified as quoted in Demiray et al. Section 2.",
+   "The pilot day-1 rows (rows_pilot_day1.jsonl) used an older policy-seed derivation. They are distributionally valid but are not episode-paired with the DynTaskEnvX rows.",
+   "run_online (the native loop) spins on DynTaskEnvX release cells, so it now raises TypeError there; use run_b1. B1Policy deliberately mirrors env.RLPolicy (same obs, drop rule and seeds), adding per-decision CPU timing.",
+   "No git commit was made. Nothing in solvers, hetero, bench, third_party or the test split was touched. All my runs used at most 7 worker processes plus an idle parent. One pkill of my own run also killed its invoking shell (the pattern matched the shell's command line); the killed run's output was discarded and the run redone."
+  ]
+ },
+ "K0": {
+  "files_written": [
+   "/home/jovyan/dev/cbba-sota/cbba_sota/dyn/env.py (modified)",
+   "/home/jovyan/dev/cbba-sota/cbba_sota/dyn/controller.py (modified)",
+   "/home/jovyan/dev/cbba-sota/cbba_sota/dyn/executor.py (modified)",
+   "/home/jovyan/dev/cbba-sota/cbba_sota/dyn/baselines/cpsat_rh.py (modified: B3 crash fix)",
+   "/home/jovyan/dev/cbba-sota/cbba_sota/dyn/stats.py (modified: pair_rows None makespan)",
+   "/home/jovyan/dev/cbba-sota/cbba_sota/dyn/methods.py (new)",
+   "/home/jovyan/dev/cbba-sota/scripts/trackD_run.py (modified: planners + --world executor)",
+   "/home/jovyan/dev/cbba-sota/scripts/trackD_k0.py (new)",
+   "/home/jovyan/dev/cbba-sota/tests/test_dyn_k0.py (new, 25 tests)",
+   "/home/jovyan/dev/cbba-sota/runs/trackD/k0/rows.jsonl (12760 final K0 rows; env 6fabb0570f, executor 56a085a816, controller 80bf534371)",
+   "/home/jovyan/dev/cbba-sota/runs/trackD/k0/summary.txt",
+   "/home/jovyan/dev/cbba-sota/runs/trackD/k0/rl_static.jsonl (check iv)",
+   "/home/jovyan/dev/cbba-sota/runs/trackD/k0/campaign.sh and run_light.log / run_heavy.log / run_b3.log",
+   "/home/jovyan/dev/cbba-sota/runs/trackD/k0/rows_superseded_*.jsonl (older world code, archived; do not use)",
+   "/home/jovyan/dev/cbba-sota/runs/trackD/day2_preview/rows.jsonl, rows_rl.jsonl, summary.txt (post-K0 preview, 6720 env rows)",
+   "/tmp/k0/policy_vs_head.py + policy_vs_head.json/.log (RL/greedy HEAD-env vs new-env comparison)",
+   "/tmp/k0/k1_preview.py (preview analysis script)",
+   "/tmp/k0/scout_f3.jsonl (F3 scouting sweep)"
+  ],
+  "tests": "Full suite: `OMP_NUM_THREADS=1 NUMBA_NUM_THREADS=1 .venv/bin/python -m pytest tests/ -q` gives 288 passed in 472 s (exit 0). `ruff check cbba_sota scripts tests`: all checks passed.\n\nNew tests/test_dyn_k0.py (25 tests, about 30 s):\n- 15 regression episodes, one per fix found today. Each asserts executor == env exactly (re-plans, seeds, legs, task times, counters) and, where the plans are minimal covers, decision order == arrival order.\n- The non-minimal residual-repair episode: decision order differs but completes, and a `refused` event is seen.\n- Tiny-instance tests:\n  - release epoch while every robot is busy;\n  - zero-length trip home is not stalled;\n  - `leave_on_arrival` uses the real arrival, a wasted trip, and `on=False` undo;\n  - a refused join is reported and the robot moves on;\n  - an undetected halted robot is believed to leave.\n- Runner integration: SPARC and B4 give the same makespan and counters in the env and executor worlds; RL(g.) static through the runner == `rl.rollout`; a planner without a budget tier errors.\n\nAll 185 test_dyn_* tests also passed serially (620 s).",
+  "key_numbers": [
+   "K0 (i), executor vs env: 12760/12760 dev episodes bit-identical (max |dt| 0.0; counters equal). 4 settings x 20 instances x 2 CRN seeds x 11 cells (static, F0-N1/N2/N3, F1-R1/R2/R3, F2-R2N3, F3-pf0.1/pf0.2/pf0.2-R2) x 7 Light planners (SPARC, SPARC-rk, ins-only, every-event, open-loop, B4, B5), plus SPARC-Heavy (220) and B3-Light (220). Per family: static 1160, F0 3480, F1 3480, F2 1160, F3 3480. Compared: 304,187 re-plans (equal seeds, i.e. bit-identical beliefs) and 2,717,150 legs. Cmd: runs/trackD/k0/campaign.sh (trackD_k0.py run ...), then `.venv/bin/python scripts/trackD_k0.py summary`.",
+   "Worlds of the final K0 run: env DynTaskEnvX 6fabb0570f, executor 56a085a816, controller 80bf534371. Before the fixes (same harness) the executor diverged from the first dynamic event (the day-1 preview).",
+   "F3 scouting sweep (pre-final, same code): 5026/5026 identical; 4474/4474 minimal-cover episodes identical under decision order. Cmd: trackD_k0.py run --instances 0-19 --seeds 0-2 --cells F3-pf0.1 F3-pf0.2 F3-pf0.2-R2 --out /tmp/k0/scout_f3.jsonl.",
+   "(ii) D2: decision order == arrival order on 12368/12368 episodes whose plans are all minimal covers. 392 F3 episodes (81/1160 F3-pf0.1, 154/1160 pf0.2, 157/1160 pf0.2-R2) contain non-minimal coalitions from residual repair; 269/392 are still identical. D2 is not claimed there.",
+   "(iii) static: 1160/1160 static-cell episodes identical across env, executor and decision order; A's static RL/greedy/plan-replay tests still pass.",
+   "(iv) RL static reduction (`trackD_k0.py rl --procs 14`, 756 s):\n  - DynTaskEnvX reproduces the stored Phase-1 dev RL(s.64) rows bit for bit on 80/80 instances: the multiset of 64 sample makespans and the best (5120 rollouts). Stored lists are in parallel block-completion order, not seed order; plain rl.rollout reorders the same way, so they are compared as multisets.\n  - RL(g.) with the Phase-1 seed == rl.rollout: 80/80.\n  - RL(g.) and RL(s.1) through trackD_run.run_case == rl.rollout with the runner seed: 80/80 instances (160 episodes).",
+   "Policy runs, HEAD env (4b70840e7e, commit 0acd442) vs new env 6fabb0570f: 440 RL(g.)/greedy episodes (4 settings x dev 0-4 x 11 cells, seed 0).\n  - static, F0, F1, F2: 100% trajectory-identical.\n  - F3 trajectories identical 18/20, 15/20, 17/20 (RL, by cell) and 18/20, 15/20, 14/20 (greedy).\n  - Makespans identical except greedy F3-pf0.2 (18/20).\n  Cmd: /tmp/k0/policy_vs_head.py 5 (1 process, 1287 s).",
+   "Executor speed-up (median wall per episode, env / executor, loaded host): SPARC 0.648/0.281 s (x2.3); B4 x2.9; B5 x2.8; ins-only x8.3; open-loop x5.3; every-event x1.3; B3 x1.2.",
+   "Post-K0 preview through trackD_run.py, env world 6fabb0570f.\n  - Design: dev F1-F3 (7 cells) x 20 inst x 2 seeds = 1120 episodes per method; 80 instance clusters; stratified cluster bootstrap (cbba_sota.dyn.stats.gm_ratio).\n  - Success: 100% for SPARC, B4, B5, ins-only, every-event; RL(g.) 1117/1120.\n  - Cmd: trackD_run.py --families F1 F2 F3 --methods SPARC B4 ins-only every-event B5 --tier light --instances 0-19 --seeds 0-1 --workers 12 --out runs/trackD/day2_preview (plus RL(g.) --tier native --rows rows_rl.jsonl); analysis: /tmp/k0/k1_preview.py runs/trackD/day2_preview.",
+   "Preview, SPARC/B4 (B4 = 12 restarts, provisional): pooled 0.9723 [0.9679, 0.9767], wins 720/1120.\n  - Families: F1 0.9776; F2 0.9742; F3 0.9663.\n  - Settings: MA-AT-25 0.957 [0.950, 0.965]; MA-AT-50 0.973 [0.962, 0.985]; SA-AT 0.978 [0.969, 0.987]; SA-BT 0.981 [0.974, 0.989].\n  - B's day-1 value on the buggy env was 0.9559.",
+   "Preview, other comparisons:\n  - SPARC/B5 0.9914 [0.9877, 0.9950].\n  - SPARC/ins-only 0.860 [0.851, 0.869]; F3-pf0.2 0.811.\n  - SPARC/every-event 1.0098 [1.0052, 1.0145] (every-event slightly better; F3 1.019).\n  - SPARC/RL(g.) 0.914 [0.907, 0.921].",
+   "B3: 4/220 K0 cases crashed (a CP-SAT coalition wider than the kernel's slot width W). Fixed; all 220 then completed and matched."
+  ],
+  "api_summary": "cbba_sota.dyn.methods (new):\n- PLANNERS = (\"SPARC\", \"SPARC-rk\", \"ins-only\", \"every-event\", \"open-loop\", \"B3\", \"B4\", \"B5\").\n- TIERS[light|heavy][name] -> default budgets:\n  - SPARC 300/3000 iterations;\n  - B4 12 restarts (Light only; provisional);\n  - B5 300/3000;\n  - B3 light dtime 0.02, workers 1; heavy needs an explicit dtime.\n- make_policy(name, tier=\"light\", seed_base=0, **params) -> RollingPolicy.\n- make_controller(env, realization, tier, seed, method=\"SPARC\", seed_base=0, **params) -> PlanController. This is the trackD_run factory. Planner seeds come from the belief digest (spec 4.1), not from the runner seed.\n\nscripts/trackD_run.py:\n- Built-in planner methods: SPARC, SPARC-rk, ins-only, every-event, open-loop, B3, B4, B5. They need --tier light or heavy; params via 'B4?restarts=15'.\n- New --world env|executor (default env). Executor rows: world='Executor[surrogate]@<hash>', planners only; env rows keep their case ids.\n\nscripts/trackD_k0.py (new):\n- `run [--settings --instances --seeds --cells --methods --tier --tol 1e-6 --procs<=16 --out]`: for each case, runs the env (arrival order), the env (decision order) and the executor, and compares re-plan times and seeds, legs, task times, makespan and counters.\n- `summary`: per-family verdict.\n- `rl`: check (iv).\n- Rows count only for the same env, executor and controller hashes. Helpers: trajectory_env, trajectory_executor, compare(a, b, tol).\n\ncbba_sota.dyn.env.DynTaskEnvX (new or changed):\n- leave_on_arrival(i, on=True) -> bool: a controller action that releases a travelling robot from its task. It leaves on its real arrival as a wasted trip (event 'wasted', reason 'released'); on=False undoes it.\n- New noise event 'refused': a decision-order join on a covered task; the robot is re-polled at once.\n- Release and window-end epochs are reported at their time even when every agent is busy.\n- A zero-length trip is not stalled.\n- run_plan skips route tasks that are finished or already started.\n- At a partner's failure detection, present members leave, including an undetected halted robot (believed alive). abandon() and leave_on_arrival() treat an undetected halted robot as alive.\n- code_hash() is fixed at import.\n\ncbba_sota.dyn.controller.PlanController:\n- Commitments are frozen from env.legs at the departure (_commit_departures).\n- A commitment ends when the task starts; restarted tasks are cleared through task['restarts'].\n- Abandoning partners leave only the failed robot's task.\n- _partner_failed applies the lease = failure-detector rule to frozen partners that had not departed.\n- Uses env.leave_on_arrival instead of an ETA wake-up.\n- EVENT_KIND maps 'refused' to noise.\n\ncbba_sota.dyn.executor:\n- code_hash(); world label 'Executor[surrogate]@<hash>'.\n- Executor.legs[i] = [(departure, task | -1, arrival)].\n- Executor.released[A] mirrors leave_on_arrival.\n- Belief conventions are identical to PlanController.belief.",
+  "gates": [
+   {
+    "gate": "K0 (i): executor vs env replay, >= 20 episodes per family, to 1e-6 for minimal covers",
+    "status": "pass",
+    "evidence": "12760/12760 dev episodes bit-identical, max |dt| 0 and counters equal, over static, F0, F1, F2 and F3. Per family 1160-3480 episodes; 7 Light planners plus SPARC-Heavy and B3. Includes the 392 non-minimal F3 episodes. Worlds: env 6fabb0570f, executor 56a085a816, controller 80bf534371. runs/trackD/k0/summary.txt. Needed 16 fixes (env, controller, executor, B3, stats; see issues)."
+   },
+   {
+    "gate": "K0 (ii): arrival order == decision order at ideal comms",
+    "status": "pass",
+    "evidence": "12368/12368 episodes whose plans are all minimal covers are bit-identical. The 392 F3 episodes with non-minimal coalitions (residual repair keeps redundant frozen members) differ legitimately; 269 are still identical. Reported descriptively, as D2 covers minimal covers only."
+   },
+   {
+    "gate": "K0 (iii): static reduction bit-identical",
+    "status": "pass",
+    "evidence": "1160/1160 static-cell episodes identical across env, executor and decision order. A's static RL, greedy and plan-replay tests pass in the 288-test suite. Policy runs with the new env are identical to the HEAD env on static, F0, F1 and F2 (440-episode sample)."
+   },
+   {
+    "gate": "K0 (iv): RL online in the new env == static RL with every perturbation off",
+    "status": "pass",
+    "evidence": "80/80 dev instances: the 64 stored Phase-1 RL(s.64) sample makespans (as a multiset) and the best are reproduced bit for bit (5120 rollouts). RL(g.) == rl.rollout 80/80. Runner RL(g.) and RL(s.1) == rl.rollout 160/160. Rows: runs/trackD/k0/rl_static.jsonl."
+   },
+   {
+    "gate": "Integration env + planners through scripts/trackD_run.py",
+    "status": "pass",
+    "evidence": "The runner builds planners through cbba_sota.dyn.methods (light/heavy tiers). 6720 preview rows completed without error in runs/trackD/day2_preview. The executor world is optional (--world executor); tests check that env and executor rows agree."
+   },
+   {
+    "gate": "Full test suite + ruff",
+    "status": "pass",
+    "evidence": "288 passed in 472 s; `ruff check cbba_sota scripts tests` all checks passed."
+   },
+   {
+    "gate": "K1/T1 preview on the fixed env (not the formal gate; B4 untuned)",
+    "status": "partial",
+    "evidence": "SPARC/B4 pooled 0.9723 [0.9679, 0.9767]: misses T1's 'pooled <= 0.97' criterion by 0.002. CI upper < 1, and every setting < 1 with CI < 1 (0.957-0.981). Day-1 value on the buggy env was 0.9559. K2 not triggered (SPARC/ins-only F3 0.828). K3 not triggered (SPARC/RL(g.) 0.914)."
+   }
+  ],
+  "issues_and_caveats": [
+   "Env fixes (DynTaskEnvX), each regression-tested in tests/test_dyn_k0.py:\n  (1) check_finished jumped the clock past a release or window-end epoch when every agent was busy, so releases were reported late (B's day-1 finding).\n  (2) A zero-length trip home was delayed by an active stall.\n  (3) run_plan now skips route tasks that already started, not only finished ones; before, the robot made a guaranteed wasted trip.\n  (4) Causal lease: at a partner's detection an undetected halted present member is believed to leave too (it stays halted in place). Before, keeping it in the cover revealed its failure early, which B1 observes. abandon() now acts on such robots instead of returning True without acting.\n  (5) New leave_on_arrival(i, on) replaces the controller's ETA wake-up, which fired before the real arrival after later stalls.\n  (6) A refused decision-order join now emits 'refused'.\n  (7) code_hash is computed once at import, as A, B and D asked.",
+   "Controller fixes:\n  (1) Robots that abandoned the failed robot's task were removed from every frozen coalition, including later commitments they still held.\n  (2) Coalitions were frozen lazily at the next call, re-adding robots that had left since; they are now frozen from env.legs at the departure.\n  (3) The lease = failure-detector rule now also covers frozen partners that had not departed.\n  (4) A commitment ends when its task starts, also when the task was started and reset between two calls.",
+   "Executor fixes, aligned to env + controller:\n  - belief conventions (started, committed, head locks, members freed at a finish, failed robots at their depot);\n  - a halted traveller looks stalled until detected;\n  - an explicit release flag;\n  - a wasted trip leaves the frozen coalition;\n  - the commitment ends at start;\n  - zero-length legs are not stalled;\n  - the D7 end time;\n  - counters (distance travelled, abandons for released waits).",
+   "Other fixes:\n  - B3 (cpsat_rh._prune_minimal) crashed when a CP-SAT sub-solve returned a coalition wider than the kernel's slot width W. Now pre-pruned to fit; coalitions that already fit are unchanged.\n  - stats.pair_rows crashed on a failed episode's makespan None; None now becomes NaN, which the drop/impute rules already handle.",
+   "Every env fix changes the env code hash (4b70840e7e -> 6fabb0570f), so all day-1 rows (A's campaign, D's B1 rows, B's pilot) are stale for the runner's resume check.\n  - Policy rows: on the 440-episode sample, F0-F2 are trajectory-identical, so they are substantively still valid; F3 policy rows should be rerun (causal-leave change).\n  - B's day-1 planner pilot numbers are superseded: those runs missed release epochs and had the controller bookkeeping bugs.",
+   "Post-fix preview: SPARC/B4 = 0.9723 [0.9679, 0.9767] narrowly misses T1's 'pooled <= 0.97' point criterion (the CI upper bound is < 1 and every setting is < 1). This is a preview, not the K1 gate: B4's 12 restarts are provisional (the equal-CPU calibration on a quiet core, K8, is pending) and neither method is tuned. The orchestrator should treat K1 as unresolved and at risk. Every-event RH beats structural-only by 1.0% (F3 1.9%), consistent with B's day-1 finding and contrary to the S8 prior.",
+   "Residual repair keeps every frozen member (spec 4.1). A frozen member that has not departed can become redundant once extras join, which gives non-minimal coalitions (392 of 3480 F3 episodes in K0) and wasted trips. Dropping such redundant, not-yet-departed members would be a spec 4.1 change; I did not make it (the planner's contract is B's and the spec's).",
+   "Stored runs/rl/<setting>/dev.jsonl sample_makespans are in parallel block-completion order, not seed order. Anyone indexing them by k will mismatch; compare them as multisets. This is not a DynTaskEnvX issue: plain rl.rollout shows the same.",
+   "The executor is only 1.2-8.3x faster than the env (2.3x for SPARC-type planners; every-event and B3 are planner-bound). K0 holds only for the verified code (env 6fabb0570f, executor 56a085a816, controller 80bf534371); trackD_k0.py counts rows only when all three hashes match, so rerun it after any edit to those files.",
+   "CPU and wall numbers come from a loaded shared host (load about 85) and are descriptive only. I used at most 14 worker processes plus a parent, within the 16 cap.",
+   "A defunct (zombie) campaign.sh shell from a campaign I stopped remains in the process table; it uses no CPU and cannot be killed (its parent must reap it). No live processes of mine remain.",
+   "Nothing was committed. No other agent was messaged. solvers/, hetero/, bench/ and third_party/ were not edited. Dev split only. Scratch analysis scripts are in /tmp/k0 (k1_preview.py, policy_vs_head.py, belief-diff tools). Files outside my scope in git status (scripts/gen_instances.py, anytime.py, bks.py, tests/test_headroom.py) belong to the other workflow."
+  ]
+ },
+ "P1": {
+  "files_written": [
+   "/home/jovyan/dev/cbba-sota/cbba_sota/dyn/c1dyn.py",
+   "/home/jovyan/dev/cbba-sota/scripts/trackD_c1dyn.py",
+   "/home/jovyan/dev/cbba-sota/tests/test_dyn_c1dyn.py",
+   "/home/jovyan/dev/cbba-sota/docs/results/trackD-week1/c1dyn.md",
+   "/home/jovyan/dev/cbba-sota/docs/results/trackD-week1/c1dyn_ratios.csv",
+   "/home/jovyan/dev/cbba-sota/docs/results/trackD-week1/c1dyn_methods.csv",
+   "/home/jovyan/dev/cbba-sota/docs/results/trackD-week1/c1dyn_gates.csv",
+   "/home/jovyan/dev/cbba-sota/docs/results/trackD-week1/c1dyn_summary.txt",
+   "/home/jovyan/dev/cbba-sota/docs/results/trackD-week1/c1dyn_b4_budget.json",
+   "/home/jovyan/dev/cbba-sota/runs/trackD/c1dyn/campaign.sh (pre-specified arms; header fixes the T1/K1 comparator and the rules)",
+   "/home/jovyan/dev/cbba-sota/runs/trackD/c1dyn/campaign2.sh (lanes x and y: 200-task calibration, SPARC-rk, hybrids, 200-task arms)",
+   "/home/jovyan/dev/cbba-sota/runs/trackD/c1dyn/campaign3.sh (exploratory t=0 ablation and seeds 2-3 replication)",
+   "/home/jovyan/dev/cbba-sota/runs/trackD/c1dyn/rows_*.jsonl (13 files, 32,240 rows, git-ignored)",
+   "/home/jovyan/dev/cbba-sota/runs/trackD/c1dyn/b4_budget.json, b4_budget_primary_frozen.json, calib.jsonl, calib_200.jsonl, analysis/{ratios,methods,gates}.csv, analysis/summary.txt, logs/*"
+  ],
+  "tests": "New file tests/test_dyn_c1dyn.py: 9 tests, all pass in 8.3 s.\n- The calibration probe ProbeSPARC leaves the SPARC episode bit-identical to plain SPARC (signature, makespan and re-plan count).\n- The equal-CPU restart fit, with and without construction-only charging.\n- Labels and B4 budget levels, including the t=0 budget variants and the hybrid labels.\n- The T1/K1 and K2 decision rules on synthetic ratios.\n- Family-balanced weighting.\n- The episode summary.\n- A hybrid of SPARC with SPARC, and of B4 with B4, reproduces SPARC or B4 bit for bit in DynTaskEnvX.\n\nFull suite: `OMP_NUM_THREADS=1 NUMBA_NUM_THREADS=1 .venv/bin/python -m pytest tests/ -q -p no:cacheprovider` gives 332 passed in 800 s, exit 0. It ran after all my campaigns had finished, so its 15-worker test stayed within the cap.\n\n`ruff check cbba_sota scripts tests`: all checks passed on the whole tree.\n\nThe analysis reruns byte-for-byte (seeded bootstrap), and the copies in docs/results/trackD-week1 are byte-identical to runs/trackD/c1dyn/analysis.",
+  "key_numbers": [
+   "All numbers: world DynTaskEnvX, env hash 6fabb0570f. Plan-following methods use [arrival,causal,L=200,det]; policies use [decision,...] plus arrival-order variants. Code = commit 1f0f046 for every file the runner imports (sha1 checked before and after). Dev instances 0-19. Pre-specified analysis: CRN seeds 0-1, 1,120 paired episodes per method on F1-F3, 80 instance clusters, cluster bootstrap within settings (10,000 resamples, seed 0).",
+   "B4 equal-CPU calibration: 6,555 SPARC-L re-plans probed on identical belief states.\n  - As implemented: 17/12/18/9 restarts (MA-AT-25/MA-AT-50/SA-AT/SA-BT).\n  - Construction-only (does not charge the per-restart Problem rebuild, about 70% of the cost): 47/44/49/39. This is the pre-specified B4-eq.\n  - In-campaign CPU per episode: SPARC-L 0.464 s, B4-impl 0.490 s, B4-eq 1.260 s.\n  - Cmd: scripts/trackD_c1dyn.py calibrate --instances 0-19 --seeds 0 --procs 20",
+   "T1/K1: SPARC-L/B4-eq pooled F1-F3 = 0.9847 [0.9806, 0.9890], p = 8.5e-10.\n  - < 1 on 4/4 settings: 0.9784, 0.9818, 0.9897, 0.9890.\n  - Families: F1 0.9881, F2 0.9880, F3 0.9803.\n  - Pooled > 0.97, so T1 FAILS and K1 FIRES.",
+   "T1 at every B4 budget (all fail):\n  - B4-r12 0.9723 [0.9679, 0.9767]; reproduces the K0 preview exactly.\n  - B4-impl 0.9740 [0.9695, 0.9785].\n  - B4-2eq 0.9884.\n  - B4-4eq 0.9913.\n  - Family-balanced 0.9855 [0.9807, 0.9902].\n  - B4-4eq/B4-eq = 0.9934.",
+   "K2: SPARC-L/ins-only on F3 = 0.8279 [0.8167, 0.8390] (≤ 0.98), so K2 does NOT fire. The other condition, SPARC-L/B4-eq on F1 = 0.9881, is > 0.97.",
+   "SPARC-L / other methods, pooled F1-F3:\n  - B5 (D-ITAGS-style) 0.9914 [0.9877, 0.9950].\n  - insertion-only 0.8598 [0.8510, 0.8687].\n  - open loop 0.8827 [0.8753, 0.8899].\n  - every-event 1.0098 [1.0052, 1.0145]: every-event is 1% better; F3 1.0191.\n  - SPARC-H 1.0229 [1.0181, 1.0277]: E2a preview not equivalent; F3 1.0387.",
+   "B1 / B7:\n  - SPARC-L/RL(g.) 0.9144 [0.9074, 0.9214]; arrival-order RL(g.) 0.9209; RL(s.1) 0.9104; RL(s.1) arrival order 0.9168. K3 preview does not fire.\n  - RL(g.) arrival/decision = 0.9928.\n  - SPARC-L/greedy 0.7878 (arrival order 0.7940).\n  - RL(g.) beats SPARC-L on SA-AT F3: 1.0207 [1.0022, 1.0410].",
+   "Success on F1-F3 (1,120 each):\n  - All planners 1120/1120.\n  - RL(g.) 1117 (arrival order 1119); RL(s.1) 1118 (1119). All RL failures are MA-AT-25 dev 12/19, seed 1, F3-pf0.2 or F3-pf0.2-R2 livelocks at the 200 cap.\n  - Greedy 1038 (arrival order 1039).\n  - 0 F3 realizations excluded on seeds 0-1.",
+   "T3 (F0): SPARC-L == open loop on 480/480 pairs, 1 re-plan per episode; TOST passes. On F0, SPARC-L/every-event = 1.0250 [1.0151, 1.0349].",
+   "F3, first real-env run (480 episodes per method), per episode: SPARC-L 19.7 re-plans, 38.1 structural events, 14.67 abandons, 2.35 aborted-task restarts, mean makespan 42.81. insertion-only 52.74; B4-eq 43.70; RL(g.) 44.93.",
+   "Exploratory decomposition (hybrids, 1,120 pairs each):\n  - SPARC-L/(SPARC-L t=0 plan, then B4-eq repairs) = 0.9849 [0.9810, 0.9889].\n  - SPARC-L/(B4-eq t=0 plan, then SPARC-L repairs) = 1.0000 [0.9950, 1.0050].\n  - So the whole margin comes from in-loop ALNS repair; the t=0 plans are equal.",
+   "Exploratory t=0 budget, 10x for both methods:\n  - SPARC-L+t0/SPARC-L 0.9915.\n  - B4-eq+t0/B4-eq 0.9995.\n  - SPARC-L+t0/B4-eq+t0 0.9768: the T1 rule still fails.",
+   "Exploratory relaxed keys:\n  - SPARC-L/SPARC-rk 1.0135 [1.0081, 1.0189] on seeds 0-1; 1.0166 [1.0119, 1.0212] on fresh seeds 2-3.\n  - SPARC-rk/B4-eq 0.9717 on seeds 0-1 (T1 rule fails by 0.0017); 0.9665 [0.9614, 0.9720] on seeds 2-3 (T1 rule passes).\n  - Replication, seeds 2-3: SPARC-L/B4-eq = 0.9825 [0.9786, 0.9865].",
+   "Exploratory Heavy tier: SPARC-H/B4-eq 0.9627 [0.9579, 0.9674] passes the T1 rule, but at 3.69 s vs 1.26 s CPU per episode.",
+   "CPU per structural event (loaded host, load 60-90, descriptive):\n  - SPARC-L p50 8.53 ms, p95 31.3 ms, median per-episode p95 25.7 ms, max per-episode p95 81.2 ms.\n  - SPARC-H p50 68.4 ms, p95 288 ms.\n  - B4-eq p50 34.6 ms.\n  - RL(g.) 7.32 ms per decision, about 407 decisions per episode, 3.12 s CPU per episode (vs 0.464 s for SPARC-L).\n  - Re-plans per episode: SPARC-L 28.1, every-event 70.8.",
+   "MA-AT-50-5-200 (secondary, 20 instances x 2 seeds):\n  - B4 equal-CPU = 3 restarts (cold floor 36.9 ms vs SPARC-L 42.9 ms per event).\n  - SPARC-L/B4-eq 0.9873; /B4-r12 0.9969; /ins-only 0.7855; /B5 0.9833; /every-event 1.0358; /SPARC-H 1.0436; /RL(g.) 0.9565; /greedy 0.8327.\n  - SPARC-L CPU p50 34.4 ms, p95 65.6 ms; SPARC-H p50 300 ms, p95 604 ms.",
+   "Campaign totals: 32,240 rows (32,234 completed, 6 excluded, 0 errors). 94,380 s wall and 78,907 s CPU summed over episodes. Run 09:31-10:49 UTC with at most 22 workers on CPUs 8-39."
+  ],
+  "api_summary": "**cbba_sota.dyn.c1dyn** (pinned kernel 4cf5e04 via dyn.planner / rh_kernels)\n\n- `ProbeSPARC(iters=300, probe_restarts=(0, 24), noise=0.2)`: a SPARC subclass. At each re-plan it times B4 (`RHPlanner.plan(..., iters=0, warm=False, restarts=r)`) and one `Problem` build on the same belief, then adopts SPARC's own plan.\n  - `.probes`: a list of `{first, n_open, sparc_s, b4_s{r}, problem_s}`.\n- `restarts_equal_cpu(sparc_s, b4_s: {r: [s]}, overhead_s=None) -> dict`: `r_star`, `r_star_median`, `a_ms`, `b_ms`, ...\n  - `overhead_s` subtracts `r * overhead` per event (construction-only charging).\n- `Hybrid(first: RollingPolicy, then: RollingPolicy)`: the first plan comes from `first`, later re-plans from `then`, with the incumbent handed over.\n- `hybrid(env, realization, tier, seed, first='SPARC', then='B4', **params)`: the runner plug-in `ctrl:cbba_sota.dyn.c1dyn:hybrid?first=..&then=..&restarts=..`.\n- `B4_LEVELS`; `b4_levels(budget_json) -> {setting: {'B4-eq', 'B4-2eq', 'B4-4eq', 'B4-impl': restarts}}`.\n- `labels(row, b4) -> [label]`, mapping runner rows to analysis labels:\n  - SPARC-L / SPARC-H / SPARC-rk;\n  - `B4-r<k>` plus its level labels;\n  - `-arr` for arrival-order policies;\n  - `+t0` for variants with a separate t=0 budget;\n  - `A>B` for hybrids.\n- `PAIR_KEYS = (setting, instance, cell, seed)`; `CLUSTER_KEYS = (setting, instance)`.\n- `family_balanced(pair_rows_result, family_of) -> (values, clusters)`.\n- `k1_decision(pooled: GMRatio, per_setting) -> GateResult(name, passed, detail)`: spec T1.\n- `k2_decision(ins_f3, b4_f1) -> GateResult`: `passed` means the kill condition holds.\n- `episode_summary(rows) -> dict`: success, makespan, re-plans, churn, CPU p50/p95, travel, wasted trips, abandons, restarts.\n\n**scripts/trackD_c1dyn.py**\n\n- `calibrate [--settings ..] [--instances 0-19] [--seeds 0] [--cells ..] [--probe 0,24] [--procs <=22] [--tag T]`: writes `runs/trackD/c1dyn/calib[_T].jsonl` and merges per-setting entries into `b4_budget.json`.\n- `analyze [--rows runs/trackD/c1dyn] [--hash H] [--seeds-main 0-1] [--copy-to docs/results/trackD-week1]`:\n  - reads `rows*.jsonl` of one env hash, deduplicated by case_id;\n  - writes `analysis/{ratios,methods,gates}.csv` and `summary.txt`;\n  - with `--copy-to`, copies them byte-exact as `c1dyn_*`.\n\nThe campaigns use `scripts/trackD_run.py` unchanged. B4 levels are method strings `'B4?restarts=k'`; t=0 variants are `'SPARC?iters0=3000'` and `'B4?restarts=k&restarts0=10k'`.",
+  "gates": [
+   {
+    "gate": "T1 / K1 planner collapse (SPARC-L vs B4 at the same Light budget, F1-F3 pooled <= 0.97, CI upper < 1, < 1 on >= 3/4 settings)",
+    "status": "fail",
+    "evidence": "Pre-specified comparator B4-eq (construction-only equal CPU, 47/44/49/39 restarts): 0.9847 [0.9806, 0.9890]. < 1 on 4/4 settings (0.978, 0.982, 0.990, 0.989); p = 8.5e-10. The whole CI lies above 0.97. Also fails vs B4-impl 0.9740, B4-r12 0.9723, B4-2eq 0.9884 and B4-4eq 0.9913, and with family-balanced weighting (0.9855). K1 FIRES: per spec Section 8, the dynamic-method claim is dropped (orchestrator/user decision). SPARC-L is significantly better than B4 at every budget, but by about 1.5% at equal CPU, not 3%."
+   },
+   {
+    "gate": "K2 no dynamic separation (SPARC/ins-only > 0.98 on F3 AND SPARC/B4 > 0.97 on F1)",
+    "status": "pass",
+    "evidence": "The kill does not fire: SPARC-L/ins-only on F3 = 0.8279 [0.8167, 0.8390] (per cell 0.8605 / 0.8109 / 0.8131). The second condition holds (SPARC-L/B4-eq on F1 = 0.9881 > 0.97), but K2 needs both."
+   },
+   {
+    "gate": "T1b SPARC vs insertion-only (descriptive)",
+    "status": "pass",
+    "evidence": "0.8598 [0.8510, 0.8687]; 80/80 instances; F1 0.8962, F2 0.8509, F3 0.8279."
+   },
+   {
+    "gate": "T2 trigger rule, SPARC vs every-event RH (descriptive)",
+    "status": "partial",
+    "evidence": "1.0098 [1.0052, 1.0145]: every-event re-planning is 1.0% better (F3 1.9%), contrary to the S8 prior. Descriptive by spec."
+   },
+   {
+    "gate": "T3 F0 noise control: SPARC vs open loop, TOST ±2%, identical decisions",
+    "status": "pass",
+    "evidence": "480/480 F0 pairs identical, GM 1.0000, TOST p = 0; 1 re-plan per F0 episode. Note: on F0, every-event re-planning is 2.5% better than SPARC-L (1.0250), because the 300-iteration t=0 plan is weak; the S2 pilots used a 20,000-iteration t=0 plan."
+   },
+   {
+    "gate": "E2a preview: SPARC-L within ±2% of SPARC-H (C2-dyn)",
+    "status": "fail",
+    "evidence": "SPARC-L/SPARC-H = 1.0229; bootstrap 90% CI [1.0189, 1.0269]; TOST p = 0.86. F3 1.0387; SA-AT F3 1.0559. The Light budget does not saturate on dev (for the C2 owner)."
+   },
+   {
+    "gate": "K3 preview: B1 within 5% of SPARC",
+    "status": "pass",
+    "evidence": "Does not fire: SPARC-L/RL(g.) 0.9144; RL(g.) arrival order 0.9209; RL(s.1) 0.9104; RL(s.1) arrival order 0.9168. At 200 tasks (secondary), SPARC-L/RL(g.) = 0.9565, close to the 5% bar. On SA-AT F3, RL(g.) beats SPARC-L (1.0207)."
+   },
+   {
+    "gate": "B4 equal-CPU budget calibration (spec 3.6)",
+    "status": "partial",
+    "evidence": "Done on identical SPARC-L belief states via CPU ratios on the loaded host; the in-campaign check matches to within 6% (SPARC-L 0.464 s vs B4-impl 0.490 s per episode). The quiet-core calibration (K8) is pending. T1 fails over the whole plausible range (9-196 restarts), so K1 does not depend on it."
+   },
+   {
+    "gate": "Full test suite + ruff",
+    "status": "pass",
+    "evidence": "332 passed in 800 s (exit 0); `ruff check cbba_sota scripts tests` passes; the new tests/test_dyn_c1dyn.py has 9 tests."
+   }
+  ],
+  "issues_and_caveats": [
+   "K1 FIRES under the pre-specified rule. Per spec Section 8, the dynamic-method claim is dropped and Track D becomes an analysis appendix; the orchestrator/user decides.\n  - The failure is robust to the B4 budget (9-196 restarts), the charging rule and the family weighting.\n  - The margin over every competitor is significant, but over the constructor with restarts it is about 1.5%.",
+   "Exploratory results only; none is gate evidence, all were added after seeing the seeds 0-1 snapshot:\n  - The SPARC-L margin over B4 comes entirely from in-loop repairs: the t=0 plans are equal (hybrid 1.0000).\n  - Relaxed keys (SPARC-rk) are 1.4-1.7% better than SPARC-L, which brings SPARC-rk/B4-eq to 0.9717 (seeds 0-1) and 0.9665 (fresh seeds 2-3), straddling 0.97.\n  - Adopting relaxed keys now is a forking path. It needs a re-freeze and confirmation on data not used to choose it; the validation split is not generated (configs.SPLITS has test and dev only), and bench/ was off limits.",
+   "C2-dyn is at risk: SPARC-L is 2.3% behind SPARC-H on dev (4.4% at 200 tasks; 3.9% on F3). Only 0.85 points of that is the t=0 plan.",
+   "Spec gap: the budget of the first (t=0) plan is unspecified. `iters0` defaults to the per-event 300 iterations, which makes SPARC-L's t=0 plan no better than B4-eq's 40-50 constructions. Giving both methods 10x at t=0 helps SPARC by 0.85% and B4 by 0.05%, and T1 still fails (0.9768).",
+   "B4 implementation overhead: `RHPlanner.plan` rebuilds the kernel `Problem` for every restart (about 70% of B4's per-restart CPU). B4-eq was charged for constructions only, which is generous to B4. A copy-based B4 would cost less CPU for identical plans, since `_initial` only mutates the Problem in the rare residual fallback.",
+   "Naming: the task text called D-ITAGS-style repair 'B7'. In the spec, B5 is D-ITAGS-style and B7 is the paper greedy. Both were run and reported.",
+   "Dev only, 2 CRN seeds (spec 9.1 plans 3). The seeds 2-3 replication reuses the same 80 instances.\n  - Neither B4 nor SPARC is tuned: the spec allows ≤ 12 configurations per method, which is week-2 work.\n  - B3 (CP-SAT-LNS), B2 and B6 were not run in this pilot.",
+   "CPU numbers are process time on a loaded shared host (load 60-90) and are descriptive only; quiet-core K8 is pending. The per-event max includes one-time numba cache loading in fresh workers.",
+   "Secondary MA-AT-50-5-200:\n  - Planners fail 1-2 of 280 by hitting the 200 cap. The shared case is dev 8, seed 1, F3-pf0.2 with 17/50 robots failed.\n  - B4's cold floor nearly equals SPARC-L's whole event cost there, so B4-eq is only 3 restarts (median-based 12). Descriptive only.",
+   "Provenance:\n  - The rows record `git_dirty_dyn = true` only because of untracked or modified modules of other agents (and my c1dyn.py) that the runner does not import. Every imported file is identical to commit 1f0f046 (sha1 before and after the campaigns).\n  - Rows record the env hash but not the planner hash. I verified the planner files did not change during the runs.",
+   "The analysis restricts the pre-specified numbers to seeds 0-1 (`--seeds-main`). Seeds 2-3 rows appear only in the replication section. 2 seeds-2-3 F3 realizations were excluded (MA-AT-25 dev 13 seed 2), paired for all methods.",
+   "Housekeeping:\n  - Two defunct shells of mine remain in the process table (campaign2.sh, campaign3.sh zombies). Their parent is PID 1 (code-server), which does not reap them; they use no CPU and cannot be killed. A third zombie campaign.sh predates this session.\n  - No live processes of mine remain.\n  - Nothing was committed and no other agent was messaged. solvers/, hetero/, bench/, third_party/ and the test split were untouched. No other agent's file was edited."
+  ]
+ },
+ "P2": {
+  "files_written": [
+   "/home/jovyan/dev/cbba-sota/cbba_sota/dyn/baselines/rl_mpc.py",
+   "/home/jovyan/dev/cbba-sota/cbba_sota/dyn/baselines/cpsat_tiers.py",
+   "/home/jovyan/dev/cbba-sota/cbba_sota/dyn/baselines/cbta.py",
+   "/home/jovyan/dev/cbba-sota/scripts/trackD_baselines.py",
+   "/home/jovyan/dev/cbba-sota/tests/test_dyn_rl_mpc.py",
+   "/home/jovyan/dev/cbba-sota/tests/test_dyn_cbta.py",
+   "/home/jovyan/dev/cbba-sota/docs/results/trackD-week1/baselines.md",
+   "/home/jovyan/dev/cbba-sota/docs/results/trackD-week1/baselines_summary.txt",
+   "/home/jovyan/dev/cbba-sota/runs/trackD/baselines_d/ (git-ignored data: rows_b6.jsonl, rows_b3light.jsonl, rows_b1arrival.jsonl, rows_b3heavy.jsonl, rows_b2.jsonl, rows_b2x3.jsonl, rows_b6_seeds23.jsonl, f0diag/rows_*.jsonl, and campaign_*.sh scripts and logs)"
+  ],
+  "tests": "New test files:\n- tests/test_dyn_rl_mpc.py, 8 tests:\n  - a static clone rolls out bit-identically to solvers.rl.rollout (greedy and sampled) and, in sampled batches, to rl.lockstep, with both the fast and the native methods;\n  - fast == native on mid-episode clones of an F3-pf0.2-R2 episode;\n  - the clone is causal and consistent: hidden tasks = unreleased tasks; known-failed robots never move and are no task's member; physically committed robots are members, with the belief's arrival; plans put those robots' tasks first and give failed robots no route;\n  - the static open-loop plan is never later than the greedy rollout it came from;\n  - episodes are deterministic and complete;\n  - the policy refuses to plan without a StateView and refuses a non-Heavy tier.\n- tests/test_dyn_cbta.py, 9 tests:\n  - every auction plan passes planner.check_plan at every re-plan (F1-R2 and F3-pf0.2-R2), and the episodes complete;\n  - the CBTA offer is the earliest achievable start;\n  - CBTA beats CBGA on average start time;\n  - B3 tiers: per-setting sub-solve counts; one sub-solve per event at Light.\n- Together: 17 passed in 144 s.\n\nFull suite: `OMP_NUM_THREADS=1 NUMBA_NUM_THREADS=1 .venv/bin/python -m pytest tests/ -q` gave 332 passed in 644 s after the campaigns. The final run gave 333 passed in 672 s, because another workflow added a test. It ran with nothing else of mine running: test_hetero_core's 15 workers plus pytest = 16. `ruff check cbba_sota scripts tests`: all checks passed.\n\nExtra identity checks (scratch scripts in /tmp/agentD3):\n- ident_b2.py: 24 static rollouts identical to rl.rollout.\n- ident_mid.py: 40 mid-episode clones x 3 rollouts, fast == native.",
+  "key_numbers": [
+   "Setup for all numbers: world DynTaskEnvX@6fabb0570f (the hash K0 verified); dev split; F1-F3; r = makespan(SPARC-L) / makespan(method), so < 1 favours SPARC-Light; cluster bootstrap over instances; reference rows are agent B's C1-dyn pilot rows (runs/trackD/c1dyn).",
+   "K3, B1 (80 clusters): SPARC-L/RL(g.) = 0.9144 [0.9074, 0.9214]; arrival order 0.9209 [0.9141, 0.9275]; RL(s.1) 0.9104; RL(s.1) arrival order 0.9168. Not triggered.",
+   "K3, B2 RL-MPC Heavy (171 episodes: dev 0-5 plus 3 dev-6, seed 0, 7 cells, 25 clusters): SPARC-L/B2 = 0.9061 [0.8934, 0.9191]. Per setting 0.880 / 0.897 / 0.919 / 0.934. Not triggered.",
+   "B2 vs B1 on the same cases: B2/RL(g.) = 1.0172 [0.9995, 1.0339]; F3 1.0428 [1.0185, 1.0663]. RL-MPC is no better than the online policy under structural events.",
+   "B2 at 3x budget (24 episodes, 12 clusters): SPARC-L/B2x3 = 0.9174 [0.9014, 0.9344]; B2x3/B2 = 0.9890 [0.9634, 1.0125].",
+   "F0 diagnostic (48 episodes): B2/RL(g.) = 0.9171 static, 0.9420 on F0-N1, 0.9538 on F0-N3; pooled 0.9375 [0.9266, 0.9474]. Best-of-N planning beats RL online only without structural events.",
+   "K4, B3-Heavy (72 episodes: dev 0-5, seed 0, F1-R2/F2-R2N3/F3-pf0.2, 24 clusters): SPARC-L/B3-H = 0.9192 [0.8980, 0.9376]. B3-Heavy is 8% worse. Not triggered.",
+   "B3-Light (1120 episodes): SPARC-L/B3-L = 0.8849 [0.8770, 0.8929]. B3-L/B3-H = 1.0571 [1.0389, 1.0769]. SPARC-H/B3-H = 0.9069.",
+   "B6 CBTA-style (start), 1120 episodes: SPARC-L/B6 = 0.9864 [0.9796, 0.9932]; SA-AT-50 1.0148 [1.0015, 1.0295], i.e. B6 beats SPARC-L; F3 0.9958 (p = 0.27).",
+   "B6 CBTA-style (start) vs the other cheap rules: B6/B4-eq = 0.9983 [0.9914, 1.0052]; B6/B5 = 1.0051 [0.9984, 1.0119].",
+   "B6 CBTA-style (start) replication on fresh CRN seeds 2-3 (1118 pairs): 0.9837 [0.9779, 0.9895]; SA-AT 1.0061 [0.9957, 1.0169].",
+   "B6 other rules, 1120 episodes each: CBTA-style (makespan) 0.9569 [0.9498, 0.9636]; seq (the declared fallback, cheapest insertion) 0.9497 [0.9447, 0.9546].",
+   "B6 fidelity check: CBTA-style (start) average start < CBGA-style on 20/20 static dev instances (9.005 vs 44.414). Weak evidence, because the CBGA reading is weak (makespan 105.7).",
+   "B5 (B's rows): SPARC-L/B5 = 0.9914 [0.9877, 0.9950].",
+   "B2 Heavy budget: HEAVY_DECISIONS = 5820 / 4450 / 5990 / 5640 policy decisions per event (MA-AT-25 / MA-AT-50 / SA-AT / SA-BT). Source: calibrated 1.375 / 1.796 / 1.336 / 1.418 ms CPU per decision (lockstep batch 16, forward passes on an H100).",
+   "B2 realized CPU: 9.8-12.6 s per re-plan; 254-344 s per episode.",
+   "B3 Heavy budget: 32 / 47 / 100 / 98 single-worker sub-solves of 0.05 dtime per event. Realized 5.4-19.8 CPU-s per re-plan.",
+   "B3 Light budget: 1 sub-solve of 0.02 dtime. Realized 52-161 ms per re-plan, against 16-31 ms for SPARC-L.",
+   "B3 as delivered, bounded by summed dtime, has unbounded CPU. MA-AT-25 dev 0 F1-R2: dtime 0.02 gave per-event CPU p95 7.8 s; dtime 2.0 with 8 workers gave p95 70.5 s.",
+   "CPU per structural event, p50: B6 about 2.4-2.9 ms; RL(g.) online 7.3 ms per decision."
+  ],
+  "api_summary": "cbba_sota.dyn.baselines.rl_mpc (B2 RL-MPC; loop and sampling pinned to solvers/rl.py @ 4cf5e04):\n- make_controller(env, realization, tier, seed, *, decisions=None, decisions0=None, batch=16, n_max=256, greedy=True, device='auto', seed_base=0, scale=1.0) -> RLMPCController\n  - The trackD_run plug-in: 'ctrl:cbba_sota.dyn.baselines.rl_mpc:make_controller' with --tier heavy.\n  - The budget comes from HEAVY_DECISIONS[setting] x scale.\n  - device 'auto' picks cuda:(pid % 2).\n- RLMPC(base_bytes, RLMPCConfig(decisions, decisions0, batch, n_max, greedy, device, max_time), seed_base, kappa, net)\n  - A RollingPolicy.\n  - .stats per event: rollouts, decisions, complete, best_k, best_ms, fallback.\n  - RLMPCController(PlanController) hands env.state() to the policy.\n- NominalClone(TaskEnv):\n  - hidden, gone, pending, forced, reserve;\n  - fast=True gives bit-identical accelerated methods;\n  - precompute(), next_forced(i), visible_done().\n- Functions:\n  - nominal_base(env) -> bytes\n  - build_clone(base, PlanState, StateView, kappa) -> NominalClone\n  - lockstep(clone_bytes, net, specs=[(k, seed, sample)], device, max_time) -> list[Rollout]\n  - rollout_plan(clone_env, PlanState, phys) -> DynPlan\n  - sample_seed(seed, k)\n- Constants: HEAVY_DECISIONS, HEAVY_DECISIONS_DEFAULT.\n\ncbba_sota.dyn.baselines.cpsat_tiers (B3 tiers on agent B's unchanged CPSATRH):\n- B3_TIERS = {light: 1 sub-solve x 0.02 dtime, 1 worker; heavy: 'auto' x 0.05 dtime, 1 worker}\n- HEAVY_SUBSOLVES = {MA-AT-25: 32, MA-AT-50: 47, SA-AT: 100, SA-BT: 98}\n- setting_of(Instance) -> str | None\n- make_policy(tier, seed_base, inst, **params) -> CPSATRH\n- make_controller(env, realization, tier, seed, **params): the plug-in 'ctrl:cbba_sota.dyn.baselines.cpsat_tiers:make_controller' with --tier light|heavy.\n\ncbba_sota.dyn.baselines.cbta (B6, good-comms fixed point):\n- AuctionRH(rule='cbta'|'cbga'|'seq', objective='start'|'makespan', seed_base, search): a RollingPolicy.\n- append_offer(prob, free, last, x, by='arrival'|'travel') -> (members, start, travel_cost)\n- make_controller(env, realization, tier, seed, rule='cbta', objective='makespan'): the plug-in 'ctrl:cbba_sota.dyn.baselines.cbta:make_controller?rule=cbta&objective=start'. Native tier.\n\nscripts/trackD_baselines.py subcommands:\n- calibrate-b2 [--device --batch --clones --procs]\n- fidelity-b6 [--instances]\n- report DIRS... [--ref 'SPARC[light]'] [--methods LABELS] [--seeds 0 1] [--families F1 F2 F3]\n  - Labels: B2[heavy], B2?scale=3[heavy], B3[light], B3[heavy], 'B6?rule=cbta&objective=start', RL(g.)[arrival], ...\n  - Duplicate case ids across dirs are deduplicated after an equal-makespan check.\n  - Prints K3/K4 verdicts only for SPARC[light] on F1-F3.",
+  "gates": [
+   {
+    "gate": "K3 RL anomaly: B1 within 5% of SPARC-Light pooled (F1-F3)",
+    "status": "pass",
+    "evidence": "Not triggered, CI upper bounds all below 0.93. SPARC-L/RL(g.) = 0.9144 [0.9074, 0.9214]; arrival order 0.9209 [0.9141, 0.9275]; RL(s.1) 0.9104; RL(s.1) arrival order 0.9168 (1120 pairs, 80 clusters; B's C1-dyn rows, plus my arrival-order rerun, bit-identical to B's)."
+   },
+   {
+    "gate": "K3 RL anomaly: B2 RL-MPC Heavy within 5% of SPARC-Light pooled",
+    "status": "pass",
+    "evidence": "Not triggered. SPARC-L/B2 = 0.9061 [0.8934, 0.9191] (171 episodes, 25 clusters, seed 0). At 3x budget: 0.9174 [0.9014, 0.9344], and B2x3/B2 = 0.989, so budget does not move it. Subsample only: dev 0-5, one CRN seed."
+   },
+   {
+    "gate": "K4 heavy beats light: B3-Heavy beats SPARC-Light by >2% with CI excluding 0",
+    "status": "pass",
+    "evidence": "Not triggered. SPARC-L/B3-Heavy = 0.9192 [0.8980, 0.9376] (72 episodes, 24 clusters, one cell per family). B3-Heavy is 8% worse, and 11% worse on SA-AT even with 2.5x the target CPU there. K4 does not drop the C2 light claim. E2a (SPARC-L vs SPARC-H) already fails in B's preview (1.0229)."
+   },
+   {
+    "gate": "B2 RL-MPC implemented (state clone, GPU lockstep, rollout->key-ordered plan, executed under 4.3)",
+    "status": "pass",
+    "evidence": "rl_mpc.py plus 8 tests. The static clone is bit-identical to rl.rollout and rl.lockstep. Fast == native methods on mid-episode clones. Plans put physically committed robots first. 171 + 24 + 48 env episodes, 0 errors, 100% success."
+   },
+   {
+    "gate": "B3 state-start rolling CP-SAT-LNS at Light and Heavy tiers",
+    "status": "partial",
+    "evidence": "Runs at both tiers (cpsat_tiers.py, deterministic sub-solve counts). Light cannot fit its budget: one sub-solve costs 52-161 ms vs 16-31 ms for SPARC-L. Heavy per-setting counts miss 8 CPU-s by 0.7-2.5x. Calibrated on a loaded host; K8 pending."
+   },
+   {
+    "gate": "B5 as specified",
+    "status": "pass",
+    "evidence": "Agent B's ditags.py matches the spec definition. Reused C1-dyn rows: SPARC-L/B5 = 0.9914 [0.9877, 0.9950]."
+   },
+   {
+    "gate": "B6 CBTA-style auction started (reimplementation plus declared fallback)",
+    "status": "partial",
+    "evidence": "cbta.py runs in good-comms fixed-point form: cbta-start, cbta-makespan, the seq fallback and cbga for the check. 3x1120 plus 2x1120 (seeds 2-3) episodes. Fidelity check CBTA < CBGA on avg start: 20/20, but the CBGA reading is weak. Message-level CBTA and a stronger CBGA are week-2 work."
+   },
+   {
+    "gate": "Full test suite and ruff",
+    "status": "pass",
+    "evidence": "333 passed in 672 s (final run). ruff check cbba_sota scripts tests: all checks passed."
+   }
+  ],
+  "issues_and_caveats": [
+   "FLAG for the K1/T1 decision. B6 CBTA-style auction with the average-start objective is a one-pass earliest-start re-auction (about 3 ms per event, no search).\n  - Pooled: SPARC-L/B6 = 0.9864 [0.9796, 0.9932], equal to B4-eq (B6/B4-eq 0.998) and B5 (1.005).\n  - It beats SPARC-L on SA-AT-50: 1.0148 [1.0015, 1.0295].\n  - It replicates on fresh seeds 2-3: 0.9837; SA-AT 1.0061.\n  - The spec expected B6 <= 0.95. No E1 clear margin exists against B4, B5 or B6-start.\n  - If B6 is not ready at the freeze, the spec swaps in 'seq' (0.950), a much weaker competitor, which would flatter SPARC. I recommend reporting CBTA-style (start) regardless of its slot.",
+   "B2 RL-MPC Heavy is no better than B1 online under F1-F3 (B2/RL(g.) 1.017 [0.9995, 1.034]) and 4-5% worse under failures. It is 5-8% better than B1 only when every task is known at t = 0 (F0 diagnostic). 3x the budget changes nothing.\n  - No defect was found: the tests cover the static identity, fast == native, causality and plan heads.\n  - Likely causes: the plan is executed rigidly between structural events, and the rollouts start from states the policy never produced (frozen commitments, reserved tasks).\n  - This matches risk 6 (RL-MPC seen as a strawman) and should be disclosed.",
+   "B2 design choices (declared):\n  - The clone applies the shared commit-at-departure rule: frozen members that have not departed are forced to their committed tasks, and covered committed tasks are reserved.\n  - Candidate 0 is the greedy decode.\n  - The budget is 8 CPU-s of decisions with GPU forward passes on top ('8 cores AND a GPU').\n  - Clone travel is at speed/kappa.\n  - The fallback is SPARC's insertion floor. The campaign rows do not record the fallback count: 1 of 123 re-plans in an N=1 diagnostic.",
+   "B2 bug found and fixed during calibration. A robot whose pending start was taken kept its pending decision time, which made the clone loop forever when all visible tasks were covered. It hung on SA-BT-50 dev 10 seed 1 F1-R3 at t=0. Fixed and re-verified bit-identical before any reported B2 row.",
+   "B3 budget semantics changed without editing agent B's cpsat_rh.py (new cpsat_tiers.py).\n  - Summed deterministic time does not bound CPU: dtime 0.02 gave a per-event p95 of 7.8 s; dtime 2.0 with 8 workers gave 70.5 s.\n  - The tiers are now fixed sub-solve counts.\n  - Heavy uses sequential single-worker sub-solves: 8 interleaved workers kept about 2 threads busy.\n  - The realized Heavy CPU per re-plan is 0.7-0.9x of 8 s on MA-AT and SA-BT and 2.5x on SA-AT. Per-setting counts came from one calibration episode each.\n  - B3-Light overspends the Light tier by 2-6x: no CP-SAT sub-model fits 16-31 ms in Python.",
+   "Coverage and statistics limits:\n  - B2 and B3-Heavy are subsamples (25 and 24 clusters, CRN seed 0 only). B3-Heavy covers one cell per family.\n  - B2 was cut from dev 0-7 to 0-5 for time; 3 finished dev-6 episodes are kept.\n  - K3 and K4 are far from their thresholds, so these limits do not affect the decisions.\n  - No per-method tuning (spec 5.1 allows 12 configurations per method); all methods ran at defaults.",
+   "Hardware caveats: all CPU and budget calibrations were made on a shared host (load 80-180) with two shared H100s that other users kept 66-100% busy. They are provisional until the quiet-core measurement (K8).",
+   "B6 is a good-comms sequential-greedy fixed point, not a message-level CBTA (bundle release and partial reset are week 2, needed for CBTA-dec in C3).\n  - The CBTA rules bid appended arrival times from the planner's timing arrays, not any-slot insertion-kernel bids. The kernel is used by 'seq'.\n  - The CBGA-style reading is weak (makespan 105.7 vs 30.3), so the fidelity check is weak evidence.",
+   "Provenance:\n  - All rows: DynTaskEnvX@6fabb0570f, git 1f0f0462bafb with git_dirty_dyn=true (my modules are uncommitted).\n  - rl_mpc.py changed after the main B2 campaign only by adding the 'scale' parameter (default 1, identity); tests were rerun after the change.\n  - My arrival-order RL(g.) rows duplicate B's rows_native_arr.jsonl case for case, with identical makespans.",
+   "Housekeeping:\n  - A first calibrate-b2 pool hung (a mp.Pool spawn issue) and was killed.\n  - The first B2 campaign runner was stopped to cut its scope, and its 12 orphaned workers were killed; their in-flight episodes were lost, and every completed row was kept.\n  - No processes of mine remain.\n  - Scratch files are in /tmp/agentD3.\n  - Nothing was committed, no other agent was messaged, and solvers/, hetero/, bench/, third_party/ and the test split were not touched."
+  ]
+ },
+ "P3": {
+  "files_written": [
+   "/home/jovyan/dev/cbba-sota/cbba_sota/dyn/c3world.py (new: C3Env, C3Controller, C3Config, run_c3)",
+   "/home/jovyan/dev/cbba-sota/cbba_sota/dyn/protocols.py (modified: rule 4.6(c) in plan_state and trigger state, HOMING/TRAVEL ready times, make_stack(dur=), docstrings)",
+   "/home/jovyan/dev/cbba-sota/cbba_sota/dyn/replica.py (modified: overdue_aborts, effective_kind, overdue_commitment, overdue_absents, declared_failed evidence, absent supersession, lease absent rule, LeaseConfig.overdue_h)",
+   "/home/jovyan/dev/cbba-sota/scripts/trackD_c3.py (new: resumable C3 campaign runner)",
+   "/home/jovyan/dev/cbba-sota/scripts/trackD_c3_analyze.py (new: design, tune, gates, merge, paired, tables)",
+   "/home/jovyan/dev/cbba-sota/tests/test_dyn_c3.py (new, 17 tests)",
+   "/home/jovyan/dev/cbba-sota/tests/test_dyn_comm.py (updated for rule 4.6(c) and absent supersession)",
+   "/home/jovyan/dev/cbba-sota/docs/results/trackD-week1/c3.md (the report)",
+   "/home/jovyan/dev/cbba-sota/docs/results/trackD-week1/c3_gates_4settings.json and .txt",
+   "/home/jovyan/dev/cbba-sota/docs/results/trackD-week1/c3_gates_first2.json and .txt",
+   "/home/jovyan/dev/cbba-sota/docs/results/trackD-week1/c3_gates_5rho.json and .txt, c3_rho_ext.txt",
+   "/home/jovyan/dev/cbba-sota/docs/results/trackD-week1/c3_tuned_leases.json and c3_tuned_leases_ext.json",
+   "/home/jovyan/dev/cbba-sota/docs/results/trackD-week1/c3_design_pilot.txt, c3_design_adopt.txt",
+   "/home/jovyan/dev/cbba-sota/docs/results/trackD-week1/c3_full_vs_goodcomms.txt, c3_connected.txt, c3_beacon.txt",
+   "/home/jovyan/dev/cbba-sota/runs/trackD/c3/ (git-ignored): design*.jsonl, grid.jsonl, grid_ext.jsonl, eval.jsonl, full_v2.jsonl, eval_final.jsonl, grid_final*.jsonl, connected.jsonl, beacon.jsonl, tuned.json, tuned_ext.json, code_<hash>/ snapshots, *.sh launchers, identity_check.py"
+  ],
+  "tests": "`OMP_NUM_THREADS=1 NUMBA_NUM_THREADS=1 .venv/bin/python -m pytest tests/ -q` gives 333 passed in 639 s (exit 0), run with no campaign active. `ruff check cbba_sota scripts tests` passes.\n\n`tests/test_dyn_c3.py` has 17 tests:\n- C3Env with no controller hooks is bit-identical to DynTaskEnvX (static, F1-R2, F3) under the good-comms SPARC controller.\n- The rally leg is stall-aware, and the next leg starts where the rally stopped.\n- The termination rule: mission-complete signal, including at H = 0, and the per-replica variant.\n- Rule 4.6(c) (unit test), and the lease names a declared-failed head member absent.\n- Episodes complete and report their world; determinism given the CRN key.\n- FULL against the good-comms controller (loose bound).\n- Regression: a lone-worker failure no longer blocks completion.\n- Regression: the FULL release deadlock (SA-AT-50 dev 18).\n- With ideal comms, every replica is global whenever the planner reads it.\n- The vectorized task kinds equal the replica rule.\n- The analysis rules: regret, DS, variant tie rule.\n- The test split is refused.\n\n`tests/test_dyn_comm.py` (42 tests) now covers the overdue-commitment evidence and absent supersession.",
+  "key_numbers": [
+   "Main evaluation, dev: 4 settings x 20 instances x seeds 0-1 x {F1-R2, F3-pf0.2} x rho {2, 1, 0.5}, 80 clusters; frozen leases; value = makespan with failures scored 200. Rows: runs/trackD/c3/eval_final.jsonl, 5,760 T2 rows (hash 5bc2c415b9) plus 320 FULL rows (26d92033cd). Analysis: `scripts/trackD_c3_analyze.py gates --rows runs/trackD/c3/eval_final.jsonl --rhos 2 1 0.5 --grid runs/trackD/c3/grid_final.jsonl --tuned runs/trackD/c3/tuned.json`.",
+   "Max regret against the best fixed architecture per cell: CEN-F 1.382, HYB (=V1) 1.192, REP-clamp 1.170, INF-r 1.006, SPARC-V2 1.205, SPARC-V3 1.184, DS (rho* = 2) 1.170.",
+   "Variant selection (spec 4.5): V1 (HYB) 1.192. V3 1.184 is lower, but V1 is within 1 point of it and V2 1.205 is not, so the tie rule picks V1.",
+   "K6: the selected SPARC variant is 18.6 points worse than INF-r (1.006). DS is also at or below SPARC (1.170 < 1.192).",
+   "E3a: +0.186, one-sided 95% upper bound +0.217, comparator INF-r, 80 clusters. Does not hold.",
+   "K5: best fixed architecture at rho 0.5 against FULL. F1-R2: INF-r 1.853 [1.815, 1.894]. F3: INF-r 1.794 [1.754, 1.835]. Pooled over families: CEN-F 2.328, HYB 2.049, REP-clamp 2.039, INF-r 1.823.",
+   "INF-r regret per cell is at most 1.006. It has the lowest max regret in every setting: MA-AT-25 1.053, SA-BT-50 1.081, MA-AT-50 1.080, SA-AT-50 1.048.",
+   "First two settings (40 clusters): V1 max regret 1.177; INF-r 1.066; DS (rho* = inf) 1.120; E3a +0.111 [upper 0.179]; K5 1.739 / 1.737.",
+   "Five-level rho grid {2, 1.25, 1, 0.75, 0.5}, MA-AT-25 + SA-BT-50, 40 clusters: V1 1.177; INF-r 1.086; DS 1.120; E3a +0.091 [upper 0.155]; the same decisions.",
+   "K7 (grid rows: seed 2, dev 0-4, MA-AT-25 + SA-BT-50, 10 clusters, 3,240 T2 episodes + 20 FULL): K5 never fires and K6 always fires under all 9 common leases and the tuned set. The SPARC K6 margin ranges from -7.9 to +1.1 points. What flips: the variant (V1/V2/V3), the best fixed architecture (INF-r/REP-clamp/HYB), DS rho* (2 or inf), and SPARC < CEN-F at rho 0.5 (not under L = 10).",
+   "SPARC (V1) / CEN-F. rho 0.5: F1 0.839 [0.806, 0.872], F3 0.924 [0.884, 0.964]. rho 1: F1 0.896, F3 0.863. rho 2: F1 1.008 [0.989, 1.026], F3 1.002 [0.968, 1.035].",
+   "Success (160 episodes per cell). FULL: 320/320. T2: 422 of 5,760 failed (SA-AT-50 364, MA-AT-25 55, MA-AT-50 3, SA-BT-50 0). F3 success, CEN-F: 0.73-0.74. F3 success, INF-r: 0.856 at rho 2, 0.994 at rho 1, 1.000 at rho 0.5.",
+   "Costs at rho 0.5. Route versions per episode: 22-43k for HYB, REP-clamp, SPARC and V3; 2.5-2.8k for INF-r; 634-674 for CEN-F. Wasted trips are highest for INF-r (111 on F1, 85 on F3). Bytes per robot per time unit are 3.0-4.3 kB for every arm (deltas 0.4-1.4 kB).",
+   "Connected T2 check (rho 100, dev 0-3, seed 2): every arm is 1.036 [1.002, 1.073] x FULL on F1-R2 with GE loss and 1.022 without loss. On F3 the arms are 1.32-1.59 x FULL, and the anchoring arms succeed in 7 of 8 episodes.",
+   "FULL against the K0-verified good-comms SPARC controller (24 pairs, MA-AT-25 + SA-BT-50, dev 0-5, seed 0): GM 0.995 on F1-R2 and 1.057 on F3. SA-AT-50 F3 on dev 0, 7 and 18: 49.8/46.2, 87.3/64.4, 98.7/69.8.",
+   "Beacon factor (10 clusters per cell, descriptive): on F1-R2 the GM ratio is 0.805-1.036 (22 of 24 below 1) and wasted trips fall by 69-82 per episode at rho 0.5 with period 1. On F3 the ratio is 0.93-1.23; at rho 1 with period 1 it hurts SPARC, HYB and V3 (1.14-1.23).",
+   "Design pilot, ratio to FULL at rho 1 / 0.5. CEN-F: anchor/monotone 1.983/2.326, head/monotone 1.832/2.057. SPARC: anchor/monotone 1.985/2.088, head/monotone 1.707/2.198. The spec-literal anchor + monotone was kept.",
+   "T2 adoption rule (192 T2 episodes each): keep GM 82.38, success 92.2%, 53 wasted trips; follow GM 83.85, success 91.7%, 123 wasted trips.",
+   "Identity check: 44/44 stratified T2 evaluation cases are bit-identical between hashes 5bc2c415b9 and 26d92033cd.",
+   "Tuned leases (g:L), frozen before evaluation, runs/trackD/c3/tuned.json, md5 24071d26...: CEN-F 3:30 at every rho; HYB 3:30 / 1:60 / 1:60; REP-clamp 3:30 / 3:60 / 3:60; INF-r 1:30 / 1:30 / 3:30; SPARC 0.3:60 / 1:60 / 3:30; V3 3:30 / 3:60 / 3:30 (rho 2 / 1 / 0.5). L = 10 was always the worst or nearly the worst choice."
+  ],
+  "api_summary": "**cbba_sota.dyn.c3world**\n- `C3Config` (frozen dataclass):\n  - `arm`: FULL | CEN-F | HYB | REP-clamp | INF-r | SPARC | SPARC-V3 | REP-TO | REP-KO\n  - `rho`, `lease_g=1.0`, `lease_L=30.0`, `iters=300`\n  - `loss='ge'`, `p_loss=0.2`, `rho_ge=0.8`, `budget=1500.0`, `beacon=None|period`\n  - `frozen_model='anchor'|'head'`, `keys='monotone'|'relaxed'`, `theta=0.7`\n  - `member_window=1.5`, `membership_debounce=0.5`, `h_f=10.0`, `silence=2.0`\n  - `rally=True`, `adopt='keep'|'follow'` (FULL always follows), `home_rule='global'|'replica'`\n  - `station=(0.5, 0.5)`, `max_time=200.0`\n  - property `ideal`\n- `run_c3(setting, split, i, crn_seed, cell, cfg) -> dict` runs one episode in the ground-truth world. The test split is refused. The returned row has:\n  - identity and result: `makespan`, `success`, `completion`, `makespan_or_cap`\n  - execution counters: `wasted_trips`, `abandons`, `abandons_lease`, `releases`, `absents`, `rally_starts`, `travel`, `rally_dist`\n  - planning: `plan_calls`, `plan_calls_off_station`, `plan_cpu_ms_p50`, `plan_cpu_ms_p95`, `versions`\n  - comms: `bytes`, `delta_bytes`, `frames`, `bytes_per_robot_time`, `station_frac`\n  - provenance: `world`, `c3_hash`, `env_hash`\n- `C3Env(DynTaskEnvX)` adds `rally_start(i, xy)`, `rally_stop(i)` and `idle_here(i)`. Flags `c3` and `home_ok` switch on the C3 termination rule and tick-polled idle robots; with neither set it behaves exactly like DynTaskEnvX.\n- `make_c3_env(source, real, **options)`\n- `C3Controller(env, inst, real, cfg, key)` is a `run_plan` Controller.\n- `c3_hash()` gives the code hash of env, perturb, c3world, comm, replica, protocols, planner and rh_kernels.\n- `resolve_arm(cfg)`, `ARM_NAMES`\n\n**cbba_sota.dyn.replica** (new)\n- `overdue_aborts(belief, dur, h_f)`\n- `effective_kind(belief, dur=None, h_f=10)`\n- `overdue_commitment(belief, b, h_f)`\n- `overdue_absents(belief, h_f)`\n- `declared_failed` now also accepts overdue commitments as evidence.\n- `Belief.absents()` drops absent records superseded by newer knowledge of the member.\n- `LeaseConfig.overdue_h`\n- `lease_check` names silent planned members absent, declared-failed ones included.\n\n**cbba_sota.dyn.protocols**\n- `plan_state(scope, belief, inst, kappa, frozen_model, h_f=10)`\n- `rh_planner(inst, iters, kappa, config, frozen_model, h_f=10)`\n- `make_stack(..., dur=None)`\n- `ProtocolRunner.dur`\n\n**scripts/trackD_c3.py**\n- `run --settings --instances --seeds --cells --arms --rhos --leases {g:L | grid | tuned:<json>} --frozen-model --keys --beacon --adopt --procs (at most 22) --out`\n- `summary --rows`\n\n**scripts/trackD_c3_analyze.py**\n- `design`\n- `tune --out`\n- `gates --rows [--grid] [--tuned] [--settings] [--rhos] --json` (K5, K6, E3a via `stats.max_regret_test`, DS rho*, variant tie rule, K7 per lease)\n- `merge --t2 --full --out`\n- `paired --rows --base [--vs-full] --label`\n- `tables --json`",
+  "gates": [
+   {
+    "gate": "K5 C3 headroom (at rho 0.5, best fixed architecture within 5% of FULL -> no C3 method claim)",
+    "status": "pass",
+    "evidence": "K5 does not fire, so there is headroom. At rho 0.5 the best fixed architecture is INF-r in both families: F1-R2 1.853 [1.815, 1.894] x FULL, F3 1.794 [1.754, 1.835] (80 clusters; docs/results/trackD-week1/c3_gates_4settings.json). The first two settings give 1.739 / 1.737. It never fires under any of the 9 common leases."
+   },
+   {
+    "gate": "K6 C3 separation (SPARC worst-case regret >= 2 points below best fixed AND DS > SPARC)",
+    "status": "fail",
+    "evidence": "K6 fires on both clauses. Selected variant V1 (HYB): max regret 1.192. Best fixed arm INF-r: 1.006, so SPARC is 18.6 points worse. DS (rho* = 2): 1.170 <= SPARC. It fires in every setting separately, on the 5-level rho grid (margin -9.1 points), and under every common lease (margin -7.9 to +1.1 points). C3 is therefore descriptive. The lowest worst-case regret on dev belongs to the fixed rule INF-r, not to DS."
+   },
+   {
+    "gate": "E3a preview (MaxReg(SPARC) < min over A and DS, one-sided 95% bound excludes 0)",
+    "status": "fail",
+    "evidence": "4 settings: +0.186 (upper +0.217). First two settings: +0.111 (upper +0.179). 5-level rho grid: +0.091 (upper +0.155). Comparator INF-r in all three; stats.max_regret_test with 10,000 simultaneous cluster resamples."
+   },
+   {
+    "gate": "K7 lease fragility (any C3 conclusion flips within the lease grid)",
+    "status": "partial",
+    "evidence": "K7 fires for the rankings. The K5 and K6 verdicts are identical under all 9 common leases (g in {0.3, 1, 3} x L in {10, 30, 60}) and the tuned set. What flips: the selected variant (V1/V2/V3), the best fixed architecture (INF-r/REP-clamp/HYB on the 10-cluster tuning set), DS rho* (2/inf), and SPARC < CEN-F at rho 0.5 (false under L = 10). Only 'no headroom kill' and 'no SPARC separation' may be claimed."
+   },
+   {
+    "gate": "C3 world fidelity: FULL (ideal comms, same world) vs the K0-verified good-comms controller",
+    "status": "partial",
+    "evidence": "24 pairs, all successful: F1-R2 0.995, F3 1.057 (declared termination tail). SA-AT-50 F3 is 8-41% slower on 3 checked episodes, cause undiagnosed. This only makes K5 more conservative. Connected T2 is 1.02-1.04 x FULL on F1-R2."
+   },
+   {
+    "gate": "Full test suite + ruff",
+    "status": "pass",
+    "evidence": "333 passed in 639 s (exit 0); `ruff check cbba_sota scripts tests` clean."
+   },
+   {
+    "gate": "Leases frozen in advance; dev only; deterministic budgets; CRN",
+    "status": "pass",
+    "evidence": "tuned.json (md5 24071d26...) was written at 11:24 UTC before any evaluation row existed; tuning used seed 2, evaluation seeds 0-1. tuned_ext.json (rho 1.25/0.75) was frozen before its evaluation rows. Budgets are iterations and ticks; the channel uses CRN stream 5. The test split is refused."
+   }
+  ],
+  "issues_and_caveats": [
+   "Decision for the orchestrator. K6's wording says 'DS is recommended'. On dev, DS (1.170) is dominated in every setting by the fixed rule INF-r (outsiders keep only their committed head; max regret 1.006). The C3 comparison collapses to that one rule ('do not honour stale commitments of unreachable robots', S12's mechanism). SPARC keeps station anchoring (CEN-F) inside the station component, which is its costly ingredient on F3.",
+   "Seven defects in the day-1 C3 rules surfaced on dev episodes. Each is fixed, declared as a C3 convention, and regression-tested; they need freezing with the spec:\n1. Per-replica D7 has no termination liveness, so termination now uses a global mission-complete signal, also at H = 0.\n2-3. Rule 4.6(c) is new: overdue work, arrival or finish of a silent robot counts as abort, absent and failure evidence.\n4. The lease now names declared-failed planned members absent.\n5. Absent records are superseded by newer knowledge of the member.\n6. WORK overdue now counts as failure evidence.\n7. FULL follows versions that release commitments (under the detector lease, keeping them deadlocked); T2 keeps commitments ('keep' was chosen on seed 2: GM 82.4 vs 83.9, success 92.2% vs 91.7%).",
+   "Defect 7 was found after the T2 evaluation. Only FULL was rerun (340 episodes, hash 26d92033cd). T2 behaviour under 'keep' was verified bit-identical between the old and new code on 44/44 stratified cases, so the T2 rows (grid 063c36c4ef, evaluation 5bc2c415b9) were kept. The code hashes differ by docstrings and the FULL-only rule; snapshots are in runs/trackD/c3/code_<hash>/. The repository is at 40ea3eec4e, which differs from 26d92033cd by one docstring line in protocols.py.",
+   "Known residual liveness hole, not fixed: a robot that dies while idle can be given solo work by clamped planning. T2 failures concentrate on F3, and on SA-AT-50 in particular (364 of 422 failures). Makespans score them 200. A both-succeed sensitivity of E3a was not run.",
+   "F3 cost under C3 is mostly rule 4.6 (a silent robot is only suspected until h_f = 10 plus evidence), not partitions: connected T2 still costs 1.32-1.59 x FULL on F3, but 1.02-1.04 on F1.",
+   "Leases were tuned on MA-AT-25 and SA-BT-50 (seed 2, dev 0-4, 10 clusters) and applied to all four settings. rho 1.25/0.75 were evaluated on the first two settings only; the four-setting gates use rho {2, 1, 0.5}.",
+   "Design choices made on the dev design seed (seed 2): spec-literal anchor + monotone keys kept, since the day-1 toy-world anchoring pathology did not reproduce (5-16% differences, not consistent in sign). T2 adoption rule 'keep'.",
+   "The beacon factor is descriptive (10 clusters per cell). It helps on F1 and is mixed on F3. Not run: RL-dec, CBTA-dec, the oracle arms, the T4 decision-difference log, corner station, Bernoulli/Rayleigh channels.",
+   "CPU numbers are from a loaded shared host (load 60-160) and descriptive only. Replicated arms plan 1,569-2,626 times per episode at rho 0.5.",
+   "Housekeeping: nothing committed and no agent messaged; the user committed most of my files in 02ccc51 during the run. Working-tree changes beyond that commit: the protocols.py docstring line, plus untracked c3.md, c3_design_adopt.txt, c3_gates_5rho.*, c3_rho_ext.txt and c3_tuned_leases_ext.json. solvers/, hetero/, bench/, third_party/ and env.py were not edited. No processes of mine are running; some zombie bash entries (defunct) remain in the process table. Scratch scripts are in /tmp/agentC3."
+  ]
+ },
+ "memo": {
+  "memo_path": "/home/jovyan/dev/cbba-sota/docs/trackD-week1-memo.md",
+  "summary": "I rewrote the week-1 decision memo at /home/jovyan/dev/cbba-sota/docs/trackD-week1-memo.md. It replaces the interim memo from commit 02ccc51, which was written from partial results and still said c3.md was missing. The outcome: K1 and K6 fire and E2a fails, so Track D becomes an analysis appendix with no method claim and no confirmatory C3 claim. The paper's contribution stays the static ALNS (Track S).\n\nI checked the numbers rather than trusting the reports. A new script, /home/jovyan/dev/cbba-sota/scripts/trackD_week1_verify.py, re-reads the raw rows under runs/trackD with its own pairing and bootstrap; it does not import cbba_sota.dyn.stats. Every recomputed point estimate matches the agents' reports, and CI ends differ by at most 0.0004. A few secondary numbers are quoted from the result files, not recomputed; the memo lists them in its Section 8.\n\nGate outcomes (all dev split, env DynTaskEnvX@6fabb0570f):\n- **K0 passes.** Executor and env agree on 12,760 of 12,760 episodes, and the RL(s.64) samples match the stored Phase-1 rows on 80 of 80 instances.\n- **K1 fires.** SPARC-L against the rolling constructor B4-eq is 0.9847 [0.9806, 0.9890], well short of the 0.97 bar. It fails at every B4 budget tried (9 to 196 restarts).\n- **K2 does not fire.** SPARC-L against insertion-only on F3 is 0.8279.\n- **K3 does not fire.** SPARC-L against RL online is 0.9144, and against RL-MPC 0.9061.\n- **K4 does not fire.** Rolling CP-SAT-LNS at the Heavy tier is 8% worse than SPARC-L (0.9192).\n- **K5 does not fire.** At ρ = 0.5 the best fixed architecture is still 1.85 × FULL on F1-R2 and 1.79 × FULL on F3, so C3 has headroom.\n- **K6 fires on both clauses.** SPARC's worst-case regret is 1.192 against 1.006 for the one-line rule INF-r, and DS (1.170) also beats SPARC. The result also holds on the episodes where every arm succeeds, which no agent had run.\n- **K7 fires for rankings** (which variant and which fixed architecture come out best). The K5 and K6 verdicts do not change across leases.\n- **K8 is deferred** to a quiet pinned host after the other workflow finishes. On the loaded host, SPARC-L at 50 tasks has p95 31 ms, but SPARC-H at 200 tasks has per-episode p95 up to 1.52 s.\n- **K9 passes** with the narrowed wording.\n- **E2a fails.** Light is 2.3% behind Heavy (1.0229), so C2-dyn is not supported.\n\nBeyond the gates, the memo flags several things the reports did not:\n- **Kernel pin.** Track D runs the unfinished v2 kernel at 4cf5e04, not the committed ALNS v2 (0e449fb). Re-pinning changes the CPU conversion and could move T1, so a re-pinned T1 must be a new, pre-specified test.\n- **Spec flaw in K6.** The dev tie rule selected variant V1, which is itself the fixed architecture HYB, so K6's first clause could never have passed with V1.\n- **DS is not the right recommendation.** The spec says to recommend DS after K6, but INF-r dominates DS everywhere on dev.\n- **Pilot priors do not hold up.** Every-event re-planning beats structural-only by 1% (the opposite of S8), and S2 was never re-tested at its own first-plan budget.\n- **Validation split.** A validation split now exists and Track D has never touched it; all 86,075 Track D rows that record a split are dev.\n\nThe memo also proposes frozen parameters (Section 4.7 plus the C3 conventions), a descriptive-only rewrite of Section 9, open problems, and week-2 work that starts with five user decisions. The \"fewer messages\" clause in prereg-phase1.md was already removed in 4cf5e04.\n\nNothing was committed and no other agent was messaged. solvers, hetero, bench, third_party and the test split were not touched, and no processes of mine are left running. Uncommitted: my memo edit and the new verification script, plus files other agents left: the protocols.py and baselines.md edits and the untracked C3 result files.",
+  "gates": [
+   {
+    "gate": "K0 fidelity",
+    "status": "pass",
+    "evidence": "12,760/12,760 dev episodes, executor == env, max |dt| 0 (env 6fabb0570f, executor 56a085a816, controller 80bf534371). Decision order == arrival order on 12,368/12,368 minimal-cover episodes. RL(s.64) sample multisets equal to the stored Phase-1 rows on 80/80, and runner RL == rl.rollout on 80/80. All recounted from runs/trackD/k0. The env and executor hashes are unchanged today, and git diff 1f0f046 of the runner-imported files is empty."
+   },
+   {
+    "gate": "K1 planner collapse (T1)",
+    "status": "fires",
+    "evidence": "SPARC-L/B4-eq 0.9847 [0.9806, 0.9890], < 1 on 4/4 settings, p = 8.5e-10; the whole CI is above 0.97. Also fails at B4-r12 0.9723, B4-impl 0.9740, B4-2eq 0.9884 and B4-4eq 0.9913, and on seeds 2-3 (0.9825). The CBTA-style re-auction (no search) is 0.9864 and beats SPARC-L on SA-AT (1.0148). Recomputed from runs/trackD/c1dyn rows."
+   },
+   {
+    "gate": "K2 no dynamic separation",
+    "status": "does not fire",
+    "evidence": "SPARC-L/insertion-only on F3 0.8279 [0.8167, 0.8390] (needs > 0.98 to fire). SPARC-L/B4-eq on F1 0.9881."
+   },
+   {
+    "gate": "K3 RL anomaly",
+    "status": "does not fire",
+    "evidence": "B1 RL(g.) 0.9144 [0.9074, 0.9214]; arrival order 0.9209; RL(s.1) 0.9104. B2 RL-MPC Heavy 0.9061 [0.8934, 0.9191] (171 episodes, 25 clusters, seed 0). B2 at 3x budget 0.9174."
+   },
+   {
+    "gate": "K4 heavy beats light",
+    "status": "does not fire",
+    "evidence": "SPARC-L/B3-Heavy 0.9192 [0.8980, 0.9376] (72 episodes, 24 clusters): B3-Heavy is 8% worse. B3-Light 0.8849."
+   },
+   {
+    "gate": "E2a preview (C2-dyn)",
+    "status": "fail",
+    "evidence": "SPARC-L/SPARC-H 1.0229, 90% CI [1.0189, 1.0269], TOST p = 0.86. F3 1.0387; 200 tasks 1.0436."
+   },
+   {
+    "gate": "K5 C3 headroom",
+    "status": "does not fire",
+    "evidence": "Best fixed architecture (INF-r) at rho 0.5: 1.853 [1.815, 1.894] x FULL on F1-R2 and 1.794 [1.754, 1.835] on F3. Recomputed from runs/trackD/c3/eval_final.jsonl."
+   },
+   {
+    "gate": "K6 C3 separation",
+    "status": "fires (both clauses)",
+    "evidence": "Selected variant V1 (= HYB) max regret 1.192 vs INF-r 1.006 (18.6 points worse); DS 1.170 < SPARC. E3a +0.186 (upper bound +0.217). Same on the 5-level rho grid (V1 1.177, INF-r 1.086, DS 1.120), per setting, and on the new both-succeed subset (HYB 1.161, INF-r 1.006, DS 1.150)."
+   },
+   {
+    "gate": "K7 lease fragility",
+    "status": "fires for rankings",
+    "evidence": "K5 and K6 verdicts are stable under all 9 common leases and the tuned set (SPARC margin -7.9 to +1.1 points). The selected variant, the best fixed arm, DS rho* and SPARC < CEN-F at rho 0.5 flip (10-cluster tuning rows). Evaluation rows use exactly the frozen tuned.json leases (md5 24071d26...)."
+   },
+   {
+    "gate": "K8 compute",
+    "status": "deferred",
+    "evidence": "Deferred to a quiet pinned host after the other workflow finishes. Loaded-host process CPU per structural event: SPARC-L 50 tasks p50 8.5 ms, p95 31.3 ms (max per-episode p95 81.2 ms); SPARC-H 200 tasks p50 300 ms, p95 604 ms, per-episode p95 up to 1.52 s."
+   },
+   {
+    "gate": "K9 novelty",
+    "status": "pass (narrowed claim)",
+    "evidence": "docs/trackD-novelty.md: 62 HeteroMRTA citers screened, 0 hits. DODRL-HMRTA is dynamic heterogeneous-MRTA prior art on its own instances; its full text is unread."
+   },
+   {
+    "gate": "Full test suite",
+    "status": "pass",
+    "evidence": "OMP_NUM_THREADS=1 NUMBA_NUM_THREADS=1 .venv/bin/python -m pytest tests/ -q -p no:cacheprovider: 333 passed in 626.8 s, exit 0."
+   },
+   {
+    "gate": "ruff check cbba_sota scripts tests",
+    "status": "pass",
+    "evidence": "All checks passed, including the new scripts/trackD_week1_verify.py."
+   },
+   {
+    "gate": "Kernel pin 4cf5e04",
+    "status": "pass",
+    "evidence": "scripts/trackD_kernel_check.py --n 1 --iters 1500, rerun today: dev 0 of all 5 settings identical to the 4cf5e04 kernel."
+   }
+  ],
+  "surviving_claims": [
+   "C1-dyn (primary): DROPPED by K1. It survives only as descriptive appendix findings.",
+   "C2-dyn: NOT SUPPORTED. E2a fails (Light is 2.3% behind Heavy) and K8 is deferred. Descriptive only: SPARC-Light beats rolling CP-SAT-LNS Heavy by 8% on a 24-cluster subsample.",
+   "C3: DESCRIPTIVE. K6 fires, E3a fails and K5 does not kill. The benchmark and diagnosis survive: headroom of about 1.8x FULL at rho 0.5; the one-line INF-r rule has the lowest dev max regret (1.006); under failures, failure suspicion rather than partitions drives the cost; leases and the beacon matter as much as the architecture.",
+   "Appendix finding: search in the loop pays on structural events. SPARC-L/insertion-only is 0.860 pooled and 0.828 on F3.",
+   "Appendix finding: cheap rolling rules at equal CPU come within 1.5% (B4-eq 0.985, B5 0.991, CBTA-style start 0.986).",
+   "Appendix finding: the published RL policy online is 8-9% behind SPARC-L (0.914). Dynamics cost RL(g.) 10-34% against its own static makespan (new; env 6fabb0570f). RL-MPC does not close the gap.",
+   "Appendix finding: every-event re-planning is 1% better than structural-only, reversing the S8 prior. On F0, SPARC equals open loop exactly (T3).",
+   "K9 wording only: first evaluation of the HeteroMRTA benchmark and its released policy under online release, delays and failures, against rolling optimizers at equal per-event compute.",
+   "Static Track S claims (C1/C2) are unaffected and remain the paper's contribution."
+  ],
+  "tests": "Full suite: OMP_NUM_THREADS=1 NUMBA_NUM_THREADS=1 .venv/bin/python -m pytest tests/ -q -p no:cacheprovider gave 333 passed in 626.8 s, exit 0 (log /tmp/trackD_memo/fullsuite.log). No other cbba-sota process was running; the suite's 15 replay workers plus pytest stay within 16 processes. ruff check cbba_sota scripts tests: all checks passed. Also run: scripts/trackD_week1_verify.py (all sections, exit 0; output /tmp/trackD_memo/verify_out.txt) and scripts/trackD_kernel_check.py --n 1 --iters 1500 (5 settings identical to 4cf5e04, exit 0)."
+ }
+}
