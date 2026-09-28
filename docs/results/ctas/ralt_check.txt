@@ -1,5 +1,5 @@
-CTAS-D port check (cbba_sota.solvers.ctas); started 2026-09-28T16:00:11, finished 2026-09-28T16:16:36; code 3fa7e7ec85356395377201ebf42301f30f461ce3-dirty-09551a87f4a0; OR-Tools 9.15.6755; host dhcho-dev-2gpus-0; command: scripts/ctas_check.py
-jobs: 2 at a time, pinned to CPUs ['39-40,42-43,46-49', '51-55,59,61,64']; load1 at job starts 35.5..46.6
+CTAS-D port check (cbba_sota.solvers.ctas); started 2026-09-28T18:43:39, finished 2026-09-28T19:00:06; code 368469ba84962cca699745c2660c01971b5c39ad; OR-Tools 9.15.6755; host dhcho-4gpu-0; command: scripts/ctas_check.py
+jobs: 2 at a time, pinned to CPUs ['34,38,45-47,50,52,73', '7,15,17,20-21,25,28,33']; load1 at job starts 21.5..39.5
 
 == 1. Shipped Gurobi CTAS-D runs (RALTestSet results.yaml, 600 s)
 instances with a solution: 50/50
@@ -64,26 +64,26 @@ instances with a solution: 50/50
 per backend: env-replayed makespan (x ratio to the shipped Gurobi 600 s run), time to the first incumbent [s], status
 
   i   Gurobi      BKS                         CP_SAT                          HIGHS                           SCIP
-  0   27.845   25.733      26.675 (x0.958) 0.21 FEAS      66.797 (x2.399) 8.82 FEAS                    fail - NOT_
-  1   23.175   21.843      22.398 (x0.966) 0.23 FEAS     55.755 (x2.406) 15.51 FEAS                    fail - NOT_
-  2   23.029   20.993      21.671 (x0.941) 0.14 FEAS      45.901 (x1.993) 7.41 FEAS                    fail - NOT_
-  3   23.748   23.407      23.505 (x0.990) 0.18 FEAS      49.318 (x2.077) 7.11 FEAS     43.641 (x1.838) 53.92 FEAS
-  4   22.784   21.560      22.073 (x0.969) 0.15 FEAS     58.325 (x2.560) 10.11 FEAS                fail 57.41 NOT_
-  5   20.971   20.303      20.303 (x0.968) 0.10 FEAS      58.845 (x2.806) 5.01 FEAS     30.347 (x1.447) 29.01 FEAS
-  6   32.009   30.481      30.717 (x0.960) 0.23 FEAS     51.007 (x1.593) 11.61 FEAS     53.427 (x1.669) 41.41 FEAS
-  7   27.371   25.321      25.659 (x0.937) 0.20 FEAS     71.309 (x2.605) 10.11 FEAS                    fail - NOT_
-  8   19.229   19.229      19.229 (x1.000) 0.07 FEAS      31.097 (x1.617) 4.41 FEAS     25.325 (x1.317) 41.61 FEAS
-  9   22.912   22.092      23.556 (x1.028) 0.22 FEAS     41.567 (x1.814) 19.32 FEAS     56.596 (x2.470) 59.52 FEAS
+  0   27.845   25.733      26.301 (x0.945) 0.23 FEAS      66.797 (x2.399) 9.42 FEAS                    fail - NOT_
+  1   23.175   21.843      21.906 (x0.945) 0.24 FEAS     55.755 (x2.406) 19.71 FEAS                    fail - NOT_
+  2   23.029   20.993      20.993 (x0.912) 0.17 FEAS      45.901 (x1.993) 8.01 FEAS                    fail - NOT_
+  3   23.748   23.407      23.605 (x0.994) 0.18 FEAS      49.318 (x2.077) 7.71 FEAS                fail 59.62 NOT_
+  4   22.784   21.560      21.950 (x0.963) 0.16 FEAS     58.325 (x2.560) 11.51 FEAS                fail 58.22 NOT_
+  5   20.971   20.303      20.303 (x0.968) 0.11 FEAS      58.845 (x2.806) 6.01 FEAS     48.524 (x2.314) 31.01 FEAS
+  6   32.009   30.481      30.630 (x0.957) 0.21 FEAS     51.007 (x1.593) 12.41 FEAS     53.427 (x1.669) 31.12 FEAS
+  7   27.371   25.016      25.016 (x0.914) 0.26 FEAS     71.309 (x2.605) 12.52 FEAS                    fail - NOT_
+  8   19.229   19.229      19.229 (x1.000) 0.08 FEAS      31.576 (x1.642) 4.71 FEAS     25.325 (x1.317) 40.61 FEAS
+  9   22.912   22.092      22.746 (x0.993) 0.22 FEAS     41.567 (x1.814) 22.72 FEAS                    fail - NOT_
 
  backend solved  mean ms   Gurobi  ratio ratio200  vsBKS  first_s mean/med/max obj/Gurobi build_s  cpu_s
-  CP_SAT  10/10   23.579   24.307  0.972    0.972  1.021        0.17/0.19/0.23      0.972   0.012  461.2
-   HIGHS  10/10   52.992   24.307  2.187    2.187  2.303       9.94/9.47/19.32      2.324   0.014   62.7
-    SCIP   5/10  120.934   24.307  1.748    4.932  5.262     47.15/47.76/59.52      1.868   0.014  326.7
+  CP_SAT  10/10   23.268   24.307  0.959    0.959  1.009        0.19/0.20/0.26      0.960   0.014  478.6
+   HIGHS  10/10   53.040   24.307  2.190    2.190  2.309     11.47/10.47/22.72      2.324   0.014   62.5
+    SCIP   3/10  152.728   24.307  1.767    6.303  6.678     44.11/40.61/59.62      1.865   0.015  352.0
 ratio: mean over solved instances of makespan / Gurobi; ratio200 and vsBKS: over all instances, failures as 200; first_s over runs with an incumbent; obj/Gurobi: our CTAS objective / (energyCost + timeCost) of the shipped run, solved instances.
 BKS sources: 0: final-ral-30s 25.733, final-ral-4s 26.055, pilot-cpsat-30s-x8 26.487; 1: final-ral-30s 21.843, final-ral-4s 22.001, pilot-cpsat-30s-x8 22.424; 2: final-ral-30s 21.233, final-ral-4s 20.993, pilot-cpsat-30s-x8 21.473; 3: final-ral-30s 23.407, final-ral-4s 23.409, pilot-cpsat-30s-x8 23.571; 4: final-ral-30s 21.560, final-ral-4s 21.820, pilot-cpsat-30s-x8 22.328; 5: final-ral-30s 20.303, final-ral-4s 20.334, pilot-cpsat-30s-x8 20.473; 6: final-ral-30s 30.481, final-ral-4s 30.630, pilot-cpsat-30s-x8 30.606; 7: final-ral-30s 25.321, final-ral-4s 25.659, pilot-cpsat-30s-x8 27.155; 8: final-ral-30s 19.229, final-ral-4s 19.229, pilot-cpsat-30s-x8 19.229; 9: final-ral-30s 22.092, final-ral-4s 22.092, pilot-cpsat-30s-x8 23.335
 
 == 3. SA-BT-50-5-50 val 0, 30 s from model building, 8 threads (paper: Gurobi CTAS-D solved 96% of this setting in 3600 s)
  backend     status  makespan  first_s  build_s   objective      bound  wall_s
-  CP_SAT   FEASIBLE    24.984     2.41     0.13     2600.87     503.05    30.7
-   HIGHS NOT_SOLVED         -        -     0.14           -     198.92    30.4
-    SCIP NOT_SOLVED         -        -     0.07           -      20.22    30.8
+  CP_SAT   FEASIBLE    30.192     2.92     0.18     3149.77     502.48    30.7
+   HIGHS NOT_SOLVED         -        -     0.13           -     198.92    30.3
+    SCIP NOT_SOLVED         -        -     0.08           -      20.22    30.6
