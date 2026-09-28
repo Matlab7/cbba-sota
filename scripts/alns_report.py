@@ -41,6 +41,12 @@ def _replayed(source, routes) -> float:
     return _score(rep["makespan"], rep["success"])
 
 
+def _pilot_rl(entry: dict) -> dict[str, float]:
+    """RL(g.) / RL(s.10) of the pilot evaluation: the best rollout's own env run over rollouts that finished every
+    task (inf if none did, which counts as a failure)."""
+    return {name: _score(entry[k], bool(np.isfinite(entry[k]))) for name, k in (("RL(g.)", "g"), ("RL(s.10)", "s10"))}
+
+
 def _ral_refs() -> dict[str, dict[str, float]]:
     rl = json.loads((PILOT / "rl_eval.json").read_text())
     cp = {r[0]: r[-1] for r in json.loads((PILOT / "redteam" / "cpsat_30s_8w.json").read_text())}  # routes
@@ -48,7 +54,7 @@ def _ral_refs() -> dict[str, dict[str, float]]:
     for i in range(50):
         yaml = (HETEROMRTA_DIR / "RALTestSet" / f"env_{i}" / "results.yaml").read_text()
         out[f"RALTestSet/test/{i}"] = {
-            "RL(g.)": rl[f"RALTestSet/env_{i}.pkl"]["g"], "RL(s.10)": rl[f"RALTestSet/env_{i}.pkl"]["s10"],
+            **_pilot_rl(rl[f"RALTestSet/env_{i}.pkl"]),
             "CTAS-D 600s": float(re.search(r"timeCost: ([\d.]+)", yaml).group(1)) / 100,
             "CP-SAT 30s x8": _replayed(HETEROMRTA_DIR / "RALTestSet" / f"env_{i}.pkl",
                                        cp[f"HeteroMRTA/RALTestSet/env_{i}.pkl"])}
@@ -86,17 +92,18 @@ def _scale50_refs() -> dict[str, dict[str, float]]:
     for i in range(30):
         inst, key = insts[f"ScaleSet50/env_{i}"], f"HeteroMRTA/ScaleSet50/env_{i}.pkl"
         out[f"ScaleSet50/env_{i}"] = {
-            "RL(g.)": rl[f"ScaleSet50/env_{i}.pkl"]["g"], "RL(s.10)": rl[f"ScaleSet50/env_{i}.pkl"]["s10"],
+            **_pilot_rl(rl[f"ScaleSet50/env_{i}.pkl"]),
             "pilot LNS 13s": _replayed(inst, lns13[key][1]), "pilot LNS 30s": _replayed(inst, lns30[key][1])}
     return out
 
 
 def _rl_ref_refs() -> dict[str, dict[str, float]]:
-    """The RL campaign's dev rows (runs/rl/<setting>/dev.jsonl), scored by the best rollout's own env run."""
+    """The RL campaign's dev rows (runs/rl/<setting>/dev.jsonl, RL methods only), scored by the best rollout's own
+    env run; rows on a superseded instance are dropped and of repeated rows the last counts."""
     out: dict[str, dict[str, float]] = {}
-    for path in (RUNS_DIR / "rl").glob("*/dev.jsonl"):
+    for path in sorted((RUNS_DIR / "rl").glob("*/dev.jsonl")):
         for r in read_rows(path):
-            if is_stale(r):
+            if not str(r.get("method")).startswith("RL(") or r.get("split", "dev") != "dev" or is_stale(r):
                 continue
             name = f"{r['setting']}/dev/{r['instance']}"
             out.setdefault(name, {})[f"{r['method']} {r['workers']}cpu"] = _score(r["makespan"], r["success"])

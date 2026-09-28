@@ -8,7 +8,8 @@ Usage:
   run_alns.py --settings MA-AT-50-5-50 --time B1 --workers 8   (B1 = paper RL(s.10) time, B2 = 2 x B1)
 
 Each instance runs in its own single-threaded process (``--procs`` at a time) with ``--workers`` ALNS workers, so
-at most procs * workers processes are busy. Rows record the instance ``fingerprint`` and the ``git`` code version;
+at most procs * workers processes are busy. Rows record the instance ``fingerprint``, the ``git`` code version, the
+process's CPU ``affinity``, the load average at start and end and the change of the cgroup's throttling counters;
 rows already present in the output file are skipped (resumable) if their fingerprint matches the current instance.
 """
 from __future__ import annotations
@@ -84,6 +85,7 @@ def _job(key: dict, inst, time_limit: float, seed: int, workers: int, overrides:
     base = ALNSConfig.v1() if fields.pop("preset", "v2") == "v1" else ALNSConfig()  # preset="v1": Phase 1 ALNS
     cfg = dataclasses.replace(base, **fields)
     inst.tt, inst.da  # noqa: B018  (travel matrices are instance loading, outside the time budget)
+    probe = runtime.Probe()
     t = time.monotonic()
     plan, st = solve(inst, time_limit_s=time_limit, seed=seed, n_workers=workers, config=cfg)
     wall = time.monotonic() - t
@@ -97,7 +99,7 @@ def _job(key: dict, inst, time_limit: float, seed: int, workers: int, overrides:
             "candidate_slots": st.candidate_slots, "exact_evals": st.exact_evals,
             "it_per_s": st.it_per_s, "wall_s": wall, "search_s": st.search_s, "trace": st.trace,
             "destroy_weights": st.destroy_weights, "repair_weights": st.repair_weights, "overrides": overrides,
-            "routes": plan.to_env_routes(), "fingerprint": runtime.fingerprint(inst)}
+            "routes": plan.to_env_routes(), "fingerprint": runtime.fingerprint(inst)} | probe.fields()
 
 
 def main() -> None:

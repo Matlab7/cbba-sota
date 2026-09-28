@@ -19,7 +19,8 @@ tasks finished and makespan < 200) are counted separately.
 --move rewrites each file without its stale rows and appends them, with the reason, to runs/_superseded/<path>;
 --stamp adds the current ``fingerprint`` (and ``fingerprint_by: check_rows``) to verified rows that lack one. A
 rewritten file is backed up first to runs/_superseded/_backup-<time>/<path>; files that change during the check,
-or were written in the last ``--min-age`` seconds (a campaign may still append to them), are left alone.
+or were written less than ``--min-age`` seconds before the scan (a campaign may still append to them), are left
+alone.
 """
 from __future__ import annotations
 
@@ -261,8 +262,8 @@ def main() -> None:
     if args.move or args.stamp:
         backup = SUPERSEDED / f"_backup-{time.strftime('%Y%m%d-%H%M%S')}"
         for path, lines in files.items():
-            if time.time() - stats[path].st_mtime < args.min_age:
-                print(f"  {path.relative_to(RUNS_DIR)} was written in the last {args.min_age:g}s, left alone")
+            if t0 - stats[path].st_mtime < args.min_age:  # measured at the scan, not after the (long) check
+                print(f"  {path.relative_to(RUNS_DIR)} was written {args.min_age:g}s or less before the scan, left alone")
                 continue
             res = _rewrite(path, lines, results[path], stats[path], backup, args.move, args.stamp)
             if res is None:

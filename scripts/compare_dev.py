@@ -1,16 +1,21 @@
-"""Matched wall-clock comparison on the dev split (dry run of the Phase 1 kill gate).
+"""Matched wall-clock comparison of ALNS with its competitors on a non-test split (the C1 dry run).
 
-Usage: compare_dev.py run [--settings NAME ...] [--instances 20] [--lanes 8] [--out runs/compare_dev]
-       compare_dev.py report [--out runs/compare_dev] [--csv FILE]
+Usage: compare_dev.py run [--split dev] [--settings NAME ...] [--instances 20] [--lanes 8] [--out DIR]
+       compare_dev.py report [--split dev] [--out DIR] [--csv FILE]
+
+The dev split is the ALNS tuning split, so its ratios are optimistic (tuning-contaminated); untuned numbers need a
+fresh split (``--split``, any split of ``configs.SPLITS`` except test). ``--out`` defaults to runs/compare_<split>.
 
 Budgets per setting: B1 = the paper's RL(s.10) time for that setting, B2 = 2 x B1. Methods at each budget:
 - ALNS-1, ALNS-8: coalition ALNS with 1 or 8 forked workers (seed 0).
-- CPSAT-8: CP-SAT with 8 workers, hinted: ``construct`` for min(10% of B, 3 s), then LNS in CP (``solve_lns``), the
-  best CP-SAT variant on dev in the baseline campaign (runs/baselines).
+- CPSAT-1, CPSAT-8: CP-SAT with 1 or 8 workers, hinted: ``construct`` for min(10% of B, 3 s), then LNS in CP
+  (``solve_lns``), the best CP-SAT variant on dev in the baseline campaign (runs/baselines).
+- CONSTRUCT-1: the regret-insertion constructor with randomized restarts for the whole budget, one core.
 - RL-1, RL-8: RL(s.N) with the released policy in 1 or 8 single-threaded processes; each process samples lockstep
   batches until the budget is used (``rl.sample_until``), so N fills the budget on those cores.
 - RL64+ALNS-8: RL(s.64) on 8 processes (8 lockstep samples each), then ALNS-8 from the best rollout's coalitions
-  (``rl.to_plan``) for the rest of the budget; result = better of the two.
+  (``rl.to_plan``) for the rest of the budget; result = better of the two. It contains ALNS, so it is an ablation,
+  not a competitor.
 - greedy: the paper's fixed nearest-task greedy (``greedy_nearest``), the env's own run, no budget.
 
 Makespans are env ground truth: plans are replayed with pre_set_route + execute_by_route, RL and greedy are scored
@@ -18,6 +23,11 @@ by the env's own episodes (their routes are also replayed, ``replay_makespan``, 
 tasks finished and makespan < 200. Every budget starts after the instance is loaded and its travel matrices are
 built, in the process that runs it (RL included); the RL policy, numba kernels and imports are loaded once per
 process beforehand.
+
+Report (prereg C1): per setting, budget and core count, ALNS against every competitor on the same cores separately
+(ALNS-8: CPSAT-8, RL-8; ALNS-1: CONSTRUCT-1, CPSAT-1, RL-1, greedy): mean paired ratio r = ALNS / competitor with
+a bootstrap 95% CI, win counts and the one-sided paired t-test of mean log r < 0, Holm-corrected over settings x
+competitors per (ALNS variant, budget). A failed run counts as 200.
 
 Execution: ``--lanes`` lanes of 8 persistent single-threaded processes each (spawned, policy and kernels warm), each
 lane pinned to its own 8 CPUs (``--cpus``, default the least busy physical cores). A lane runs one 8-core job at a
@@ -49,12 +59,15 @@ from cbba_sota.bench import runtime
 from cbba_sota.bench.configs import MAX_TIME
 from cbba_sota.hetero.replay import succeeded
 
-SETTINGS = ("MA-AT-25-5-50", "SA-AT-50-5-50", "MA-AT-50-5-50", "SA-BT-50-5-50", "MA-AT-50-5-200")
+SETTINGS = ("SA-BT-25-5-50", "SA-BT-50-5-50", "SA-AT-50-5-50", "MA-AT-25-5-50", "MA-AT-50-5-50", "MA-AT-50-5-200",
+            "MA-AT-150-10-500", "MA-AT-150-5-500")  # the 8 H1 settings of the prereg
 LANE = 8
-CORES = {"ALNS-1": 1, "ALNS-8": 8, "CPSAT-8": 8, "RL-1": 1, "RL-8": 8, "RL64+ALNS-8": 8, "greedy": 1}
+CORES = {"ALNS-1": 1, "ALNS-8": 8, "CPSAT-1": 1, "CPSAT-8": 8, "CONSTRUCT-1": 1, "RL-1": 1, "RL-8": 8,
+         "RL64+ALNS-8": 8, "greedy": 1}
 OURS = ("ALNS-1", "ALNS-8")
 HYBRID = "RL64+ALNS-8"
-GATE = 0.92
+COMPETITORS = {"ALNS-8": ("CPSAT-8", "RL-8"), "ALNS-1": ("CONSTRUCT-1", "CPSAT-1", "RL-1", "greedy")}
+ALPHA = 0.05
 FAIL = MAX_TIME  # a failed instance enters the ratio at the time cap
 _ONE = {k: "1" for k in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS", "NUMBA_NUM_THREADS")}
 
@@ -96,13 +109,13 @@ def _pid() -> tuple[int, str]:
 
 
 @lru_cache(maxsize=2)
-def _load(name: str, i: int):
+def _load(name: str, split: str, i: int):
     """(instance with its travel matrices, env pickle bytes, fingerprint), cached per process; loading is outside
     every budget."""
     from cbba_sota.bench import configs
     from cbba_sota.hetero import Instance
 
-    path = configs.get(name).instance_path("dev", i)
+    path = configs.get(name).instance_path(split, i)
     inst = Instance.from_pickle(path)
     inst.tt, inst.da  # noqa: B018
     return inst, path.read_bytes(), runtime.fingerprint(inst)
@@ -122,14 +135,14 @@ def _plan_row(inst, plan, wall: float, cpu: float) -> dict:
             "routes": plan.routes()}
 
 
-def run_alns(name: str, i: int, workers: int, deadline: float | None = None, budget: float | None = None,
+def run_alns(name: str, split: str, i: int, workers: int, deadline: float | None = None, budget: float | None = None,
              init=None) -> dict:
     """ALNS until ``deadline`` (monotonic) or for ``budget`` seconds; ``init``: warm-start plan. A deadline is
     moved by the time this process spends loading the instance (outside every budget)."""
     from cbba_sota.solvers import alns
 
     loading = time.monotonic()
-    inst, _, fp = _load(name, i)
+    inst, _, fp = _load(name, split, i)
     c0, k0 = time.process_time(), _children_cpu()
     t0 = time.monotonic()
     limit = budget if deadline is None else deadline - loading  # = time left + loading time
@@ -142,11 +155,11 @@ def run_alns(name: str, i: int, workers: int, deadline: float | None = None, bud
                                                "fingerprint": fp}
 
 
-def run_cpsat(name: str, i: int, budget: float, workers: int = LANE) -> dict:
+def run_cpsat(name: str, split: str, i: int, budget: float, workers: int) -> dict:
     from cbba_sota.hetero import evaluate
     from cbba_sota.solvers import cpsat, greedy
 
-    inst, _, fp = _load(name, i)
+    inst, _, fp = _load(name, split, i)
     t0, c0 = time.perf_counter(), time.process_time()
     hint = greedy.construct(inst, time_limit=min(0.1 * budget, 3.0))
     hint_ms = evaluate(inst, hint).makespan
@@ -156,7 +169,16 @@ def run_cpsat(name: str, i: int, budget: float, workers: int = LANE) -> dict:
                                                    "last_improvement_s": res.trajectory[-1][0], "fingerprint": fp}
 
 
-def run_rl(name: str, i: int, index: int, stride: int, budget: float | None = None,
+def run_construct(name: str, split: str, i: int, budget: float) -> dict:
+    from cbba_sota.solvers import greedy
+
+    inst, _, fp = _load(name, split, i)
+    t0, c0 = time.perf_counter(), time.process_time()
+    plan = greedy.construct(inst, time_limit=budget)
+    return _plan_row(inst, plan, time.perf_counter() - t0, time.process_time() - c0) | {"fingerprint": fp}
+
+
+def run_rl(name: str, split: str, i: int, index: int, stride: int, budget: float | None = None,
            samples: int | None = None) -> dict:
     """RL samples ``index``, ``index + stride``, ... of the instance: for ``budget`` seconds after this process has
     loaded it, or exactly ``samples`` in one lockstep batch. Returns the best rollout (with coalitions) and timing."""
@@ -165,8 +187,8 @@ def run_rl(name: str, i: int, index: int, stride: int, budget: float | None = No
     from cbba_sota.bench import configs
     from cbba_sota.solvers import rl
 
-    _, data, fp = _load(name, i)
-    seed = configs.get(name).seed("dev", i)
+    _, data, fp = _load(name, split, i)
+    seed = configs.get(name).seed(split, i)
 
     def seed_of(n: int) -> int:
         return rl.sample_seed(seed, index + stride * n)
@@ -180,21 +202,21 @@ def run_rl(name: str, i: int, index: int, stride: int, budget: float | None = No
             "end": time.monotonic(), "fingerprint": fp}
 
 
-def run_replay(name: str, i: int, routes) -> tuple[float, bool]:
+def run_replay(name: str, split: str, i: int, routes) -> tuple[float, bool]:
     from cbba_sota.solvers import rl
 
-    return rl.replay(_load(name, i)[1], routes)
+    return rl.replay(_load(name, split, i)[1], routes)
 
 
-def run_greedy(name: str, i: int) -> dict:
+def run_greedy(name: str, split: str, i: int) -> dict:
     from cbba_sota.bench import configs
     from cbba_sota.solvers import greedy
 
     c0 = time.process_time()
-    res = greedy.greedy_nearest(configs.get(name).instance_path("dev", i))
+    res = greedy.greedy_nearest(configs.get(name).instance_path(split, i))
     return {"makespan": res.makespan, "success": res.success, "env_finished": res.env_finished,
             "wall_s": res.wall_s, "cpu_s": time.process_time() - c0, "routes": res.routes,
-            "fingerprint": _load(name, i)[2]}
+            "fingerprint": _load(name, split, i)[2]}
 
 
 # --- lane controller (threads of the main process) -------------------------------------------------------------
@@ -214,38 +236,40 @@ def _rl_row(parts: list[dict]):
             "fingerprint": parts[0]["fingerprint"]}, best
 
 
-def _with_replay(ex: ProcessPoolExecutor, row: dict, name: str, i: int) -> dict:
+def _with_replay(ex: ProcessPoolExecutor, row: dict, name: str, split: str, i: int) -> dict:
     """Replay of the rollout's routes (after the budget, for reference; the rollout is the env's own run)."""
-    rep = ex.submit(run_replay, name, i, row["routes"]).result()
+    rep = ex.submit(run_replay, name, split, i, row["routes"]).result()
     return row | {"replay_makespan": rep[0], "replay_success": rep[1]}
 
 
 def _run_job(ex: ProcessPoolExecutor, job: dict) -> dict:
-    name, i, method, budget = job["setting"], job["instance"], job["method"], job["budget_s"]
+    name, split, i, method, budget = job["setting"], job["split"], job["instance"], job["method"], job["budget_s"]
     if method in ("ALNS-1", "ALNS-8"):
-        return ex.submit(run_alns, name, i, CORES[method], budget=budget).result()
-    if method == "CPSAT-8":
-        return ex.submit(run_cpsat, name, i, budget).result()
+        return ex.submit(run_alns, name, split, i, CORES[method], budget=budget).result()
+    if method in ("CPSAT-1", "CPSAT-8"):
+        return ex.submit(run_cpsat, name, split, i, budget, CORES[method]).result()
+    if method == "CONSTRUCT-1":
+        return ex.submit(run_construct, name, split, i, budget).result()
     if method == "greedy":
-        return ex.submit(run_greedy, name, i).result()
+        return ex.submit(run_greedy, name, split, i).result()
     if method in ("RL-1", "RL-8"):
         n = CORES[method]
-        parts = [f.result() for f in [ex.submit(run_rl, name, i, p, n, budget) for p in range(n)]]
-        return _with_replay(ex, _rl_row(parts)[0], name, i)
+        parts = [f.result() for f in [ex.submit(run_rl, name, split, i, p, n, budget) for p in range(n)]]
+        return _with_replay(ex, _rl_row(parts)[0], name, split, i)
     if method == HYBRID:  # the budget starts when the first RL block has loaded the instance
         from cbba_sota.solvers import rl
 
-        parts = [f.result() for f in [ex.submit(run_rl, name, i, p, LANE, samples=8) for p in range(LANE)]]
+        parts = [f.result() for f in [ex.submit(run_rl, name, split, i, p, LANE, samples=8) for p in range(LANE)]]
         rl_row, best = _rl_row(parts)
         t0 = min(p["start"] for p in parts)
         deadline = t0 + budget
         rl_ms = best.makespan if best.success else FAIL
         out = {f"rl_{k}": v for k, v in rl_row.items() if k not in ("routes", "fingerprint")}
         if deadline - time.monotonic() < 0.5:  # RL(s.64) used the whole budget
-            return _with_replay(ex, rl_row, name, i) | out | {"polished": False}
+            return _with_replay(ex, rl_row, name, split, i) | out | {"polished": False}
         init = rl.to_plan(best, len(best.routes)) if best.success else None
-        polish = ex.submit(run_alns, name, i, LANE, deadline=deadline, init=init).result()
-        row = polish if polish["success"] and polish["makespan"] <= rl_ms else _with_replay(ex, rl_row, name, i)
+        polish = ex.submit(run_alns, name, split, i, LANE, deadline=deadline, init=init).result()
+        row = polish if polish["success"] and polish["makespan"] <= rl_ms else _with_replay(ex, rl_row, name, split, i)
         return row | out | {"polished": True, "alns_makespan": polish["makespan"], "wall_s": polish["end"] - t0,
                             "cpu_s": rl_row["cpu_s"] + polish["cpu_s"]}
     raise ValueError(method)
@@ -292,7 +316,8 @@ class Lane(threading.Thread):
             list(tp.map(one, jobs))
 
 
-def _units(settings: list[str], n: int, done: set[tuple], rng: random.Random, scale: float) -> list[list[dict]]:
+def _units(settings: list[str], n: int, done: set[tuple], rng: random.Random, scale: float,
+           split: str = "dev") -> list[list[dict]]:
     """8-core jobs alone, 1-core jobs bundled by (setting, budget); longest first, ties shuffled."""
     from cbba_sota.bench import configs
 
@@ -301,11 +326,11 @@ def _units(settings: list[str], n: int, done: set[tuple], rng: random.Random, sc
         s = configs.get(name)
         pending: dict[str, list[dict]] = {}
         for label, b in [*budgets(s, scale).items(), ("none", None)]:
-            for i in range(min(n, s.n_instances("dev"))):
+            for i in range(min(n, s.n_instances(split))):
                 for method, cores in CORES.items():
                     if (method == "greedy") != (b is None) or (name, i, label, method) in done:
                         continue
-                    job = {"setting": name, "split": "dev", "instance": i, "seed": s.seed("dev", i),
+                    job = {"setting": name, "split": split, "instance": i, "seed": s.seed(split, i),
                            "budget": label, "budget_s": b, "method": method, "cores": cores}
                     if cores == LANE:
                         singles.append([job])
@@ -328,7 +353,7 @@ def _done(out: Path) -> set[tuple]:
 def run(args) -> None:
     os.environ.update(_ONE)
     args.out.mkdir(parents=True, exist_ok=True)
-    units = _units(args.settings, args.instances, _done(args.out), random.Random(0), args.budget_scale)
+    units = _units(args.settings, args.instances, _done(args.out), random.Random(0), args.budget_scale, args.split)
     print(f"{len(units)} units, {sum(map(len, units))} jobs, {args.lanes} lanes", flush=True)
     if not units:
         return
@@ -399,84 +424,92 @@ def _boot(x: np.ndarray, reps: int = 10_000, seed: int = 0) -> tuple[float, floa
 
 
 def _ratio(ours: np.ndarray, other: np.ndarray) -> dict:
-    """Paired ratio, bootstrap CI and the one-sided paired t-test of log ratio < log GATE."""
+    """Paired ratio ours / other: mean, bootstrap 95% CI, wins, losses and the one-sided paired t-test of mean log
+    ratio < 0 (ours better)."""
     from scipy import stats as st
 
     r = ours / other
     lo, hi = _boot(r)
-    d = np.log(r) - np.log(GATE)
+    d = np.log(r)
     p = float(st.ttest_1samp(d, 0.0, alternative="less").pvalue) if d.std() > 0 else float(d.mean() >= 0)
     return {"ratio": float(r.mean()), "lo": lo, "hi": hi, "wins": int((r < 1 - 1e-9).sum()),
-            "losses": int((r > 1 + 1e-9).sum()), "p_gate": p}
+            "losses": int((r > 1 + 1e-9).sum()), "p": p}
+
+
+def _method_table(name: str, label: str, budget: float, by_method: dict[str, dict[int, dict]]) -> list[dict]:
+    print(f"\n{name}  {label} = {budget:g} s")
+    print(f"  {'method':12s} {'cores':>5s} {'n':>3s} {'mean ms':>8s} {'succ':>5s} {'wall s':>7s} {'CPU s':>8s} "
+          f"{'N':>6s}  extra")
+    out = []
+    for m, cores in CORES.items():
+        rows = list(by_method.get(m, {}).values())
+        if not rows:
+            continue
+        ms = np.array([_score(r) for r in rows])
+        n = np.mean([r.get("rl_n_samples", r.get("n_samples", np.nan)) for r in rows])  # RL samples
+        extra = ""
+        if m == HYBRID:
+            rl = np.mean([_score({"makespan": r["rl_makespan"], "success": r["rl_success"]}) for r in rows])
+            extra = (f"RL(s.64) {rl:.3f} in {np.mean([r['rl_wall_s'] for r in rows]):.1f}s; "
+                     f"polished {sum(r['polished'] for r in rows)}")
+        over = np.mean([r["wall_s"] > r["budget_s"] + 1.0 for r in rows]) if rows[0]["budget_s"] else 0.0
+        if over:
+            extra += f" overrun>1s {over:.0%}"
+        ok = np.mean([succeeded(r["success"], r["makespan"]) for r in rows])
+        wall, cpu = np.mean([r["wall_s"] for r in rows]), np.mean([r["cpu_s"] for r in rows])
+        print(f"  {m:12s} {cores:5d} {len(rows):3d} {ms.mean():8.3f} {ok:5.2f} {wall:7.1f} {cpu:8.1f} {n:6.1f}  {extra}")
+        out.append({"setting": name, "budget": label, "budget_s": budget, "method": m, "cores": cores,
+                    "n": len(rows), "mean_makespan": float(ms.mean()), "success": float(ok), "wall_s": float(wall),
+                    "cpu_s": float(cpu), "n_samples": float(n)})
+    return out
 
 
 def report(args) -> None:
     from cbba_sota.stats import holm
 
     data = _load_rows(args.out)
-    table, gates = [], []
+    covered = [s for s in SETTINGS if any(name == s for name, _ in data)]
+    if args.split == "dev":
+        print("split dev: ALNS was tuned on these instances, so every ratio is optimistic (tuning-contaminated)")
+    print(f"H1 settings with rows: {len(covered)} of {len(SETTINGS)}"
+          + "".join(f"; missing {s}" for s in SETTINGS if s not in covered))
+    table, ratios = [], []
     for (name, label), by_method in sorted(data.items(), key=lambda kv: (SETTINGS.index(kv[0][0]), kv[0][1])):
-        common = sorted(set.intersection(*(set(v) for v in by_method.values())))
-        if len(common) < 2:
-            continue
         budget = next(r["budget_s"] for m in by_method.values() for r in m.values() if r["budget_s"])
-        print(f"\n{name}  {label} = {budget:g} s  ({len(common)} instances with every method)")
-        print(f"  {'method':12s} {'cores':>5s} {'mean ms':>8s} {'succ':>5s} {'wall s':>7s} {'CPU s':>8s} "
-              f"{'N':>6s}  extra")
-        ms = {m: np.array([_score(rows[i]) for i in common]) for m, rows in by_method.items()}
-        for m, cores in CORES.items():
-            if m not in by_method:
-                continue
-            rows = [by_method[m][i] for i in common]
-            n = np.mean([r.get("rl_n_samples", r.get("n_samples", np.nan)) for r in rows])  # RL samples
-            extra = ""
-            if m == HYBRID:
-                extra = (f"RL(s.64) {np.mean([_score({'makespan': r['rl_makespan'], 'success': r['rl_success']}) for r in rows]):.3f}"
-                         f" in {np.mean([r['rl_wall_s'] for r in rows]):.1f}s; polished {sum(r['polished'] for r in rows)}")
-            over = np.mean([r["wall_s"] > r["budget_s"] + 1.0 for r in rows]) if rows[0]["budget_s"] else 0.0
-            if over:
-                extra += f" overrun>1s {over:.0%}"
-            ok = np.mean([succeeded(r["success"], r["makespan"]) for r in rows])
-            print(f"  {m:12s} {cores:5d} {ms[m].mean():8.3f} {ok:5.2f} "
-                  f"{np.mean([r['wall_s'] for r in rows]):7.1f} {np.mean([r['cpu_s'] for r in rows]):8.1f} "
-                  f"{n:6.1f}  {extra}")
-            table.append({"setting": name, "budget": label, "budget_s": budget, "method": m, "cores": cores,
-                          "n": len(rows), "mean_makespan": float(ms[m].mean()),
-                          "success": float(ok),
-                          "wall_s": float(np.mean([r["wall_s"] for r in rows])),
-                          "cpu_s": float(np.mean([r["cpu_s"] for r in rows])), "n_samples": float(n)})
-        others = [m for m in ms if m not in OURS]
-        comparisons = [("ALNS-8", "all others", others),
-                       ("ALNS-8", "others w/o hybrid", [m for m in others if m != HYBRID]),
-                       ("ALNS-8", "RL, same cores", [m for m in others if m == "RL-8"]),
-                       ("ALNS-1", "all others", others),
-                       ("ALNS-1", "1-core others", [m for m in others if CORES[m] == 1])]
-        for ours, scope, pool in comparisons:
-            if ours not in ms or not pool:
-                continue
-            best = min(pool, key=lambda m: ms[m].mean())
-            res = _ratio(ms[ours], ms[best])
-            oracle = _ratio(ms[ours], np.min([ms[m] for m in pool], axis=0))
-            verdict = "PASS" if res["hi"] <= GATE else ("mean<=0.92" if res["ratio"] <= GATE else "FAIL")
-            print(f"  {ours}/{best:12s} ({scope:17s}) ratio {res['ratio']:.3f} [{res['lo']:.3f}, {res['hi']:.3f}] "
-                  f"wins {res['wins']}/{len(common)}  p(<0.92) {res['p_gate']:.2g}  gate {verdict}   "
-                  f"vs per-instance best {oracle['ratio']:.3f} [{oracle['lo']:.3f}, {oracle['hi']:.3f}]")
-            gates.append({"setting": name, "budget": label, "ours": ours, "scope": scope, "best": best, **res,
-                          "oracle_ratio": oracle["ratio"], "oracle_hi": oracle["hi"]})
+        table += _method_table(name, label, budget, by_method)
+        for ours, pool in COMPETITORS.items():
+            for other in (*pool, HYBRID) if ours == "ALNS-8" else pool:
+                common = sorted(set(by_method.get(ours, {})) & set(by_method.get(other, {})))
+                if len(common) < 2:
+                    continue
+                a = np.array([_score(by_method[ours][i]) for i in common])
+                res = _ratio(a, np.array([_score(by_method[other][i]) for i in common]))
+                role = "ablation" if other == HYBRID else "competitor"
+                print(f"  {ours}/{other:12s} n={len(common):2d} ratio {res['ratio']:.3f} [{res['lo']:.3f}, "
+                      f"{res['hi']:.3f}] wins {res['wins']} losses {res['losses']}  p(log r < 0) {res['p']:.2g}"
+                      f"{'  (ablation)' if role == 'ablation' else ''}")
+                ratios.append({"setting": name, "budget": label, "ours": ours, "other": other, "role": role,
+                               "n": len(common), **res})
     for label in ("B1", "B2"):
-        for ours, scope in (("ALNS-8", "all others"), ("ALNS-8", "others w/o hybrid")):
-            sel = [g for g in gates if g["budget"] == label and g["ours"] == ours and g["scope"] == scope]
+        for ours in OURS:
+            sel = [g for g in ratios if g["budget"] == label and g["ours"] == ours and g["role"] == "competitor"]
             if not sel:
                 continue
-            adj = holm([g["p_gate"] for g in sel])
-            print(f"\nHolm over settings, {ours} vs best of {scope} at {label}: " + ", ".join(
-                f"{g['setting']} {g['ratio']:.3f} p_adj={a:.2g}" for g, a in zip(sel, adj)))
-            for g, a in zip(sel, adj):
-                g["p_holm"] = float(a)
+            for g, adj in zip(sel, holm([g["p"] for g in sel])):
+                g["p_holm"] = float(adj)
+            held = [s for s in SETTINGS if {g["other"] for g in sel if g["setting"] == s and g["p_holm"] < ALPHA}
+                    == set(COMPETITORS[ours])]
+            absent = [c for c in COMPETITORS[ours] if all(g["other"] != c for g in sel)]
+            print(f"\nC1, {ours} at {label}: Holm over {len(sel)} tests (settings x competitors); better than every "
+                  f"competitor of this campaign (p_holm < {ALPHA}) on {len(held)} of {len(SETTINGS)} H1 settings: {', '.join(held) or '-'}"
+                  + (f"; no rows for {', '.join(absent)}" if absent else ""))
+            for g in sel:
+                print(f"  {g['setting']:16s} vs {g['other']:11s} ratio {g['ratio']:.3f} [{g['lo']:.3f}, {g['hi']:.3f}]"
+                      f" p_holm {g['p_holm']:.2g}")
     if args.csv:
         import csv
 
-        for path, rows in ((args.csv, table), (args.csv.with_name(args.csv.stem + "_ratios.csv"), gates)):
+        for path, rows in ((args.csv, table), (args.csv.with_name(args.csv.stem + "_ratios.csv"), ratios)):
             with path.open("w", newline="") as f:
                 w = csv.DictWriter(f, fieldnames=sorted({k for r in rows for k in r}))
                 w.writeheader()
@@ -489,14 +522,16 @@ def main() -> None:
 
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("command", choices=["run", "report"])
+    ap.add_argument("--split", default="dev", choices=[s for s in configs.SPLITS if s != "test"])
     ap.add_argument("--settings", nargs="+", default=list(SETTINGS), choices=SETTINGS)
     ap.add_argument("--instances", type=int, default=20)
     ap.add_argument("--lanes", type=int, default=8, help=f"lanes of {LANE} processes")
-    ap.add_argument("--out", type=Path, default=configs.RUNS_DIR / "compare_dev")
+    ap.add_argument("--out", type=Path, default=None, help="default runs/compare_<split>")
     ap.add_argument("--csv", type=Path, default=None, help="report: write the table (and *_ratios.csv) here")
     ap.add_argument("--budget-scale", type=float, default=1.0, help="multiply B1/B2 (smoke tests only)")
     ap.add_argument("--cpus", default=None, help="CPUs for the lanes, e.g. 0-63 (default: least busy cores)")
     args = ap.parse_args()
+    args.out = args.out or configs.RUNS_DIR / f"compare_{args.split}"
     (run if args.command == "run" else report)(args)
 
 

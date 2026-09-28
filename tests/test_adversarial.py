@@ -2,15 +2,19 @@
 
 Passing tests pin invariants that survived degenerate inputs (ties, zero durations, identical points, collinear
 points) and regression tests of fixed verifier defects: one success definition at the 200 cap, CP-SAT keys on
-zero-weight arcs, env-replayed pilot references, RL scored by its own rollout, instance fingerprints in rows and
-resume keys, and CPU pinning.
+zero-weight arcs, env-replayed pilot references, RL scored by its own rollout, instance fingerprints and code
+versions in the rows and resume keys of every campaign script, CPU pinning with host conditions per row, and the
+dev dry run spanning the prereg's settings with a tuning-contamination label.
 """
+import argparse
 import contextlib
 import importlib.util
 import io
 import json
 import multiprocessing as mp
+import os
 import re
+import subprocess
 import sys
 from concurrent.futures import ProcessPoolExecutor
 from itertools import pairwise
@@ -253,16 +257,23 @@ def test_rl_references_are_rollout_scores(tmp_path, monkeypatch):
     report = _script("alns_report")
     monkeypatch.setattr(report, "RUNS_DIR", tmp_path)
     (tmp_path / "rl" / "X").mkdir(parents=True)
-    rows = [{"setting": "X", "instance": 0, "method": "RL(s.64)", "workers": 16, "makespan": 10.0, "success": True,
-             "replay_makespan": 11.0, "replay_success": True},
-            {"setting": "X", "instance": 1, "method": "RL(s.64)", "workers": 16, "makespan": 201.0, "success": True,
-             "replay_makespan": 12.0, "replay_success": True}]
+    rl_row = {"setting": "X", "method": "RL(s.64)", "workers": 16, "success": True, "replay_success": True}
+    rows = [rl_row | {"instance": 0, "makespan": 13.0, "replay_makespan": 11.0},  # superseded by the rerun below
+            rl_row | {"instance": 0, "makespan": 10.0, "replay_makespan": 11.0},
+            rl_row | {"instance": 1, "makespan": 201.0, "replay_makespan": 12.0},
+            rl_row | {"instance": 1, "method": "construct", "makespan": 5.0}]  # not an RL row
     (tmp_path / "rl" / "X" / "dev.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
     refs = report._rl_ref_refs()
-    assert refs["X/dev/0"]["RL(s.64) 16cpu"] == 10.0 and refs["X/dev/1"]["RL(s.64) 16cpu"] == MAX_TIME
+    assert refs == {"X/dev/0": {"RL(s.64) 16cpu": 10.0}, "X/dev/1": {"RL(s.64) 16cpu": MAX_TIME}}
+    assert report._pilot_rl({"g": float("inf"), "s10": 30.0}) == {"RL(g.)": MAX_TIME, "RL(s.10)": 30.0}
     cd = _script("compare_dev")
     assert cd._score({"makespan": 204.0, "success": True}) == cd.FAIL
     assert cd._score({"makespan": 199.0, "success": True}) == 199.0
+    spec = importlib.util.spec_from_file_location("analyze", RUNS_DIR / "baselines" / "analyze.py")
+    analyze = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(analyze)
+    assert analyze.score({"makespan": 204.0, "success": True}) == MAX_TIME
+    assert analyze.score({"makespan": 199.0, "success": True}) == 199.0
 
 
 def test_stored_rows_match_current_instances():
@@ -329,6 +340,92 @@ def test_resume_keys_require_the_current_fingerprint(tmp_path):
     assert _script("run_baselines").done_keys(path) == {(0, "current", 1.0)}
     assert _script("run_rl").done_keys(path) == {(0, "current")}
     assert _script("compare_dev")._done(tmp_path) == {("RALTestSet", 0, "B1", "current")}
+
+
+_GIT = re.compile(r"[0-9a-f]{40}(-dirty-[0-9a-f]{12})?|nocommit-dirty-[0-9a-f]{12}|unknown")
+
+
+def _stale_row(**fields) -> str:
+    return json.dumps(fields | {"fingerprint": "0" * 40}) + "\n"
+
+
+def _run_script(*args: str) -> str:
+    env = os.environ | dict.fromkeys(("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS",
+                                      "NUMBA_NUM_THREADS"), "1")
+    return subprocess.run([sys.executable, str(SCRIPTS / args[0]), *args[1:]], check=True, capture_output=True,
+                          text=True, env=env).stdout
+
+
+def _new_rows(path, n_old: int = 1) -> list[dict]:
+    rows = [json.loads(line) for line in path.read_text().splitlines()]
+    assert len(rows) > n_old and all(r["fingerprint"] == "0" * 40 for r in rows[:n_old])
+    return rows[n_old:]
+
+
+def test_baseline_and_rl_campaigns_write_provenance_and_recompute_stale_rows(tmp_path):
+    """run_baselines and run_rl store the instance fingerprint and code version in every row; a rerun skips current
+    rows but recomputes a row whose fingerprint is not the current instance's."""
+    fp = runtime.instance_fingerprint("RALTestSet", "test", 0)
+    key = {"setting": "RALTestSet", "split": "test", "instance": 0}
+    base = tmp_path / "baselines" / "RALTestSet" / "test.jsonl"
+    base.parent.mkdir(parents=True)
+    base.write_text(_stale_row(**key, method="construct", budget_s=0.2))
+    args = ("run_baselines.py", "--settings", "RALTestSet", "--split", "test", "--methods", "construct", "--budgets",
+            "0.2", "--instances", "1", "--workers", "1", "--cap", "1", "--out", str(tmp_path / "baselines"))
+    assert _run_script(*args).startswith("1 jobs") and _run_script(*args).startswith("0 jobs")
+    (row,) = _new_rows(base)
+    assert row["fingerprint"] == fp and _GIT.fullmatch(row["git"]) and row["success"]
+    assert {"affinity", "load1", "load1_end"} <= row.keys() and len(runtime.parse_cpus(row["affinity"])) == 1
+
+    rl_path = tmp_path / "rl" / "RALTestSet" / "test.jsonl"
+    rl_path.parent.mkdir(parents=True)
+    rl_path.write_text(_stale_row(**key, method="RL(g.)"))
+    args = ("run_rl.py", "--settings", "RALTestSet", "--split", "test", "--methods", "g", "--instances", "1",
+            "--procs", "1", "--workers", "1", "--out", str(tmp_path / "rl"))
+    assert _run_script(*args).startswith("1 jobs") and _run_script(*args).startswith("0 jobs")
+    (row,) = _new_rows(rl_path)
+    assert row["fingerprint"] == fp and _GIT.fullmatch(row["git"])
+    assert row["success"] == succeeded(True, row["makespan"]) and "replay_makespan" in row
+
+
+def test_alns_campaign_writes_provenance_and_recomputes_stale_rows(tmp_path, monkeypatch, capsys):
+    sys.path.insert(0, str(SCRIPTS))
+    import run_alns
+
+    from cbba_sota.bench import configs
+
+    monkeypatch.setattr(configs, "RUNS_DIR", tmp_path / "runs")
+    monkeypatch.setattr(configs, "ROOT", tmp_path)
+    for var in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS", "NUMBA_NUM_THREADS"):
+        monkeypatch.setenv(var, "1")
+    out = tmp_path / "runs" / "alns" / "t" / "SA-BT-9-3-20-dev.jsonl"
+    out.parent.mkdir(parents=True)
+    out.write_text(_stale_row(setting="SA-BT-9-3-20", split="dev", index=0, name="SA-BT-9-3-20/dev/0", makespan=1.0,
+                              eval_makespan=1.0, success=True, skipped=0, it_per_s=1.0, init_makespan=1.0))
+    argv = ["run_alns.py", "--settings", "SA-BT-9-3-20", "--split", "dev", "--n", "2", "--time", "0.2", "--procs", "2",
+            "--tag", "t"]
+    for want in ("2 jobs", "0 jobs"):
+        monkeypatch.setattr(sys, "argv", argv)
+        run_alns.main()
+        assert capsys.readouterr().out.startswith(want)
+    rows = _new_rows(out)
+    assert sorted(r["index"] for r in rows) == [0, 1]
+    for r in rows:
+        assert r["fingerprint"] == runtime.instance_fingerprint("SA-BT-9-3-20", "dev", r["index"])
+        assert _GIT.fullmatch(r["git"]) and {"affinity", "load1", "load1_end"} <= r.keys()
+        assert r["makespan"] == r["eval_makespan"] and r["success"]
+
+
+def test_compare_dev_covers_the_prereg_settings_and_labels_dev(tmp_path, capsys):
+    """The dry run spans the 8 H1 settings of docs/prereg-phase1.md and labels dev ratios as tuning-contaminated."""
+    cd = _script("compare_dev")
+    assert cd.SETTINGS == ("SA-BT-25-5-50", "SA-BT-50-5-50", "SA-AT-50-5-50", "MA-AT-25-5-50", "MA-AT-50-5-50",
+                           "MA-AT-50-5-200", "MA-AT-150-10-500", "MA-AT-150-5-500")
+    # every competitor runs on the same cores as its ALNS variant; the RL + ALNS hybrid is an ablation only
+    assert all(cd.CORES[c] == cd.CORES[ours] and c != cd.HYBRID for ours, pool in cd.COMPETITORS.items() for c in pool)
+    cd.report(argparse.Namespace(out=tmp_path, split="dev", csv=None))
+    out = capsys.readouterr().out
+    assert "tuning-contaminated" in out and "0 of 8" in out
 
 
 def test_reports_drop_stale_rows(tmp_path):
