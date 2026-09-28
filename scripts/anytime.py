@@ -1,7 +1,10 @@
 """Anytime curves on the validation split: quality vs wall-clock budget on 1 and 8 cores, and the headroom report.
 
-Usage: anytime.py run [--settings NAME ...] [--n 10] [--lanes 4] [--cpus LIST]
-       anytime.py report [--settings NAME ...] [--csv-dir DIR] [--png FILE]
+Usage: anytime.py run [--grid phase1b|c1] [--settings NAME ...] [--methods M ...] [--n 10] [--lanes 4] [--cpus LIST]
+                      [--out DIR]
+       anytime.py report [--grid phase1b|c1] [--settings NAME ...] [--csv-dir DIR] [--png FILE] [--out DIR]
+       anytime.py tune --variants PCPSAT:sub_time=0.5 ... [--refs ALNS2 CPSAT] [--settings ...] [--n 10] [--out DIR]
+       anytime.py tune-report [--out DIR]
 
 Methods (one row per method, cores and budget; budgets 0.5, 1, 2, 5, 10 s, B1 and 2B1 = 2 x B1, where B1 is the
 paper's RL(s.10) time of the setting):
@@ -10,12 +13,27 @@ paper's RL(s.10) time of the setting):
 - CPSAT: CP-SAT LNS with 1 or 8 threads from the ``greedy.construct`` hint built in min(10% of the budget, 3 s),
   sub-solves of ``bks.sub_time(setting)`` seconds (the better variant on dev).
 - RL: RL(s.N) with the released policy on 1 or 8 single-threaded CPU processes, each sampling lockstep batches
-  until the budget is used (``rl.sample_until``), scored by the best rollout's own env run.
+  until the budget is used (``rl.sample_until``; the first batch has 1 sample at budgets up to ``RL_FIRST_ONE``
+  = 10 s, else 4), scored by the best rollout's own env run.
 - CONSTRUCT: the regret-insertion constructor with randomized restarts. Restarts are independent of the budget,
   so one job runs 8 restart streams (seeds 0-7, the sequence of ``greedy.construct``) on 8 cores up to the largest
   budget and reads every budget off them: CONSTRUCT-1 at b is stream 0's best plan finished by b, CONSTRUCT-8 the
   best over the 8 streams (the first plan if none finished by b; ``t_found`` says when it did).
-Grid (``grid``; cut to the 6-hour compute window on a shared host, see docs/headroom-2026-09.md): on instances 0-4
+- PCPSAT: parallel CP-SAT LNS (``cpsat.solve_lns_parallel``): 1 or 8 forked processes with one CP-SAT thread each
+  improving one shared incumbent, started from the best of their ``greedy.construct`` restart streams built in
+  min(10% of the budget, 3 s); sub-solves of at most ``PCPSAT_SUB_TIME`` seconds (the dev choice, ``tune``).
+- CPFULL: the monolithic CP-SAT model (``cpsat.solve_full``, CP-SAT's own portfolio of search and LNS workers) on 1
+  or 8 threads, hinted with the best of 1 or 8 forked ``greedy.construct`` restart streams built in min(10% of the
+  budget, 3 s); arcs to the ``CPFULL_KNN`` nearest candidate tasks only on large instances (the dev choice).
+Rows of the multi-process methods (ALNS2/ALNS1 with 8 workers, PCPSAT, CPFULL, RL, CONSTRUCT) record the CPU
+seconds of all their processes and threads (``cpu_s``; CONSTRUCT: ``stream_cpu_s``).
+Grid ``c1`` (the same-host C1/C2 campaign of 2026-09-28 on the second server): on every instance ALNS2 on 1 core at
+0.5, 1, 2 s and B1; ALNS2, CPSAT, PCPSAT, CPFULL and RL on 8 cores at B1 and the 8 restart streams; ALNS2, PCPSAT and
+CPFULL on 8 cores at 2B1; on instances 0-4 also ALNS2 on 1 core at 5 and 10 s and ALNS2, PCPSAT, CPFULL and RL on 8
+cores at 0.5-10 s. 500 tasks: ALNS2 on 1 core at 0.5-10 s and B1, the 8-core B1 points and the 8 restart streams up
+to B1. 20-task settings are not in this grid.
+Grid ``phase1b`` (``grid``; cut to the 6-hour compute window on a shared host, see docs/headroom-2026-09.md): on
+instances 0-4
 every method at every budget on 1 core, and ALNS2, CPSAT and RL at 0.5-10 s on 8 cores; on every instance ALNS2,
 ALNS1, CPSAT and RL on 1 core at 0.5, 1, 2 s and B1 and on 8 cores at B1, ALNS2 on 8 cores at 2B1, CPSAT on 8 cores
 at 2B1 up to 50 tasks, and the 8 restart streams (up to 2B1, 200 tasks up to B1). 20-task settings run 8 cores at B1
@@ -25,8 +43,9 @@ and one restart stream up to B1.
 Execution reuses scripts/compare_dev.py: ``--lanes`` lanes of 8 warm single-threaded processes pinned to their own
 8 CPUs; a lane runs one 8-core job or a bundle of up to 8 one-core jobs of the same budget. Budgets start after
 the instance and its travel matrices are loaded. Every makespan is the env replay of the plan (RL: the rollout's
-own env run). Rows go to runs/anytime/<setting>.jsonl with routes, fingerprint, code version, CPU affinity, load
-and throttling counters (resumable per setting, instance, method, cores and budget). The container shares a CPU
+own env run). Rows go to <out>/<setting>.jsonl (default runs/anytime) with 0-based routes, fingerprint, code version
+(a dirty source tree is refused unless ``--allow-dirty``), host, CPU affinity, load and throttling counters
+(resumable per setting, instance, method, cores and budget). The container shares a CPU
 quota with other tenants, and a saturated quota stalls every process in it: a lane starts a unit only when at most
 ``--quiet`` (40%) of the cgroup's CPU periods were throttled over 1 s, and rows whose job saw more than 40%
 throttled periods (``disturbed``) are re-run on resume and left out of reports. A throttled period costs a job
@@ -40,6 +59,11 @@ the constructor at the same budget and cores, as a ratio of means); paired ratio
 10,000 resamples, seed 0, wins-losses, one-sided paired t-test of mean log ratio < 0). A run whose wall time
 exceeds its budget by more than 10% + 0.25 s is late: it has no solution within the budget and is left out of the
 means (the count of on-time runs is printed). A failed plan counts as 200.
+
+``tune`` runs competitor variants (``METHOD:param=value``, e.g. ``PCPSAT:sub_time=0.5``, ``CPFULL:knn=10``;
+``knn=0`` is the full arc set) and reference methods at B1 on 8 cores on the dev split (the tuning split), rows to
+``--out`` (default runs/tune_dev) with ``variant``; ``tune-report`` prints per setting each variant's mean makespan,
+its paired ratio to the best variant of its method, and the CPU share used.
 """
 from __future__ import annotations
 
@@ -69,11 +93,14 @@ OUT = RUNS_DIR / "anytime"
 SPLIT = "val"
 LANE = cd.LANE
 LOW = (0.5, 1.0, 2.0, 5.0, 10.0)
-METHODS = ("ALNS2", "ALNS1", "CPSAT", "RL", "CONSTRUCT")
-COMPETITORS = ("CPSAT", "RL", "CONSTRUCT")
+METHODS = ("ALNS2", "ALNS1", "CPSAT", "PCPSAT", "CPFULL", "RL", "CONSTRUCT")
+COMPETITORS = ("CPSAT", "PCPSAT", "CPFULL", "RL", "CONSTRUCT")
+PCPSAT_SUB_TIME: dict[str, float] = {}  # per setting (default 2 s): the dev choice of ``tune``
+CPFULL_KNN: dict[str, int | None] = {}  # per setting (default: full arcs up to 50 tasks, else 10): the dev choice
 EXTENDED = 5  # instances below this get the full budget grid (see ``grid``)
 FAIL = cd.FAIL
 QUIET = 0.4  # a lane starts a unit only when at most this share of the cgroup's CPU periods was throttled
+RL_FIRST_ONE = 10.0  # RL budgets up to this many seconds start with a lockstep batch of 1 sample (else 4)
 DISTURBED = 0.4  # rows whose job saw a larger throttled share are re-run on resume and left out of reports
 
 
@@ -101,6 +128,26 @@ def grid(setting, i: int = 0) -> list[tuple[str, int, str]]:
         if extended:
             jobs += [(m, LANE, b) for m in ("ALNS2", "CPSAT", "RL") for b in labels[:5]]
     return jobs + [("CONSTRUCT", LANE, "stream")]
+
+
+def grid_c1(setting, i: int = 0) -> list[tuple[str, int, str]]:
+    """(method, cores, budget label) of instance ``i`` in the same-host C1/C2 campaign (see the module docstring)."""
+    labels = list(budgets(setting))
+    eight = [(m, LANE, "B1") for m in ("ALNS2", "CPSAT", "PCPSAT", "CPFULL", "RL")] + [("CONSTRUCT", LANE, "stream")]
+    if setting.n_tasks >= 500:
+        return [("ALNS2", 1, b) for b in (*labels[:5], "B1")] + eight
+    if setting.n_tasks <= 20:
+        return []
+    jobs = [("ALNS2", 1, b) for b in ("0.5", "1", "2", "B1")] + eight + [(m, LANE, "2B1")
+                                                                           for m in ("ALNS2", "PCPSAT", "CPFULL")]
+    if i < EXTENDED:
+        jobs += [("ALNS2", 1, b) for b in ("5", "10")]
+        jobs += [(m, LANE, b) for m in ("ALNS2", "PCPSAT", "CPFULL", "RL") for b in labels[:5]]
+    return jobs
+
+
+GRIDS = {"phase1b": grid, "c1": grid_c1}
+GRID = grid  # --grid
 
 
 def stream_budget(setting) -> float:
@@ -138,6 +185,35 @@ def run_cpsat(name: str, split: str, i: int, budget: float, workers: int) -> dic
     return cd._plan_row(inst, res.plan, wall, cpu) | {
         "iterations": res.iterations, "init_makespan": evaluate(inst, hint).makespan,
         "trace": [(t, ms) for t, ms, _ in res.trajectory], "sub_time": bks.sub_time(name), "fingerprint": fp}
+
+
+def run_pcpsat(name: str, split: str, i: int, budget: float, workers: int, sub_time: float | None = None) -> dict:
+    from cbba_sota.solvers import cpsat
+
+    inst, _, fp = cd._load(name, split, i)
+    sub_time = PCPSAT_SUB_TIME.get(name, 2.0) if sub_time is None else sub_time
+    t0 = time.perf_counter()
+    res = cpsat.solve_lns_parallel(inst, budget, workers=workers, init_time=min(0.1 * budget, 3.0),
+                                   sub_time=sub_time, t0=t0)
+    return cd._plan_row(inst, res.plan, time.perf_counter() - t0, res.cpu_s) | {
+        "iterations": res.iterations, "improvements": res.improvements, "init_makespan": res.init_makespan,
+        "trace": [(t, ms) for t, ms, _ in res.trajectory], "sub_time": sub_time, "fingerprint": fp}
+
+
+def run_cpfull(name: str, split: str, i: int, budget: float, workers: int, knn: int | None = None) -> dict:
+    from cbba_sota.hetero import evaluate
+    from cbba_sota.solvers import cpsat
+
+    inst, _, fp = cd._load(name, split, i)
+    if knn is None:
+        knn = CPFULL_KNN.get(name, 0 if inst.n_tasks <= 50 else 10)
+    t0, c0, k0 = time.perf_counter(), time.process_time(), cd._children_cpu()
+    hint = cpsat.construct_parallel(inst, workers, t0 + min(0.1 * budget, 3.0))
+    res = cpsat.solve_full(inst, budget, workers=workers, hint=hint, knn=knn or None, t0=t0)
+    wall, cpu = time.perf_counter() - t0, time.process_time() - c0 + cd._children_cpu() - k0
+    return cd._plan_row(inst, res.plan, wall, cpu) | {
+        "status": res.status, "bound": res.bound, "knn": knn, "init_makespan": evaluate(inst, hint).makespan,
+        "trace": [(t, ms) for t, ms, _ in res.trajectory], "fingerprint": fp}
 
 
 def run_stream(name: str, split: str, i: int, seed: int, checkpoints: list[float]) -> dict:
@@ -192,7 +268,7 @@ def _stream_rows(job: dict, parts: list[dict]) -> list[dict]:
                        key=lambda c: (c["eval_makespan"], c["stream"]))
             out.append({"method": "CONSTRUCT", "cores": cores, "budget": label, "budget_s": b,
                         "wall_s": best["t_found"], "stream_cpu_s": sum(p["cpu_s"] for p in parts[:cores]),
-                        "fingerprint": parts[0]["fingerprint"],
+                        "fingerprint": parts[0]["fingerprint"], "routes_base": 0,
                         "streams": cores, "constructions": sum(p["checkpoints"][b]["constructions"]
                                                                for p in parts[:cores])} | best)
     return out
@@ -200,12 +276,19 @@ def _stream_rows(job: dict, parts: list[dict]) -> list[dict]:
 
 def _run_job(ex, job: dict) -> list[dict]:
     name, i, method, cores, budget = job["setting"], job["instance"], job["method"], job["cores"], job["budget_s"]
+    params = job.get("params", {})
     if method in ("ALNS2", "ALNS1"):
         return [ex.submit(run_alns, name, SPLIT, i, cores, budget, method).result()]
     if method == "CPSAT":
         return [ex.submit(run_cpsat, name, SPLIT, i, budget, cores).result()]
+    if method == "PCPSAT":
+        return [ex.submit(run_pcpsat, name, SPLIT, i, budget, cores, **params).result()]
+    if method == "CPFULL":
+        return [ex.submit(run_cpfull, name, SPLIT, i, budget, cores, **params).result()]
     if method == "RL":
-        parts = [f.result() for f in [ex.submit(cd.run_rl, name, SPLIT, i, p, cores, budget) for p in range(cores)]]
+        first = 1 if budget <= RL_FIRST_ONE else 4
+        parts = [f.result() for f in [ex.submit(cd.run_rl, name, SPLIT, i, p, cores, budget, first=first)
+                                      for p in range(cores)]]
         return [cd._with_replay(ex, cd._rl_row(parts)[0], name, SPLIT, i)]
     if method == "CONSTRUCT":
         checkpoints = [b for b in budgets(configs.get(name)).values() if b <= budget + 1e-9]
@@ -257,32 +340,40 @@ class Lane(cd.Lane):
 
 
 def _done() -> set[tuple]:
+    """Keys (setting, instance, method, cores, budget label[, variant]) of the current, undisturbed rows."""
     out = set()
     for path in OUT.glob("*.jsonl"):
         for r in runtime.read_rows(path):
             if runtime.is_current(r) and not disturbed(r):
                 label = "stream" if r["method"] == "CONSTRUCT" else r["budget"]
                 cores = r.get("streams_job", r["cores"])
-                out.add((r["setting"], r["instance"], r["method"], cores, label))
+                out.add((r["setting"], r["instance"], r["method"], cores, label) + ((r["variant"],)
+                                                                                    if r.get("variant") else ()))
     return out
 
 
 def _units(settings: list[str], n: int, n_large: int, done: set[tuple], rng: random.Random,
-           first: int = 5, max_budget: float = float("inf")) -> list[list[dict]]:
+           first: int = 5, max_budget: float = float("inf"), methods: tuple[str, ...] | None = None,
+           plan=None) -> list[list[dict]]:
     """8-core jobs alone, 1-core jobs bundled by setting and budget. Instances below ``first`` come first (so an
     early stop leaves complete sets), then longest first, ties shuffled. Jobs above ``max_budget`` seconds are left
-    out (restart streams are cut to it)."""
+    out (restart streams are cut to it), and so are methods not in ``methods``. ``plan(setting, i)`` lists the
+    (method, cores, budget label, variant, params) of an instance (default: ``GRID`` without variants)."""
     singles, bundles = [], []
     for name in settings:
         s = configs.get(name)
         b = budgets(s) | {"stream": min(stream_budget(s), max_budget)}
         pending: dict[tuple[bool, str], list[dict]] = {}
         for i in range(min(n if s.n_tasks < 500 else n_large, s.n_instances(SPLIT))):
-            for method, cores, label in grid(s, i):
-                if (name, i, method, cores, label) in done or b[label] > max_budget:
+            points = plan(s, i) if plan is not None else [(*point, "", {}) for point in GRID(s, i)]
+            for method, cores, label, variant, params in points:
+                key = (name, i, method, cores, label) + ((variant,) if variant else ())
+                if key in done or b[label] > max_budget or (methods and method not in methods):
                     continue
                 job = {"setting": name, "split": SPLIT, "instance": i, "seed": s.seed(SPLIT, i), "method": method,
                        "cores": cores, "budget": label, "budget_s": b[label], "streams_job": cores}
+                if variant:
+                    job |= {"variant": variant, "params": params}
                 if cores == LANE:
                     singles.append([job])
                 else:
@@ -296,18 +387,19 @@ def _units(settings: list[str], n: int, n_large: int, done: set[tuple], rng: ran
     return units
 
 
-def run(args) -> None:
+def run(args, plan=None) -> None:
     os.environ.update(cd._ONE)
     OUT.mkdir(parents=True, exist_ok=True)
-    units = _units(args.settings, args.n, args.n_large, _done(), random.Random(0), max_budget=args.max_budget)
-    print(f"{len(units)} units, {sum(map(len, units))} jobs, {args.lanes} lanes", flush=True)
+    units = _units(args.settings, args.n, args.n_large, _done(), random.Random(0), max_budget=args.max_budget,
+                   methods=args.methods, plan=plan)
+    print(f"{len(units)} units, {sum(map(len, units))} jobs, {args.lanes} lanes, split {SPLIT}", flush=True)
     if not units:
         return
     cpus = runtime.parse_cpus(args.cpus) if args.cpus else runtime.choose_cpus(LANE * args.lanes)
     lane_cpus = runtime.blocks(cpus, LANE)[:args.lanes]
     if len(lane_cpus) < args.lanes:
         raise SystemExit(f"{len(cpus)} CPUs for {args.lanes} lanes of {LANE}")
-    version = runtime.code_version()
+    version = runtime.require_clean(args.allow_dirty)
     print(f"lanes pinned to {[runtime.format_cpus(c) for c in lane_cpus]}, code {version}", flush=True)
     work: queue.Queue = queue.Queue()
     for u in units:
@@ -322,7 +414,8 @@ def run(args) -> None:
                 f.write(json.dumps(row) + "\n")
             count[0] += 1
             print(f"[{time.time() - t0:6.0f}s] {row['setting']} {row['instance']:2d} {row['budget']:>4s} "
-                  f"{row['method']:9s} x{row['cores']} {row['makespan']:8.3f} ok={row['success']} "
+                  f"{row['method'] + (':' + row['variant'] if row.get('variant') else ''):9s} x{row['cores']} "
+                  f"{row['makespan']:8.3f} ok={row['success']} "
                   f"wall={row['wall_s']:.1f}s load={row['load1']:.0f} thr={row.get('nr_throttled', 0)} "
                   f"({count[0]} rows)", flush=True)
 
@@ -350,8 +443,8 @@ def score(r: dict) -> float:
 
 
 def load_rows(name: str, keep_disturbed: bool = False) -> dict[tuple[str, int, str], dict[int, dict]]:
-    """(method, cores, budget label) -> instance -> row (current fingerprints, not ``disturbed``, planned by ``grid``
-    for that instance; the last row wins)."""
+    """(method, cores, budget label) -> instance -> row (current fingerprints, not ``disturbed``, planned by ``GRID``
+    for that instance, no ``tune`` variants; the last row wins)."""
     s = configs.get(name)
     out: dict[tuple[str, int, str], dict[int, dict]] = {}
     rows = [r for r in runtime.read_rows(OUT / f"{name}.jsonl") if runtime.is_current(r)]
@@ -360,7 +453,7 @@ def load_rows(name: str, keep_disturbed: bool = False) -> dict[tuple[str, int, s
     for r in rows:
         cell = (r["method"], r["cores"], r["budget"])
         planned = (r["method"], r.get("streams_job", r["cores"]), "stream" if r["method"] == "CONSTRUCT" else r["budget"])
-        if (keep_disturbed or not disturbed(r)) and planned in grid(s, r["instance"]):
+        if (keep_disturbed or not disturbed(r)) and not r.get("variant") and planned in GRID(s, r["instance"]):
             out.setdefault(cell, {})[r["instance"]] = r
     return out
 
@@ -370,11 +463,11 @@ def gap_table(name: str, rows, bks_of: dict[int, float]) -> list[dict]:
     constructor-to-BKS gap closed (ratio of means over instances where both ran on time)."""
     s = configs.get(name)
     labels = budgets(s)
+    streams = next((c for m, c, _ in GRID(s, 0) if m == "CONSTRUCT"), LANE)  # cores of the restart-stream job
     out = []
     for (method, cores, label), by_i in rows.items():
-        key = (method, LANE if method == "CONSTRUCT" and s.n_tasks < 500 else cores,
-               "stream" if method == "CONSTRUCT" else label)
-        planned = sum(key in grid(s, i) for i in bks_of)
+        key = (method, streams if method == "CONSTRUCT" else cores, "stream" if method == "CONSTRUCT" else label)
+        planned = sum(key in GRID(s, i) for i in bks_of)
         ran = {i: r for i, r in by_i.items() if i in bks_of}
         ok = {i: r for i, r in ran.items() if not late(r)}
         if not ok:
@@ -411,7 +504,7 @@ def ratios(name: str, rows) -> list[dict]:
                     "other": "{}-{}@{}".format(*other), "n": len(common), **res})
 
     for label in ("B1", "2B1"):  # Holm families: settings x competitors per row type; v1 is an ablation
-        for other in COMPETITORS:
+        for other in COMPETITORS:  # (competitors without rows in this campaign are skipped)
             pair(("ALNS2", LANE, label), (other, LANE, label), f"C1 8 cores {label}")
         pair(("ALNS2", LANE, label), ("ALNS1", LANE, label), f"ablation v2/v1 8 cores {label}")
     for label in ("0.5", "1", "2"):
@@ -450,7 +543,7 @@ def report(args) -> None:
         used = [r for by_i in rows.values() for r in by_i.values()]
         share = [r["nr_throttled"] / r["nr_periods"] for r in used if r.get("nr_periods")]
         got = [r["cpu_s"] / (r["wall_s"] * r["cores"]) for r in used  # CPU received by one-process-per-core jobs
-               if r["method"] in ("ALNS2", "ALNS1", "RL") and r.get("cpu_s") and r["wall_s"] > 0]
+               if r["method"] in ("ALNS2", "ALNS1", "RL", "PCPSAT") and r.get("cpu_s") and r["wall_s"] > 0]
         print(f"\n{name}  (val, n = {len(bks_all[name])} BKS; B1 = {labels['B1']:g} s)  mean gap to BKS, %"
               "  (* = some runs late and left out)")
         kept = "kept" if args.keep_disturbed else "left out"
@@ -463,8 +556,11 @@ def report(args) -> None:
             for c in (1, LANE):
                 if any((m, c, lab) in by for lab in labels):
                     print(f"  {m + '-' + str(c):12s}" + "".join(f"  {_fmt(by.get((m, c, lab)))}" for lab in labels))
+        print("  CPU seconds used / (budget x cores), 8 cores at B1: " + ", ".join(
+            f"{m} {np.mean([cpu_s(r) / (r['budget_s'] * LANE) for r in rows[m, LANE, 'B1'].values()]):.2f}"
+            for m in METHODS if (m, LANE, "B1") in rows))
         print("  share of the constructor-to-BKS gap closed (same budget and cores):")
-        for m in ("ALNS2", "ALNS1", "CPSAT", "RL"):
+        for m in ("ALNS2", "ALNS1", "CPSAT", "PCPSAT", "CPFULL", "RL"):
             for c in (1, LANE):
                 vals = [by.get((m, c, lab), {}).get("closed") for lab in labels]
                 if any(v is not None for v in vals):
@@ -480,7 +576,7 @@ def report(args) -> None:
         print(f"  {r['comparison']:34s} {r['setting']:17s} vs {r['other']:18s} n={r['n']:2d} {r['ratio']:.3f} "
               f"[{r['lo']:.3f}, {r['hi']:.3f}] {r['wins']}-{r['losses']} p_holm {r['p_holm']:.2g}")
     if args.md:
-        args.md.write_text(markdown(gaps, rats, bks_all))
+        args.md.write_text((markdown_c1 if GRID is grid_c1 else markdown)(gaps, rats, bks_all))
         print(f"wrote {args.md}")
     if args.csv_dir:
         import csv
@@ -496,9 +592,62 @@ def report(args) -> None:
         plot(curves, args.png)
 
 
+def cpu_s(r: dict) -> float:
+    """CPU seconds of all processes and threads of a row's job (CONSTRUCT: of the streams it takes the best of, up to
+    the end of the longest one)."""
+    return r.get("stream_cpu_s", r.get("cpu_s", 0.0))
+
+
+def markdown_c1(gaps: list[dict], rats: list[dict], bks_all: dict) -> str:
+    """Compact tables of the ``c1`` campaign: gap to BKS (%) and paired ratios ALNS2 / competitor, 8 cores at B1 and
+    2B1, and ALNS2 on 1 core at 0.5 / 1 / 2 s against every competitor on 8 cores at B1."""
+    g = {(x["setting"], x["method"], x["cores"], x["budget"]): x for x in gaps}
+    r = {(x["setting"], x["ours"], x["other"]): x for x in rats}
+    names = list(dict.fromkeys(x["setting"] for x in gaps))
+    methods = [m for m in METHODS if any(x["method"] == m for x in gaps)]
+    others = [m for m in COMPETITORS if m in methods]
+
+    def gap(name, m, c, b):
+        x = g.get((name, m, c, b))
+        if x is None:
+            return "-"
+        return f"{x['gap_pct']:.2f}" + ("" if x["on_time"] == x["planned"] else f" ({x['on_time']}/{x['planned']})")
+
+    def ratio(name, ours, other):
+        x = r.get((name, ours, other))
+        if x is None:
+            return "-"
+        return f"{x['ratio']:.3f} [{x['lo']:.3f}, {x['hi']:.3f}] {x['wins']}-{x['losses']}"
+
+    out = ["**C1, 8 cores at B1.** Mean gap to the best of our own runs (%).", "",
+           "| Setting | n | " + " | ".join(methods) + " |", "|" + " --- |" * (len(methods) + 2)]
+    for name in names:
+        out.append(f"| {name} | {len(bks_all.get(name, {}))} | "
+                   + " | ".join(gap(name, m, LANE, "B1") for m in methods) + " |")
+    for label in ("B1", "2B1"):
+        cols = [m for m in others if any(k[0] == name and k[2] == f"{m}-8@{label}" for k in r for name in names)]
+        if not cols:
+            continue
+        out += ["", f"**C1, 8 cores at {label}.** Paired ratio ALNS2 / competitor (bootstrap 95% CI, wins-losses).",
+                "", "| Setting | " + " | ".join(f"ALNS2/{m}" for m in cols) + " |", "|" + " --- |" * (len(cols) + 1)]
+        for name in names:
+            out.append(f"| {name} | " + " | ".join(ratio(name, f"ALNS2-8@{label}", f"{m}-8@{label}") for m in cols)
+                       + " |")
+    for b in ("0.5", "1", "2"):
+        title = (f"**C2, ALNS2 on 1 core at {b} s vs each competitor on 8 cores at B1.** Gap of ALNS2-1 (%) and "
+                 "paired ratio.")
+        out += ["", title, "", "| Setting | ALNS2-1 gap | " + " | ".join(f"vs {m}-8@B1" for m in others) + " |",
+                "|" + " --- |" * (len(others) + 2)]
+        for name in names:
+            out.append(f"| {name} | {gap(name, 'ALNS2', 1, b)} | "
+                       + " | ".join(ratio(name, f"ALNS2-1@{b}", f"{m}-8@B1") for m in others) + " |")
+    return "\n".join(out) + "\n"
+
+
 def markdown(gaps: list[dict], rats: list[dict], bks_all: dict) -> str:
-    """Compact tables for docs/headroom-2026-09.md: gap to BKS (%) and paired ratios, 8 cores at B1 and 1 core at
-    low budgets."""
+    """Compact tables for docs/headroom-2026-09.md (grid ``phase1b``): gap to BKS (%) and paired ratios, 8 cores at B1
+    and 1 core at low budgets."""
+    methods, competitors = ("ALNS2", "ALNS1", "CPSAT", "RL", "CONSTRUCT"), ("CPSAT", "RL", "CONSTRUCT")
     g = {(x["setting"], x["method"], x["cores"], x["budget"]): x for x in gaps}
     r = {(x["setting"], x["ours"], x["other"]): x for x in rats}
     names = list(dict.fromkeys(x["setting"] for x in gaps))
@@ -526,9 +675,9 @@ def markdown(gaps: list[dict], rats: list[dict], bks_all: dict) -> str:
     out = [title, "", head, "|" + " --- |" * 12]
     for name in names:
         n = len(bks_all.get(name, {}))
-        out.append(f"| {name} | {n} | " + " | ".join(gap(name, m, LANE, "B1") for m in METHODS) + " | "
+        out.append(f"| {name} | {n} | " + " | ".join(gap(name, m, LANE, "B1") for m in methods) + " | "
                    + " | ".join(closed(name, m, LANE, "B1") for m in ("ALNS2", "CPSAT")) + " | "
-                   + " | ".join(ratio(name, "ALNS2-8@B1", f"{m}-8@B1") for m in COMPETITORS) + " |")
+                   + " | ".join(ratio(name, "ALNS2-8@B1", f"{m}-8@B1") for m in competitors) + " |")
     out += ["", "**C1 at 2B1, 8 cores.** Gap to BKS (%) and ALNS2 / CPSAT.", "",
             "| Setting | ALNS2 | CPSAT | CONSTRUCT | ALNS2/CPSAT |", "|" + " --- |" * 5]
     for name in names:
@@ -544,7 +693,7 @@ def markdown(gaps: list[dict], rats: list[dict], bks_all: dict) -> str:
         out.append(f"| {name} | " + " / ".join(gap(name, "ALNS2", 1, b) for b in ("0.5", "1", "2")) + " | "
                    + gap(name, "ALNS2", 1, "B1") + " | "
                    + " | ".join(gap(name, m, 1, "1") for m in ("ALNS1", "CPSAT", "RL", "CONSTRUCT")) + " | "
-                   + " | ".join(ratio(name, "ALNS2-1@1", f"{m}-8@B1") for m in COMPETITORS) + " |")
+                   + " | ".join(ratio(name, "ALNS2-1@1", f"{m}-8@B1") for m in competitors) + " |")
     out += ["", "**Share of the constructor-to-BKS gap closed, 1 core** (vs CONSTRUCT-1 at the same budget).", "",
             "| Setting | ALNS2 0.5 s | ALNS2 1 s | ALNS2 2 s | ALNS2 B1 | CPSAT 1 s | CPSAT B1 |", "|" + " --- |" * 7]
     for name in names:
@@ -563,7 +712,7 @@ def plot(gaps: list[dict], png: Path) -> None:
     cols = 4
     fig, axes = plt.subplots((len(names) + cols - 1) // cols, cols, figsize=(4 * cols, 3.2 * ((len(names) + 3) // 4)),
                              squeeze=False)
-    colors = dict(zip(METHODS, ("C0", "C1", "C2", "C3", "C7")))
+    colors = dict(zip(METHODS, ("C0", "C1", "C2", "C4", "C5", "C3", "C7")))
     for ax, name in zip(axes.flat, names):
         for m in METHODS:
             for c, ls in ((1, "-"), (LANE, "--")):
@@ -587,10 +736,66 @@ def plot(gaps: list[dict], png: Path) -> None:
     print(f"wrote {png}")
 
 
+# --- dev tuning of competitor variants ------------------------------------------------------------------------
+
+
+def parse_variant(spec: str) -> tuple[str, str, dict]:
+    """``"PCPSAT:sub_time=0.5,q0=8"`` -> ``("PCPSAT", "sub_time=0.5,q0=8", {"sub_time": 0.5, "q0": 8})``."""
+    method, _, rest = spec.partition(":")
+    if method not in ("PCPSAT", "CPFULL") or not rest:
+        raise SystemExit(f"bad variant {spec!r}: expected PCPSAT:param=value or CPFULL:param=value")
+    params = {k: json.loads(v) for k, v in (item.split("=", 1) for item in rest.split(","))}
+    return method, rest, params
+
+
+def tune(args) -> None:
+    variants = [parse_variant(v) for v in args.variants]
+
+    def plan(s, i):
+        return [(m, LANE, "B1", v, params) for m, v, params in variants] + [(m, LANE, "B1", "", {})
+                                                                           for m in args.refs]
+
+    args.methods = None
+    run(args, plan)
+
+
+def tune_report(args) -> None:
+    """Per setting: every variant's mean makespan over the instances all of its method's variants ran on time, its
+    paired ratio to the best of them, and the CPU share it used; reference methods for scale."""
+    for path in sorted(OUT.glob("*.jsonl")):
+        name = path.stem
+        cells: dict[tuple[str, str], dict[int, dict]] = {}
+        for r in runtime.read_rows(path):
+            if runtime.is_current(r) and not disturbed(r) and r["budget"] == "B1" and r["cores"] == LANE:
+                cells.setdefault((r["method"], r.get("variant", "")), {})[r["instance"]] = r
+        print(f"\n{name}  (dev, B1 = {budgets(configs.get(name))['B1']:g} s, 8 cores)")
+        for method in dict.fromkeys(m for m, _ in cells):
+            mine = {v: by for (m, v), by in cells.items() if m == method}
+            common = sorted(set.intersection(*({i for i, r in by.items() if not late(r)} for by in mine.values())))
+            if not common:
+                continue
+            means = {v: np.mean([score(by[i]) for i in common]) for v, by in mine.items()}
+            best = min(means, key=means.get)
+            for v, by in sorted(mine.items(), key=lambda kv: means[kv[0]]):
+                res = cd._ratio(np.array([score(by[i]) for i in common]), np.array([score(mine[best][i])
+                                                                                   for i in common]))
+                cpu = np.mean([cpu_s(r) / (r["budget_s"] * LANE) for r in by.values()])
+                n_late = sum(late(r) for r in by.values())
+                print(f"  {method + (':' + v if v else ''):28s} n={len(common):2d} mean {means[v]:8.3f}  / best "
+                      f"{res['ratio']:.3f} [{res['lo']:.3f}, {res['hi']:.3f}] {res['wins']}-{res['losses']}  "
+                      f"CPU share {cpu:.2f}  late {n_late}" + ("  <- best" if v == best else ""))
+
+
 def main() -> None:
-    global OUT
+    global OUT, SPLIT, GRID
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("command", choices=["run", "report"])
+    ap.add_argument("command", choices=["run", "report", "tune", "tune-report"])
+    ap.add_argument("--grid", choices=list(GRIDS), default="phase1b", help="run/report: the campaign's grid")
+    ap.add_argument("--split", choices=["val", "dev"], default=None,
+                    help="default val (tune: dev); test is refused until the prereg freeze")
+    ap.add_argument("--methods", nargs="+", default=None, choices=METHODS, help="run: only these methods")
+    ap.add_argument("--variants", nargs="+", default=[], help="tune: METHOD:param=value[,param=value]")
+    ap.add_argument("--refs", nargs="*", default=["ALNS2", "CPSAT"], choices=METHODS, help="tune: reference methods")
     ap.add_argument("--settings", nargs="+", default=list(bks.SETTINGS))
     ap.add_argument("--n", type=int, default=10)
     ap.add_argument("--n-large", type=int, default=3, help="instances of the 500-task settings")
@@ -602,10 +807,14 @@ def main() -> None:
     ap.add_argument("--png", type=Path, default=None)
     ap.add_argument("--md", type=Path, default=None, help="report: compact markdown tables")
     ap.add_argument("--keep-disturbed", action="store_true", help="report: sensitivity run keeping disturbed rows")
-    ap.add_argument("--out", type=Path, default=OUT, help="rows (smoke tests)")
+    ap.add_argument("--out", type=Path, default=None, help="rows (default runs/anytime; tune: runs/tune_dev)")
+    ap.add_argument("--allow-dirty", action="store_true", help="run on uncommitted source (smoke tests only)")
     args = ap.parse_args()
-    OUT = args.out
-    (run if args.command == "run" else report)(args)
+    tuning = args.command.startswith("tune")
+    OUT = args.out or (RUNS_DIR / "tune_dev" if tuning else OUT)
+    SPLIT = args.split or ("dev" if tuning else "val")
+    GRID = GRIDS[args.grid]
+    {"run": run, "report": report, "tune": tune, "tune-report": tune_report}[args.command](args)
 
 
 if __name__ == "__main__":

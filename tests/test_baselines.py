@@ -215,6 +215,46 @@ def test_lns_improves_and_replays(instances):
         assert len(set(free)) == 10
 
 
+def test_parallel_lns_shares_one_incumbent(instances):
+    """Forked single-thread workers: the result is a minimal cover whose env replay equals its makespan, no worse
+    than the best construction stream, and the CPU of every worker is counted."""
+    inst = instances[2]
+    res = cpsat.solve_lns_parallel(inst, 3.0, workers=3, init_time=0.3, sub_time=0.5)
+    assert res.plan.is_minimal_cover(inst) and replay(inst, res.plan)["makespan"] == res.makespan
+    assert res.makespan <= res.init_makespan + 1e-9 and res.iterations >= 3
+    assert res.cpu_s > 2.0 * res.wall_s  # three busy processes, not one
+    ms = [m for _, m, _ in res.trajectory]
+    assert ms == sorted(ms, reverse=True) and ms[-1] == pytest.approx(res.makespan)
+    for _, m, plan in res.trajectory:
+        assert evaluate(inst, plan).makespan == m
+    init = greedy.dispatch(inst)  # a given start plan replaces the constructions
+    res = cpsat.solve_lns_parallel(inst, 1.0, workers=2, init=init, sub_time=0.3)
+    assert res.init_makespan == pytest.approx(evaluate(inst, init.prune_to_minimal(inst)).makespan)
+
+
+def test_shared_incumbent_is_lexicographic(instances):
+    inst = instances[0]
+    shared = cpsat._Shared(inst.n_tasks, greedy._width(inst))
+    a, b = greedy.dispatch(inst), greedy.insertion(inst, np.random.default_rng(3))
+    sa, sb = cpsat._score(inst, a), cpsat._score(inst, b)
+    shared.offer(a, sa)
+    assert shared.fetch(inst.n_agents, sa) is None  # not strictly better than itself
+    got, score = shared.fetch(inst.n_agents, (sa[0], sa[1] + 1.0))  # same makespan, fewer summed returns
+    assert score == sa and got.routes() == a.routes()
+    shared.offer(b, sb)
+    assert tuple(shared.val) == min(sa, sb)
+
+
+def test_construct_parallel_is_the_best_stream(instances):
+    import time
+
+    inst = instances[1]
+    best = cpsat.construct_parallel(inst, 3, time.perf_counter() + 0.2, seed=5)
+    streams = [greedy.construct(inst, restarts=2, seed=5 + k) for k in range(3)]  # the first three builds each
+    assert best.is_minimal_cover(inst)
+    assert evaluate(inst, best).makespan <= min(evaluate(inst, p).makespan for p in streams) + 1e-9
+
+
 def test_lns_subproblem_keeps_fixed_coalitions(instances):
     inst = instances[3]
     plan = greedy.dispatch(inst)

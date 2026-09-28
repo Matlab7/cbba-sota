@@ -29,7 +29,10 @@ tasks; all other agents become fixed precedence chains. The incumbent is always 
 from __future__ import annotations
 
 import math
+import multiprocessing as mp
+import resource
 import time
+import traceback
 from dataclasses import dataclass, field
 from itertools import pairwise
 
@@ -40,6 +43,7 @@ from cbba_sota.bench.configs import MAX_TIME
 from cbba_sota.hetero.evaluate import evaluate
 from cbba_sota.hetero.instance import Instance
 from cbba_sota.hetero.plan import Plan
+from cbba_sota.solvers import greedy
 
 SCALE = 1000
 
@@ -84,6 +88,7 @@ class Result:
     trajectory: list[tuple[float, float, Plan]] = field(default_factory=list)  # (elapsed s, makespan, plan)
     iterations: int = 0  # LNS sub-solves
     improvements: int = 0
+    init_makespan: float = math.nan  # of the start plan (parallel LNS: the best construction stream)
 
     def at(self, budget: float) -> tuple[float, Plan] | None:
         """Best (makespan, plan) found within ``budget`` seconds of the start, None if nothing yet."""
@@ -435,27 +440,62 @@ def _score(inst: Instance, plan: Plan) -> tuple[float, float]:
     return sched.makespan, float(sched.ret.sum())
 
 
-def solve_lns(inst: Instance, time_limit: float, init: Plan, workers: int = 8, seed: int = 0, q0: int = 12,
-              q_min: int = 4, q_max: int = 40, per_species: int = 4, sub_time: float = 2.0,
-              kinds: tuple[str, ...] = ("critical", "spatial", "temporal", "random"), lex: bool = False,
-              t0: float | None = None) -> Result:
-    """LNS in CP from ``init`` until ``time_limit`` (measured from ``t0``, default now).
+def _lex_better(a: tuple[float, float], b: tuple[float, float]) -> bool:
+    """(makespan, summed depot returns) ``a`` strictly better than ``b``."""
+    return a[0] < b[0] - 1e-9 or (a[0] < b[0] + 1e-9 and a[1] < b[1] - 1e-9)
 
-    Sub-solves minimise (makespan, summed depot returns) lexicographically if ``lex`` (else the makespan only),
-    and a result replaces the incumbent unless it is lexicographically worse in real time, so the search keeps
-    moving on makespan plateaus. The window size adapts: +1 when a sub-solve is proven optimal, -1 when it times
-    out."""
-    t0 = time.perf_counter() if t0 is None else t0
-    c0 = time.process_time()
-    rng = np.random.default_rng(seed)
+
+class _Shared:
+    """Shared-memory incumbent of the forked ``solve_lns_parallel`` workers: a plan (order, coalitions) and its
+    (makespan, summed depot returns). Created before the fork."""
+
+    def __init__(self, T: int, W: int):
+        ctx = mp.get_context("fork")
+        self.lock, self.W = ctx.Lock(), W
+        self._order, self._cnt, self._mem = ctx.RawArray("q", T), ctx.RawArray("q", T), ctx.RawArray("q", T * W)
+        self._val = ctx.RawArray("d", 2)
+        self.order = np.frombuffer(self._order, np.int64)
+        self.cnt = np.frombuffer(self._cnt, np.int64)
+        self.mem = np.frombuffer(self._mem, np.int64).reshape(T, W)
+        self.val = np.frombuffer(self._val, np.float64)
+        self.val[:] = np.inf
+
+    def offer(self, plan: Plan, score: tuple[float, float]) -> None:
+        """Publish ``plan`` if it is strictly better than the shared plan."""
+        with self.lock:
+            if _lex_better(score, (self.val[0], self.val[1])):
+                self.order[:], self.mem[...], self.cnt[:] = plan.to_arrays(self.W)
+                self.val[:] = score
+
+    def fetch(self, n_agents: int, than: tuple[float, float]) -> tuple[Plan, tuple[float, float]] | None:
+        """The shared plan and its score if they are strictly better than ``than``, else None."""
+        with self.lock:
+            score = (float(self.val[0]), float(self.val[1]))
+            if not _lex_better(score, than):
+                return None
+            arrays = self.order.copy(), self.mem.copy(), self.cnt.copy()
+        return Plan.from_arrays(*arrays, n_agents), score
+
+
+def _lns(inst: Instance, init: Plan, t0: float, deadline: float, rng: np.random.Generator, workers: int, q0: int,
+         q_min: int, q_max: int, per_species: int, sub_time: float, kinds: tuple[str, ...], lex: bool,
+         shared: _Shared | None = None, offset: int = 0) -> tuple[Plan, float, list, int, int]:
+    """The LNS loop of ``solve_lns`` until ``deadline`` (``time.perf_counter``): (best plan, its makespan, own
+    improvements (s since ``t0``, makespan, plan), sub-solves, improvements). With ``shared`` (a
+    ``solve_lns_parallel`` worker), a strictly better shared plan replaces the incumbent before each step, every
+    accepted plan is offered to it, and windows start at kind ``offset``."""
     W = Weights.of(inst)
     cur = init.prune_to_minimal(inst)
     cur_score = _score(inst, cur)
     best, best_ms = cur, cur_score[0]
     traj = [(time.perf_counter() - t0, best_ms, best)]
     q, it, improved = min(q0, inst.n_tasks), 0, 0
-    while (left := time_limit - (time.perf_counter() - t0)) > 0.05:
-        kind = kinds[it % len(kinds)]
+    while (left := deadline - time.perf_counter()) > 0.05:
+        if shared is not None and (got := shared.fetch(inst.n_agents, cur_score)) is not None:
+            cur, cur_score = got  # found by another worker, which keeps it in its own trajectory
+            if cur_score[0] < best_ms - 1e-9:
+                best, best_ms = cur, cur_score[0]
+        kind = kinds[(it + offset) % len(kinds)]
         free = _window(inst, cur, q, kind, rng)
         model, fixed = _subproblem(inst, W, cur, free, per_species, W.schedule(cur)[1], lex)
         model.hint(cur, W)
@@ -472,10 +512,123 @@ def solve_lns(inst: Instance, time_limit: float, init: Plan, workers: int = 8, s
         score = _score(inst, plan)
         if score[0] < cur_score[0] - 1e-9 or (score[0] < cur_score[0] + 1e-9 and score[1] <= cur_score[1] + 1e-9):
             cur, cur_score = plan, score
+            if shared is not None:
+                shared.offer(plan, score)
             ms = score[0]
             if ms < best_ms - 1e-9:
                 best, best_ms = plan, ms
                 improved += 1
                 traj.append((time.perf_counter() - t0, ms, plan))
+    return best, best_ms, traj, it, improved
+
+
+def solve_lns(inst: Instance, time_limit: float, init: Plan, workers: int = 8, seed: int = 0, q0: int = 12,
+              q_min: int = 4, q_max: int = 40, per_species: int = 4, sub_time: float = 2.0,
+              kinds: tuple[str, ...] = ("critical", "spatial", "temporal", "random"), lex: bool = False,
+              t0: float | None = None) -> Result:
+    """LNS in CP from ``init`` until ``time_limit`` (measured from ``t0``, default now), every sub-solve on
+    ``workers`` CP-SAT threads.
+
+    Sub-solves minimise (makespan, summed depot returns) lexicographically if ``lex`` (else the makespan only),
+    and a result replaces the incumbent unless it is lexicographically worse in real time, so the search keeps
+    moving on makespan plateaus. The window size adapts: +1 when a sub-solve is proven optimal, -1 when it times
+    out."""
+    t0 = time.perf_counter() if t0 is None else t0
+    c0 = time.process_time()
+    best, best_ms, traj, it, improved = _lns(inst, init, t0, t0 + time_limit, np.random.default_rng(seed), workers,
+                                             q0, q_min, q_max, per_species, sub_time, kinds, lex)
     return Result(best, best_ms, "LNS", math.nan, math.nan, time.perf_counter() - t0, time.process_time() - c0,
-                  traj, it, improved)
+                  traj, it, improved, traj[0][1])
+
+
+# --- parallel LNS and parallel construction ----------------------------------------------------------------------
+
+
+def _children_cpu() -> float:
+    ru = resource.getrusage(resource.RUSAGE_CHILDREN)
+    return ru.ru_utime + ru.ru_stime
+
+
+def _fork(target, n: int, args, timeout: float) -> list:
+    """Results of ``target(k, *args)`` run in ``n`` forked processes, sorted by ``k``. A worker that raises, or
+    that reports nothing within ``timeout`` seconds after the previous one, fails the call."""
+    ctx = mp.get_context("fork")
+    queue = ctx.Queue()
+    procs = [ctx.Process(target=_guarded, args=(target, k, queue, args), daemon=True) for k in range(n)]
+    for p in procs:
+        p.start()
+    try:
+        out = sorted((queue.get(timeout=timeout) for _ in procs), key=lambda r: r[0])
+    finally:
+        for p in procs:
+            p.join(timeout=10)
+            if p.is_alive():
+                p.terminate()
+    failed = [r for r in out if isinstance(r[1], BaseException)]
+    if failed:
+        raise RuntimeError(f"worker {failed[0][0]} failed") from failed[0][1]
+    return out
+
+
+def _guarded(target, k: int, queue, args) -> None:
+    try:
+        queue.put(target(k, *args))
+    except BaseException:  # noqa: BLE001  (re-raised by the parent)
+        queue.put((k, RuntimeError(traceback.format_exc())))
+
+
+def _construct_stream(k: int, inst: Instance, seed: int, until: float) -> tuple[int, float, Plan]:
+    plan = greedy.construct(inst, time_limit=max(0.0, until - time.perf_counter()), seed=seed + k)
+    return k, evaluate(inst, plan).makespan, plan
+
+
+def construct_parallel(inst: Instance, workers: int, until: float, seed: int = 0) -> Plan:
+    """Best plan of ``workers`` forked restart streams of ``greedy.construct`` (seeds ``seed + k``) running until
+    ``until`` (``time.perf_counter``; at least three constructions each)."""
+    inst.tt, inst.da  # noqa: B018  (computed once, before the fork)
+    streams = _fork(_construct_stream, workers, (inst, seed, until), max(0.0, until - time.perf_counter()) + 120)
+    return min(streams, key=lambda r: (r[1], r[0]))[2]
+
+
+def _lns_worker(k: int, inst: Instance, seed: int, t0: float, deadline: float, init: Plan | None, init_until: float,
+                shared: _Shared, kw: dict) -> tuple[int, list, int, int]:
+    if init is None:
+        init = _construct_stream(k, inst, seed, init_until)[2]
+    init = init.prune_to_minimal(inst)
+    shared.offer(init, _score(inst, init))
+    _, _, traj, it, improved = _lns(inst, init, t0, deadline, np.random.default_rng(seed + k), 1, shared=shared,
+                                    offset=k, **kw)
+    return k, traj, it, improved
+
+
+def solve_lns_parallel(inst: Instance, time_limit: float, workers: int = 8, init: Plan | None = None,
+                       init_time: float = 0.0, seed: int = 0, q0: int = 12, q_min: int = 4, q_max: int = 40,
+                       per_species: int = 4, sub_time: float = 2.0,
+                       kinds: tuple[str, ...] = ("critical", "spatial", "temporal", "random"), lex: bool = False,
+                       t0: float | None = None) -> Result:
+    """LNS in CP on ``workers`` forked processes with one CP-SAT thread each, all improving one shared incumbent
+    until ``time_limit`` (measured from ``t0``, default now).
+
+    Without ``init``, worker k first runs restart stream ``seed + k`` of ``greedy.construct`` until
+    ``t0 + init_time``, so the search starts from the best of ``workers`` construction streams. Each worker then runs
+    the ``solve_lns`` loop (own random windows, window kinds staggered by worker, adaptive window size, single-thread
+    sub-solves of at most ``sub_time`` s), adopts the shared plan whenever it is strictly better than its own
+    incumbent (makespan, then summed depot returns) and offers every accepted plan to it. ``cpu_s`` includes the
+    workers; ``trajectory`` merges the workers' improvements (best so far over all of them)."""
+    t0 = time.perf_counter() if t0 is None else t0
+    c0, k0 = time.process_time(), _children_cpu()
+    inst.tt, inst.da  # noqa: B018  (computed once, before the fork)
+    shared = _Shared(inst.n_tasks, max(1, greedy._width(inst)))
+    kw = {"q0": q0, "q_min": q_min, "q_max": q_max, "per_species": per_species, "sub_time": sub_time,
+          "kinds": kinds, "lex": lex}
+    runs = _fork(_lns_worker, workers, (inst, seed, t0, t0 + time_limit, init, t0 + init_time, shared, kw),
+                 t0 + time_limit - time.perf_counter() + 120)
+    traj: list[tuple[float, float, Plan]] = []
+    for point in sorted((p for r in runs for p in r[1]), key=lambda p: p[0]):
+        if not traj or point[1] < traj[-1][1] - 1e-9:
+            traj.append(point)
+    best = shared.fetch(inst.n_agents, (math.inf, math.inf))[0]
+    best_ms = evaluate(inst, best).makespan
+    return Result(best, best_ms, "PLNS", math.nan, math.nan, time.perf_counter() - t0,
+                  time.process_time() - c0 + _children_cpu() - k0, traj, sum(r[2] for r in runs),
+                  sum(r[3] for r in runs), min(r[1][0][1] for r in runs))

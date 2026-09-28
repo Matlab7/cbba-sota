@@ -194,8 +194,8 @@ def collect(args) -> None:
             if e["bks"] is None:
                 continue
             r, lb = e["row"], e["lb"]
-            out[name][i] = {"bks": e["bks"], "routes": r["routes"], "found_by": label(r), "file": r["source"],
-                            "fingerprint": r["fingerprint"], "lb": lb}
+            out[name][i] = {"bks": e["bks"], "routes": r["routes"], "routes_base": 0, "found_by": label(r),
+                            "file": r["source"], "fingerprint": r["fingerprint"], "lb": lb}
             table.append({"setting": name, "instance": i, "bks": e["bks"], "found_by": label(r), "lb": lb,
                           "gap_to_lb_pct": None if lb is None else 100 * (e["bks"] - lb) / e["bks"]})
         d = diagnostics(name, rows, best)
@@ -255,7 +255,7 @@ def run(args) -> None:
         return
     cpus = runtime.parse_cpus(args.cpus) if args.cpus else runtime.choose_cpus(args.width * args.lanes)
     lane_cpus = runtime.blocks(cpus, args.width)[:args.lanes]
-    version = runtime.code_version()
+    version = runtime.require_clean(args.allow_dirty)
     work: queue.Queue = queue.Queue()
     for job in jobs:
         work.put(job)
@@ -313,6 +313,7 @@ def main() -> None:
     ap.add_argument("--csv", type=Path, default=None)
     ap.add_argument("--check", action="store_true", help="BKS-budget check runs: compared with the BKS, not in it")
     ap.add_argument("--out", type=Path, default=OUT, help="rows and BKS table (smoke tests)")
+    ap.add_argument("--allow-dirty", action="store_true", help="run on uncommitted source (smoke tests only)")
     args = ap.parse_args()
     OUT = args.out
     (run if args.command == "run" else collect)(args)

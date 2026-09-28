@@ -327,6 +327,16 @@ def test_code_version():
     assert v == "unknown" or re.fullmatch(r"[0-9a-f]{40}|([0-9a-f]{40}|nocommit)-dirty-[0-9a-f]{12}", v)
 
 
+def test_timed_campaigns_refuse_a_dirty_tree(monkeypatch):
+    dirty, clean = "0" * 40 + "-dirty-" + "1" * 12, "0" * 40
+    monkeypatch.setattr(runtime, "code_version", lambda: dirty)
+    with pytest.raises(SystemExit, match="dirty"):
+        runtime.require_clean()
+    assert runtime.require_clean(allow_dirty=True) == dirty
+    monkeypatch.setattr(runtime, "code_version", lambda: clean)
+    assert runtime.require_clean() == clean
+
+
 def _rows_with_fingerprints(fp: str) -> list[dict]:
     base = {"setting": "RALTestSet", "split": "test", "instance": 0, "budget_s": 1.0, "budget": "B1"}
     return [base | {"method": "current", "fingerprint": fp}, base | {"method": "stale", "fingerprint": "0" * 40},
@@ -371,7 +381,8 @@ def test_baseline_and_rl_campaigns_write_provenance_and_recompute_stale_rows(tmp
     base.parent.mkdir(parents=True)
     base.write_text(_stale_row(**key, method="construct", budget_s=0.2))
     args = ("run_baselines.py", "--settings", "RALTestSet", "--split", "test", "--methods", "construct", "--budgets",
-            "0.2", "--instances", "1", "--workers", "1", "--cap", "1", "--out", str(tmp_path / "baselines"))
+            "0.2", "--instances", "1", "--workers", "1", "--cap", "1", "--out", str(tmp_path / "baselines"),
+            "--allow-dirty")
     assert _run_script(*args).startswith("1 jobs") and _run_script(*args).startswith("0 jobs")
     (row,) = _new_rows(base)
     assert row["fingerprint"] == fp and _GIT.fullmatch(row["git"]) and row["success"]
@@ -403,7 +414,7 @@ def test_alns_campaign_writes_provenance_and_recomputes_stale_rows(tmp_path, mon
     out.write_text(_stale_row(setting="SA-BT-9-3-20", split="dev", index=0, name="SA-BT-9-3-20/dev/0", makespan=1.0,
                               eval_makespan=1.0, success=True, skipped=0, it_per_s=1.0, init_makespan=1.0))
     argv = ["run_alns.py", "--settings", "SA-BT-9-3-20", "--split", "dev", "--n", "2", "--time", "0.2", "--procs", "2",
-            "--tag", "t"]
+            "--tag", "t", "--allow-dirty"]
     for want in ("2 jobs", "0 jobs"):
         monkeypatch.setattr(sys, "argv", argv)
         run_alns.main()
@@ -412,7 +423,8 @@ def test_alns_campaign_writes_provenance_and_recomputes_stale_rows(tmp_path, mon
     assert sorted(r["index"] for r in rows) == [0, 1]
     for r in rows:
         assert r["fingerprint"] == runtime.instance_fingerprint("SA-BT-9-3-20", "dev", r["index"])
-        assert _GIT.fullmatch(r["git"]) and {"affinity", "load1", "load1_end"} <= r.keys()
+        assert _GIT.fullmatch(r["git"]) and {"host", "affinity", "load1", "load1_end"} <= r.keys()
+        assert len(runtime.parse_cpus(r["affinity"])) == 1 and r["routes_base"] == 1  # pinned, 1-based env routes
         assert r["makespan"] == r["eval_makespan"] and r["success"]
 
 

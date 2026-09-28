@@ -8,9 +8,11 @@ Usage:
   run_alns.py --settings MA-AT-50-5-50 --time B1 --workers 8   (B1 = paper RL(s.10) time, B2 = 2 x B1)
 
 Each instance runs in its own single-threaded process (``--procs`` at a time) with ``--workers`` ALNS workers, so
-at most procs * workers processes are busy. Rows record the instance ``fingerprint``, the ``git`` code version, the
-process's CPU ``affinity``, the load average at start and end and the change of the cgroup's throttling counters;
-rows already present in the output file are skipped (resumable) if their fingerprint matches the current instance.
+at most procs * workers processes are busy. Each process is pinned to its own ``--workers`` CPUs (``--cpus``, default
+the least busy physical cores). Rows record the instance ``fingerprint``, the ``git`` code version (a dirty tree is
+refused unless ``--allow-dirty``), the host, the process's CPU ``affinity``, the load average at start and end and the
+change of the cgroup's throttling counters; rows already present in the output file are skipped (resumable) if their
+fingerprint matches the current instance. ``routes`` are 1-based env routes (``routes_base`` 1).
 """
 from __future__ import annotations
 
@@ -19,7 +21,7 @@ import dataclasses
 import json
 import os
 import time
-from concurrent.futures import ProcessPoolExecutor, as_completed
+from concurrent.futures import as_completed
 from pathlib import Path
 
 import numpy as np
@@ -99,7 +101,8 @@ def _job(key: dict, inst, time_limit: float, seed: int, workers: int, overrides:
             "candidate_slots": st.candidate_slots, "exact_evals": st.exact_evals,
             "it_per_s": st.it_per_s, "wall_s": wall, "search_s": st.search_s, "trace": st.trace,
             "destroy_weights": st.destroy_weights, "repair_weights": st.repair_weights, "overrides": overrides,
-            "routes": plan.to_env_routes(), "fingerprint": runtime.fingerprint(inst)} | probe.fields()
+            "routes": plan.to_env_routes(), "routes_base": 1,
+            "fingerprint": runtime.fingerprint(inst)} | probe.fields()
 
 
 def main() -> None:
@@ -114,6 +117,8 @@ def main() -> None:
     ap.add_argument("--procs", type=int, default=30)
     ap.add_argument("--tag", default=None)
     ap.add_argument("--set", nargs="*", default=[], dest="overrides")
+    ap.add_argument("--cpus", default=None, help="CPUs to pin the processes to, e.g. 0-31 (default: least busy cores)")
+    ap.add_argument("--allow-dirty", action="store_true", help="run on uncommitted source (smoke tests only)")
     args = ap.parse_args()
     for var in THREAD_VARS:
         os.environ[var] = "1"
@@ -144,10 +149,10 @@ def main() -> None:
         done = {r["name"] for r in runtime.read_rows(out) if r.get("fingerprint", 0) == current.get(r["name"])}
         jobs += [(out, key, inst, limit) for key, inst, limit in items if key["name"] not in done]
     print(f"{len(jobs)} jobs -> {root}", flush=True)
-    version = runtime.code_version()
-    import multiprocessing as mp
-
-    with ProcessPoolExecutor(args.procs, mp_context=mp.get_context("spawn"), initializer=_warm) as ex:
+    version = runtime.require_clean(args.allow_dirty)
+    procs = max(1, min(args.procs, len(jobs)))
+    cpus = runtime.parse_cpus(args.cpus) if args.cpus else None
+    with runtime.pinned_pool(procs, max(1, args.workers), cpus, initializer=_warm) as ex:
         futures = {}
         for out, key, inst, limit in jobs:
             inst = inst if isinstance(inst, Instance) else Instance.from_pickle(inst)

@@ -132,7 +132,7 @@ def _plan_row(inst, plan, wall: float, cpu: float) -> dict:
     rep = replay(inst, plan)
     return {"makespan": rep["makespan"], "success": rep["success"], "env_finished": rep["env_finished"],
             "eval_makespan": evaluate(inst, plan).makespan, "skipped": rep["skipped"], "wall_s": wall, "cpu_s": cpu,
-            "routes": plan.routes()}
+            "routes": plan.routes(), "routes_base": 0}
 
 
 def run_alns(name: str, split: str, i: int, workers: int, deadline: float | None = None, budget: float | None = None,
@@ -179,9 +179,10 @@ def run_construct(name: str, split: str, i: int, budget: float) -> dict:
 
 
 def run_rl(name: str, split: str, i: int, index: int, stride: int, budget: float | None = None,
-           samples: int | None = None) -> dict:
+           samples: int | None = None, first: int = 4) -> dict:
     """RL samples ``index``, ``index + stride``, ... of the instance: for ``budget`` seconds after this process has
-    loaded it, or exactly ``samples`` in one lockstep batch. Returns the best rollout (with coalitions) and timing."""
+    loaded it (the first lockstep batch has ``first`` samples), or exactly ``samples`` in one lockstep batch. Returns
+    the best rollout (with coalitions) and timing."""
     from dataclasses import asdict
 
     from cbba_sota.bench import configs
@@ -195,7 +196,7 @@ def run_rl(name: str, split: str, i: int, index: int, stride: int, budget: float
 
     start = time.monotonic()
     if samples is None:
-        res = rl.sample_until(data, _net, seed_of, start + budget)
+        res = rl.sample_until(data, _net, seed_of, start + budget, first=first)
     else:
         res = rl.sample_lockstep(data, _net, [seed_of(n) for n in range(samples)], sample=True)
     return {"best": asdict(res.best), "makespans": res.makespans, "cpu_s": res.cpu_s, "start": start,
@@ -215,7 +216,7 @@ def run_greedy(name: str, split: str, i: int) -> dict:
     c0 = time.process_time()
     res = greedy.greedy_nearest(configs.get(name).instance_path(split, i))
     return {"makespan": res.makespan, "success": res.success, "env_finished": res.env_finished,
-            "wall_s": res.wall_s, "cpu_s": time.process_time() - c0, "routes": res.routes,
+            "wall_s": res.wall_s, "cpu_s": time.process_time() - c0, "routes": res.routes, "routes_base": 0,
             "fingerprint": _load(name, split, i)[2]}
 
 
@@ -232,7 +233,7 @@ def _rl_row(parts: list[dict]):
     best = rl.best_of([rl.Result(**p["best"]) for p in parts])
     return {"makespan": best.makespan, "success": best.success, "env_finished": best.env_finished,
             "wall_s": max(p["end"] - p["start"] for p in parts), "cpu_s": sum(p["cpu_s"] for p in parts),
-            "n_samples": sum(len(p["makespans"]) for p in parts), "routes": best.routes,
+            "n_samples": sum(len(p["makespans"]) for p in parts), "routes": best.routes, "routes_base": 0,
             "fingerprint": parts[0]["fingerprint"]}, best
 
 
@@ -361,7 +362,7 @@ def run(args) -> None:
     lane_cpus = runtime.blocks(cpus, LANE)[:args.lanes]
     if len(lane_cpus) < args.lanes:
         raise SystemExit(f"{len(cpus)} CPUs for {args.lanes} lanes of {LANE}")
-    version = runtime.code_version()
+    version = runtime.require_clean(args.allow_dirty)
     print(f"lanes pinned to {[runtime.format_cpus(c) for c in lane_cpus]}, code {version}", flush=True)
     work: queue.Queue = queue.Queue()
     for u in units:
@@ -530,6 +531,7 @@ def main() -> None:
     ap.add_argument("--csv", type=Path, default=None, help="report: write the table (and *_ratios.csv) here")
     ap.add_argument("--budget-scale", type=float, default=1.0, help="multiply B1/B2 (smoke tests only)")
     ap.add_argument("--cpus", default=None, help="CPUs for the lanes, e.g. 0-63 (default: least busy cores)")
+    ap.add_argument("--allow-dirty", action="store_true", help="run on uncommitted source (smoke tests only)")
     args = ap.parse_args()
     args.out = args.out or configs.RUNS_DIR / f"compare_{args.split}"
     (run if args.command == "run" else report)(args)

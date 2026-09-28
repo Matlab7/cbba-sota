@@ -188,6 +188,7 @@ def main() -> None:
     ap.add_argument("--instances", type=int, default=None, help="only the first k instances")
     ap.add_argument("--out", type=Path, default=configs.RUNS_DIR / "baselines")
     ap.add_argument("--summary", action="store_true", help="print the summary table and exit")
+    ap.add_argument("--allow-dirty", action="store_true", help="run on uncommitted source (smoke tests only)")
     args = ap.parse_args()
     if args.summary:
         return summarize(args.out, args.settings, args.split, args.instances, args.methods, args.budgets)
@@ -222,7 +223,7 @@ def main() -> None:
     free = runtime.parse_cpus(args.cpus) if args.cpus else runtime.choose_cpus(args.cap)
     if len(free) < args.cap:
         ap.error(f"--cpus has {len(free)} CPUs for --cap {args.cap}")
-    free, version = free[:args.cap], runtime.code_version()
+    free, version = free[:args.cap], runtime.require_clean(args.allow_dirty)
     print(f"pinning to CPUs {runtime.format_cpus(free)}, code {version}", flush=True)
     queue, running = list(jobs), {}
     t0 = time.time()

@@ -4,19 +4,23 @@
   fingerprint matches the current instance, so rows computed on a regenerated instance are recomputed; reports
   drop rows whose fingerprint differs (``is_stale``).
 - ``code_version``: the git commit of the source, or ``<commit|nocommit>-dirty-<hash>`` when it has uncommitted
-  changes.
+  changes; ``require_clean`` refuses timed campaigns on such a tree.
 - CPU pinning: ``choose_cpus`` picks idle physical cores, ``pin`` restricts every thread of the calling process to
   a CPU set (threads and forked children created later inherit it); call it in pool initializers or at job start.
-- ``Probe``: CPU affinity, load average and the cgroup's throttling counters over one job.
+  ``pinned_pool`` is a process pool whose processes each pin themselves to their own block of CPUs.
+- ``Probe``: host, CPU affinity, load average and the cgroup's throttling counters over one job.
 """
 from __future__ import annotations
 
 import hashlib
 import json
+import multiprocessing as mp
 import os
+import socket
 import subprocess
 import time
-from collections.abc import Iterable, Iterator
+from collections.abc import Callable, Iterable, Iterator
+from concurrent.futures import ProcessPoolExecutor
 from functools import cache
 from pathlib import Path
 
@@ -95,6 +99,16 @@ def code_version(root: Path = ROOT) -> str:
     if head and h.digest() == hashlib.sha1().digest():
         return head
     return f"{head or 'nocommit'}-dirty-{h.hexdigest()[:12]}"
+
+
+def require_clean(allow_dirty: bool = False) -> str:
+    """``code_version()`` for the rows of a timed campaign; exits if the source has uncommitted changes, unless
+    ``allow_dirty`` (smoke tests), so that every timed row names a commit that reproduces it."""
+    version = code_version()
+    if "dirty" in version and not allow_dirty:
+        raise SystemExit(f"source tree is dirty ({version}): commit before a timed campaign, or pass --allow-dirty "
+                         "for a smoke test")
+    return version
 
 
 def read_rows(path: Path) -> Iterator[dict]:
@@ -179,6 +193,28 @@ def pin(cpus: Iterable[int]) -> None:
             pass
 
 
+def _pin_from(queue, initializer: Callable | None, initargs: tuple) -> None:
+    pin(queue.get(timeout=60))
+    if initializer is not None:
+        initializer(*initargs)
+
+
+def pinned_pool(procs: int, width: int, cpus: list[int] | None = None, initializer: Callable | None = None,
+                initargs: tuple = ()) -> ProcessPoolExecutor:
+    """``procs`` spawned processes, each pinned to its own block of ``width`` CPUs out of ``cpus`` (default: the
+    least busy physical cores, ``choose_cpus``), then running ``initializer(*initargs)``. A job's forked workers
+    and threads inherit its block, so a job with ``width`` workers never shares a core with another job."""
+    cpus = choose_cpus(procs * width) if cpus is None else cpus
+    groups = blocks(cpus, width)[:procs]
+    if len(groups) < procs:
+        raise ValueError(f"{len(cpus)} CPUs for {procs} blocks of {width}")
+    ctx = mp.get_context("spawn")
+    queue = ctx.Queue()
+    for g in groups:
+        queue.put(g)
+    return ProcessPoolExecutor(procs, mp_context=ctx, initializer=_pin_from, initargs=(queue, initializer, initargs))
+
+
 def affinity() -> str:
     return format_cpus(os.sched_getaffinity(0))
 
@@ -201,9 +237,9 @@ def cgroup_cpu_stat() -> dict[str, int]:
 
 
 class Probe:
-    """Host conditions over one job: CPU affinity of the process running it (``cpus`` if given), load average at
-    the start and end, and the change in the cgroup's throttling counters (the whole container, not only this
-    job)."""
+    """Host conditions over one job: the host name, CPU affinity of the process running it (``cpus`` if given),
+    load average at the start and end, and the change in the cgroup's throttling counters (the whole container, not
+    only this job). Rows without ``host`` were written on the first server, before 2026-09-28 15:00."""
 
     def __init__(self, cpus: Iterable[int] | None = None):
         self.cpus = None if cpus is None else format_cpus(cpus)
@@ -211,7 +247,8 @@ class Probe:
 
     def fields(self) -> dict:
         end = cgroup_cpu_stat()
-        out = {"affinity": self.cpus or affinity(), "load1": self.load1, "load1_end": os.getloadavg()[0]}
+        out = {"host": socket.gethostname(), "affinity": self.cpus or affinity(), "load1": self.load1,
+               "load1_end": os.getloadavg()[0]}
         for key in ("nr_throttled", "throttled_usec"):
             if key in self.stat and key in end:
                 out[key] = end[key] - self.stat[key]

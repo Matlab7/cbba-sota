@@ -11,8 +11,10 @@ Usage:
 
 SPEC maps a label to ALNSConfig overrides of the v2 defaults (``{"preset": "v1"}`` starts from the Phase 1
 configuration). ``run`` shuffles the jobs of all variants into one pool, so every variant sees the same host
-conditions, and writes run_alns rows (env-replayed makespans) to runs/alns/<root>/<label>/<setting>-dev.jsonl; it
-resumes per (instance, seed), and reports average the seeds of an instance. ``report`` prints, per setting, each
+conditions, pins every pool process to its own ``--workers`` CPUs (``--cpus``, default the least busy physical
+cores), refuses a dirty source tree unless ``--allow-dirty``, and writes run_alns rows (env-replayed makespans,
+1-based routes) to runs/alns/<root>/<label>/<setting>-dev.jsonl; it resumes per (instance, seed), and reports
+average the seeds of an instance. ``report`` prints, per setting, each
 variant's mean makespan, its paired ratio to REF with a bootstrap 95% CI (10,000 resamples, seed 0) and
 wins/losses, and its paired ratio to CPSAT-8 at the same budget. A failed run counts as 200. ``anytime`` plots,
 per setting, the mean ratio of each variant's best-so-far makespan (from the stored traces) to CPSAT-8's final
@@ -25,11 +27,10 @@ from __future__ import annotations
 
 import argparse
 import json
-import multiprocessing as mp
 import os
 import random
 import sys
-from concurrent.futures import ProcessPoolExecutor, as_completed
+from concurrent.futures import as_completed
 from pathlib import Path
 
 import numpy as np
@@ -81,10 +82,11 @@ def run(args) -> None:
                             "label": label}, s.instance_path(args.split, i), run_alns.budget(s, args.time),
                       overrides) for i in range(n) if i not in done]
     random.Random(0).shuffle(jobs)
-    version = runtime.code_version()
-    procs = max(1, args.procs // max(1, args.workers))
+    version = runtime.require_clean(args.allow_dirty)
+    procs = max(1, min(args.procs // max(1, args.workers), len(jobs)))
     print(f"{len(jobs)} jobs, {procs} at a time x {args.workers} workers", flush=True)
-    with ProcessPoolExecutor(procs, mp_context=mp.get_context("spawn"), initializer=run_alns._warm) as ex:
+    cpus = runtime.parse_cpus(args.cpus) if args.cpus else None
+    with runtime.pinned_pool(procs, max(1, args.workers), cpus, initializer=run_alns._warm) as ex:
         futures = {ex.submit(run_alns._job, key, Instance.from_pickle(path), limit, args.seed, args.workers,
                              overrides): out for out, key, path, limit, overrides in jobs}
         for fut in as_completed(futures):
@@ -319,6 +321,8 @@ def main() -> None:
     r.add_argument("--seed", type=int, default=0)
     r.add_argument("--workers", type=int, default=1)
     r.add_argument("--procs", type=int, default=40, help="busy processes (jobs x workers)")
+    r.add_argument("--cpus", default=None, help="CPUs to pin the jobs to, e.g. 0-39 (default: least busy cores)")
+    r.add_argument("--allow-dirty", action="store_true", help="run on uncommitted source (smoke tests only)")
     p = sub.add_parser("report")
     p.add_argument("--root", required=True)
     p.add_argument("ref")

@@ -95,6 +95,22 @@ def test_anytime_grid():
     assert ("CONSTRUCT", 1, "stream") in large and at.stream_budget(get("MA-AT-150-5-500")) == 560.5
 
 
+def test_c1_grid_and_tune_variants():
+    """The same-host campaign: every competitor on 8 cores at B1 on every instance, ALNS2 on 1 core at the C2
+    budgets, the 500-task settings included (8 restart streams up to B1), no 20-task settings; tune variants."""
+    at = _script("anytime")
+    mid, large = at.grid_c1(get("MA-AT-25-5-50"), 0), at.grid_c1(get("MA-AT-150-5-500"))
+    later = at.grid_c1(get("MA-AT-25-5-50"), at.EXTENDED)
+    for jobs in (mid, later, large):
+        assert {(m, 8, "B1") for m in ("ALNS2", "CPSAT", "PCPSAT", "CPFULL", "RL")} <= set(jobs)
+        assert ("CONSTRUCT", 8, "stream") in jobs and {("ALNS2", 1, b) for b in ("0.5", "1", "2", "B1")} <= set(jobs)
+    assert set(later) < set(mid) and ("PCPSAT", 8, "2B1") in later and ("RL", 8, "1") in mid
+    assert at.grid_c1(get("SA-AT-25-5-20")) == [] and {b for _, c, b in large if c == 8} == {"B1", "stream"}
+    assert at.parse_variant("PCPSAT:sub_time=0.5,q0=8") == ("PCPSAT", "sub_time=0.5,q0=8", {"sub_time": 0.5, "q0": 8})
+    with pytest.raises(SystemExit):
+        at.parse_variant("ALNS2:lam=0.1")
+
+
 def test_construct_streams_are_read_off_at_every_budget():
     """Stream rows: best plan finished by each budget, env-replayed; the 8-stream row is the best of the streams."""
     at = _script("anytime")

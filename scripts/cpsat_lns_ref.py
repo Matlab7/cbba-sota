@@ -5,18 +5,19 @@ Usage: cpsat_lns_ref.py --settings MA-AT-150-5-500 MA-AT-150-10-500 [--n 20] [--
 
 Each job builds the ``greedy.construct`` hint for min(10% of the budget, 3 s) and runs ``cpsat.solve_lns`` with
 ``--workers`` threads and ``--sub-time`` seconds per LNS step for the rest of the budget (the clock starts before
-the hint, after the instance and its travel matrices are loaded). ``--lanes`` jobs run at once, so at most lanes x
-workers threads compute. Rows (env replay of the plan) go to runs/alns/cpsat_ref/<setting>-dev.jsonl, keyed by
-(instance, budget, workers, sub_time); resumable.
+the hint, after the instance and its travel matrices are loaded). ``--lanes`` jobs run at once, each lane process
+pinned to its own ``--workers`` CPUs (``--cpus``, default the least busy physical cores), so at most lanes x workers
+threads compute. Rows (env replay of the plan, 1-based routes, host conditions) go to
+runs/alns/cpsat_ref/<setting>-dev.jsonl, keyed by (instance, budget, workers, sub_time); resumable. A dirty source
+tree is refused unless ``--allow-dirty``.
 """
 from __future__ import annotations
 
 import argparse
 import json
-import multiprocessing as mp
 import os
 import time
-from concurrent.futures import ProcessPoolExecutor, as_completed
+from concurrent.futures import as_completed
 
 from cbba_sota.bench import configs, runtime
 
@@ -29,6 +30,7 @@ def _job(name: str, split: str, i: int, budget: float, workers: int, sub_time: f
 
     inst = Instance.from_pickle(configs.get(name).instance_path(split, i))
     inst.tt, inst.da  # noqa: B018  (loading, outside the budget)
+    probe = runtime.Probe()
     t0, c0 = time.perf_counter(), time.process_time()
     hint = greedy.construct(inst, time_limit=min(0.1 * budget, 3.0))
     hint_ms = evaluate(inst, hint).makespan
@@ -39,8 +41,8 @@ def _job(name: str, split: str, i: int, budget: float, workers: int, sub_time: f
             "workers": workers, "sub_time": sub_time, "makespan": rep["makespan"], "success": rep["success"],
             "eval_makespan": evaluate(inst, res.plan).makespan, "skipped": rep["skipped"], "wall_s": wall,
             "cpu_s": cpu, "hint_makespan": hint_ms, "iterations": res.iterations,
-            "trace": [(t, ms) for t, ms, _ in res.trajectory], "routes": res.plan.to_env_routes(),
-            "fingerprint": runtime.fingerprint(inst), "load1": os.getloadavg()[0]}
+            "trace": [(t, ms) for t, ms, _ in res.trajectory], "routes": res.plan.to_env_routes(), "routes_base": 1,
+            "fingerprint": runtime.fingerprint(inst)} | probe.fields()
 
 
 def main() -> None:
@@ -52,6 +54,8 @@ def main() -> None:
     ap.add_argument("--workers", type=int, default=8)
     ap.add_argument("--lanes", type=int, default=2)
     ap.add_argument("--sub-time", type=float, default=2.0, help="seconds per LNS sub-solve")
+    ap.add_argument("--cpus", default=None, help="CPUs to pin the lanes to (default: least busy cores)")
+    ap.add_argument("--allow-dirty", action="store_true", help="run on uncommitted source (smoke tests only)")
     args = ap.parse_args()
     if args.split == "test":
         raise SystemExit("reference runs for tuning use dev (or validation) splits only")
@@ -71,8 +75,9 @@ def main() -> None:
         jobs += [(out, name, i, b) for i in range(min(args.n, s.n_instances(args.split)))
                  if (i, b, args.workers, args.sub_time) not in done]
     print(f"{len(jobs)} jobs", flush=True)
-    version = runtime.code_version()
-    with ProcessPoolExecutor(args.lanes, mp_context=mp.get_context("spawn")) as ex:
+    version = runtime.require_clean(args.allow_dirty)
+    cpus = runtime.parse_cpus(args.cpus) if args.cpus else None
+    with runtime.pinned_pool(max(1, min(args.lanes, len(jobs))), args.workers, cpus) as ex:
         futures = {ex.submit(_job, name, args.split, i, b, args.workers, args.sub_time): out
                    for out, name, i, b in jobs}
         for fut in as_completed(futures):
