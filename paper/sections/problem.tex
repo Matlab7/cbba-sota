@@ -1,0 +1,32 @@
+\section{Problem}
+\label{sec:problem}
+
+We use the problem and the benchmark of \citet{dai2025heterogeneous} unchanged. An instance has agents
+$A = \{1, \dots, n\}$, tasks $T = \{1, \dots, m\}$ and $K$ traits. Agent $i$ has a binary trait vector
+$a_i \in \{0, 1\}^K$ shared by all agents of its species, starts and ends at its species' depot $o_i$ and moves at a
+common speed $v$. Task $j$ has a location $x_j$, a duration $d_j$ and a requirement vector $r_j \in \mathbb{N}^K$. Travel
+times are Euclidean, $\tau_{jk} = \lVert x_j - x_k \rVert / v$ between tasks and $\tau^0_{ij} = \lVert o_i - x_j \rVert
+/ v$ between agent $i$'s depot and task $j$.
+
+A plan gives every task a coalition $C_j \subseteq A$ that covers it, $\sum_{i \in C_j} a_i \ge r_j$ componentwise,
+and every agent a route, the sequence of the tasks whose coalitions it belongs to. Agents leave their depots at time 0.
+Task $j$ starts when the last member arrives, $s_j = \max_{i \in C_j} \alpha_{ij}$, where $\alpha_{ij}$ is the arrival
+time of member $i$, and it occupies all members until $f_j = s_j + d_j$. A member then travels to the next task on its
+route: if that task is $k$, $\alpha_{ik} = f_j + \tau_{jk}$, and after its last task it returns to its depot. The
+makespan is the latest return to a depot, and the objective is to minimise it. Routes can deadlock: if one agent must
+do $j$ before $k$ and another $k$ before $j$, neither task ever starts. The benchmark's simulator lets an agent join a
+task only while the task is not yet covered, and it stops at simulated time 200; a plan that has not finished all
+tasks by then is a failure.
+
+In the taxonomy of \citet{gerkey2004formal} this is a single-task robot, multi-robot task problem with time-extended
+assignment (ST-MR-TA): coalition formation, routing and scheduling in one. The synchronised starts are what makes it
+hard for construction heuristics and for policies that choose one task at a time: a coalition's start waits for its
+latest member, and that delay propagates along the routes of all members.
+
+\paragraph{Benchmark.} HeteroMRTA \cite{dai2025heterogeneous} draws tasks and depots uniformly in the unit square,
+durations uniformly in $[0, 5)$ and uses $v = 0.2$. It has three families. In SA-BT the agents are single-skilled (one
+trait per species) and requirements are binary; SA-AT has additive requirements of up to two units per trait, so a
+task can need two agents of one species; in MA-AT each species has a distinct random binary trait vector, so agents can have several skills.
+A setting is named by the family and the numbers of agents, species and tasks, e.g.\ MA-AT 150/5/500. We generate
+instances with the benchmark's own generator from fixed seeds, for three disjoint splits (Section~\ref{sec:setup}),
+and use its simulator to score every plan.

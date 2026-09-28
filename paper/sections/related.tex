@@ -1,0 +1,36 @@
+\section{Related Work}
+\label{sec:related}
+
+\paragraph{Task allocation with coalitions.} Multi-robot task allocation has been classified by whether robots do
+one or several tasks at a time, whether tasks need one or several robots, and whether assignments extend over time
+\cite{gerkey2004formal}, and by the dependencies between schedules \cite{korsah2013comprehensive}. Coalition formation
+for tasks that one agent cannot do alone goes back to \citet{shehory1998methods}; anytime coalition formation with
+spatial and temporal constraints is studied by \citet{capezzuto2020anytime}. Market-based methods such as CBBA
+\cite{choi2009consensus} allocate tasks to single robots in a decentralised way. Trait-based approaches allocate
+coalitions by capability requirements and interleave allocation, scheduling and motion planning
+\cite{neville2021interleaved,neville2023ditags}. For the heterogeneous coalition problem studied here, CTAS-D
+\cite{fu2023robust} formulates a mixed-integer program over species-level flows with synchronised start times, and ant
+colony optimisation has been applied to multi-skilled coalitions \cite{babincsak2023ant}.
+
+\paragraph{Learned policies.} \citet{dai2024dynamic} learn to form coalitions and routes with an attention-based policy
+trained by RL, and \citet{dai2025heterogeneous} extend this to heterogeneous agents with trait vectors and release
+the HeteroMRTA benchmark that we use. \citet{bichler2025sadcher} learn by imitation to schedule heterogeneous
+coalitions with precedence constraints in real time. The RL policies decide sequentially and improve by sampling rollouts, like
+attention models for vehicle routing \cite{kool2019attention,kwon2020pomo}. For routing, a systematic evaluation on the
+travelling salesman problem found learned solvers still behind traditional solvers in nearly all respects
+\cite{liu2023how}, and \citet{accorsi2022guidelines} propose guidelines for testing learned routing methods to the
+standards of operations research. On HeteroMRTA, the comparison was with an exact solver under a time limit, ant
+colony heuristics and a greedy rule.
+
+\paragraph{Routing with synchronisation.} Vehicle routing problems in which several vehicles must meet at a
+customer have been studied extensively in operations research \cite{drexl2012synchronization}. Exact and heuristic
+methods exist for routing and scheduling with temporal precedence and synchronisation constraints
+\cite{bredstrom2008combined,parragh2018solving}, and large neighbourhood search with constraint programming was used
+for synchronised routing by \citet{hojabri2018large}. Our method follows this line: LNS \cite{shaw1998using} with
+adaptive operator selection \cite{ropke2006adaptive,pisinger2010large}, specialised to coalitions with a
+representation that makes every move feasible and exactly evaluable.
+
+\paragraph{Evaluating heuristics.} \citet{hooker1995testing} and \citet{johnson2002theoreticians} argue for
+controlled experiments with stated budgets and strong baselines rather than competitive horse races. We follow this
+advice and add a pre-registration of the confirmatory run, with hypotheses, competitors, budgets, analysis and the
+exact code fixed in advance.

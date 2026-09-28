@@ -1,0 +1,10 @@
+# LaTeX build products (paper/build.sh)
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
+*.build.log
+*.pdf
+!by.pdf
+!figures/*.pdf

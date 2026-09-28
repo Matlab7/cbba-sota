@@ -1,0 +1,71 @@
+\section{Results}
+\label{sec:results}
+
+\input{tables/c1c2}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/budget}
+\caption{Mean gap to the best known plan (\%, symmetric log scale) against the wall-clock budget. ALNS on one core
+(line) at 0.5, 1, 2\,s and $B_1$, and on 8 cores at $B_1$ (open square), against every competitor on 8 cores at $B_1$
+(horizontal lines; the dotted vertical line marks $B_1$). CTAS-D, which fails on most instances, is not shown. Test
+split, 50 instances per setting.}
+\label{fig:budget}
+\end{figure*}
+
+\paragraph{C1: equal compute.} ALNS on 8 cores is better than every competitor at the same budget $B_1$ on
+\ConeBheld{} of the \ConeBsettings{} settings (Table~\ref{tab:ratios}a): \ConeBsig{} of the \ConeBtests{} tests are
+significant after Holm's correction (largest adjusted $p = \ConeBmaxp$), and ALNS gives the shorter plan in
+\ConeBwon{} of the \ConeBpairs{} paired runs. Its plans are \ConeBclasslo--\ConeBclasshi\% shorter than those of the
+CP-SAT baselines and restarts, and \ConeBrlgainlo--\ConeBrlgainhi\% shorter than those of the learned policy.
+Settings where C1 does not hold: \ConeBfaillist. The pre-registered decision rule (C1 on at least six of the eight
+settings) therefore \ConeBverdict. With twice the budget, $2B_1$, ALNS stays ahead of parallel CP-SAT LNS, the CP-SAT
+model and restarts on \ConeBBheld{} of \ConeBBsettings{} settings (\ConeBBsig{} of \ConeBBtests{} tests significant,
+plans \ConeBBclasslo--\ConeBBclasshi\% shorter).
+
+\input{tables/methods}
+
+\paragraph{Parallelism does not rescue CP-SAT.} The CP-SAT LNS uses only \Cpucpsatlo--\Cpucpsathi{} of its 8 cores
+(Table~\ref{tab:methods}), because building each sub-model is serial between multi-threaded sub-solves. Its parallel
+version keeps all cores busy (\Cpupcpsatlo--\Cpupcpsathi) and runs many more sub-solves, but it is not clearly better:
+ALNS is \ConeBpcpsatlo--\ConeBpcpsathi{} of the parallel version against \ConeBcpsatlo--\ConeBcpsathi{} of the threaded
+one. CP-SAT's own portfolio on the full model does no better (\ConeBcpfulllo--\ConeBcpfullhi): on the larger instances
+it rarely improves on the construction it is hinted with (in tuning, it ended with its hint on 13 of 16 instances with
+200 or 500 tasks). Short sub-solves do not help either: on
+200 tasks, sub-solves of 0.5\,s or less spent their time building and presolving sub-models and never improved the
+incumbent in our tuning runs.
+
+\paragraph{The exact MILP.} CTAS-D finds a plan within $B_1$ on \CtasSolved{} of the \CtasRuns{} test instances up to
+200 tasks (Table~\ref{tab:ratios}a). This matches the published picture, where Gurobi solved few instances of most
+50-task settings within an hour \cite{dai2025heterogeneous}: the MILP is a strong method on 20 tasks, where our port
+beats the shipped Gurobi solutions, but not a competitor at this scale.
+
+\paragraph{The learned policy.} RL(s.$N$) ends \Gaprllo--\Gaprlhi\% above the best known plans, although it draws
+\RLNlo{} to \RLNhi{} times the published number of rollouts. Restarts of our construction heuristic alone give plans
+\RestartsRLlo--\RestartsRLhi\% shorter (ratio of means): a careful constructor with restarts already closes much
+of the gap to the learned policy, and search closes the rest.
+
+\paragraph{C2: one core.} ALNS on a single core for 2\,s is significantly better than every competitor on 8 cores at
+$B_1$ on \Ctwoheld{} of the \Ctwosettings{} settings: \Ctwoheldlist{} (Table~\ref{tab:ratios}b;
+\Ctwosig{} of \Ctwotests{} tests significant). It does not hold on \Ctwofaillist. Against the learned policy it holds
+everywhere, with plans \Ctworlgainlo--\Ctworlgainhi\% shorter than those RL(s.$N$) finds on 8 cores in 7 to 280
+times the wall-clock time. At 1\,s and 0.5\,s, C2 holds on \CtwoOneheld{} and \CtwoHalfheld{} settings, and at $B_1$
+ALNS on one core has a lower mean gap than every 8-core competitor on \OneCoreBoneAhead{} settings (descriptive;
+Figure~\ref{fig:budget}).
+
+\paragraph{Scaling with cores.} Eight workers instead of one improve ALNS at $B_1$ by only
+\Workersgainlo--\Workersgainhi\% (ratio \Workerslo--\Workershi). Most of its advantage is thus per-core efficiency,
+not parallelism.
+
+\paragraph{How good are the plans?} The best known plans on 50 or more tasks come from ALNS runs, which raises the
+question whether ALNS is merely close to itself. On val, we ran parallel CP-SAT LNS and the full CP-SAT model for
+300\,s on 8 cores from constructions only, 10 to 20 times the compute of $B_1$. On none of the \RefValInstances{} val
+instances with 50 or more tasks did any run without an ALNS component match the best ALNS-derived plan; the best of
+them is on average \RefValFreelo--\RefValFreehi\% longer per setting, while ALNS on 8 cores at $B_1$ ends
+\Gapalnslo--\Gapalnshi\% above the best known on the test split. The certified lower bounds of CP-SAT remain
+\RefValBoundlo--\RefValBoundhi\% below the best known plans, so the distance to the optimum is unknown; the paired
+ratios above do not depend on it.
+
+\paragraph{Execution.} All \RunsBone{} runs of the 8-core, $B_1$ cells were scored; \LateBone{} of them overran their
+budget and were scored at the budget as pre-registered. Rows with more than 40\% throttled CPU periods were re-run and
+left out; the per-row host conditions are in the supplement.

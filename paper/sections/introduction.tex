@@ -1,0 +1,66 @@
+\section{Introduction}
+\label{sec:intro}
+
+\begin{figure*}[t]
+\centering
+\resizebox{\textwidth}{!}{\input{figures/overview}}
+\caption{Overview. (a) Robots with binary trait vectors must gather in coalitions that cover each task's requirement
+vector; a task starts when its last member arrives, so a late member delays the whole coalition and everything after
+it. (b) Our ALNS searches over a global task order with a minimal covering coalition per task, which cannot deadlock
+and is evaluated exactly; insertions are scored in time linear in the coalition size from longest-path tails
+(Eq.~\eqref{eq:insert}). (c) Every method runs on the same pinned cores for the same budget, under a pre-registration
+frozen before the single run on the test split.}
+\label{fig:overview}
+\end{figure*}
+
+Teams of heterogeneous robots are deployed for search and rescue, inspection and construction, where many tasks need
+capabilities that no single robot has \cite{kashino2020aerial,korsah2013comprehensive}. A task can then only start
+once a coalition whose combined capabilities cover its requirements has gathered at its location, and every member
+waits for the last one to arrive. Allocating coalitions, ordering each robot's tasks and timing the joint starts are
+therefore one coupled problem: a robot that arrives late delays every task downstream of its coalition partners, and
+an inconsistent ordering of shared tasks can deadlock the team. Such problems, where the schedules of different robots
+constrain each other, are the hardest classes of the multi-robot task allocation taxonomies
+\cite{gerkey2004formal,korsah2013comprehensive}.
+
+Recent work has approached this problem with learned policies. \citet{dai2025heterogeneous} train a decentralised
+policy by reinforcement learning (RL), with which each robot chooses its next task through an attention mechanism,
+and report that it closely matches or outperforms heuristic and mixed-integer programming baselines while being at
+least two orders of magnitude faster. Their best variant samples ten rollouts, RL(s.10), and scales to 150 robots and
+500 tasks on the HeteroMRTA benchmark that they release, while the exact baseline, the MILP CTAS-D
+\cite{fu2023robust}, solves few instances of most 50-task settings within an hour. Related learned approaches form
+coalitions and routes for homogeneous teams \cite{dai2024dynamic} or schedule heterogeneous coalitions with precedence
+constraints by imitation learning \cite{bichler2025sadcher}. In the HeteroMRTA evaluation, the classical competitors
+are an exact solver stopped at a time limit, ant colony heuristics \cite{babincsak2023ant} and a greedy rule, and
+each method runs at its own time budget.
+
+Operations research has a long record of strong anytime heuristics for closely related problems, in particular
+large neighbourhood search (LNS) for vehicle routing with synchronisation constraints
+\cite{drexl2012synchronization,hojabri2018large,parragh2018solving}. It is therefore natural to ask how much of the
+reported advantage of learned policies survives a comparison with a well-engineered search method and strong
+constraint-programming baselines, when every method gets the same wall-clock time on the same cores. We answer this
+question on HeteroMRTA with a pre-registered, compute-matched study (Figure~\ref{fig:overview}).
+
+\paragraph{Contributions.}
+\begin{itemize}
+\item \textbf{An ALNS for coalition formation and scheduling with synchronisation} (Section~\ref{sec:method}). Plans
+  are a global task order with one minimal covering coalition per task. This representation is deadlock-free by
+  construction, its forward pass reproduces the benchmark's own simulator bit for bit, and an insertion move is
+  evaluated exactly in time linear in the coalition size from longest-path tails.
+\item \textbf{A compute-matched evaluation protocol} (Section~\ref{sec:setup}). All methods run in the same lanes of
+  pinned physical cores at the benchmark's own budgets, with their CPU use recorded and host throttling monitored.
+  Competitors are tuned on a separate split. The hypotheses, competitors, budgets and analysis were frozen, and the
+  frozen code identified by its git trees, before the single run on the test split.
+\item \textbf{Strong competitors.} Besides the published RL policy and constructor restarts, we compare with
+  CP-SAT LNS in a threaded and a properly parallel form, with CP-SAT's own portfolio on the full model, and with
+  CTAS-D, which we port to an open solver and check against the benchmark authors' own Gurobi solutions.
+\item \textbf{Findings} (Section~\ref{sec:results}). ALNS is significantly better than every competitor on
+  \ConeBheld{} of the 8 settings with 50 to 500 tasks, with plans \ConeBclasslo--\ConeBclasshi\% shorter than
+  those of the classical baselines and \ConeBrlgainlo--\ConeBrlgainhi\% shorter than those of the learned policy.
+  Parallelising CP-SAT does not close the gap, the exact MILP rarely produces a plan within the budget, and ALNS on a
+  single core for 2\,s is already significantly better than every eight-core competitor at the full budget on
+  \Ctwoheld{} of the 8 settings.
+\end{itemize}
+
+We take no position against learning for multi-robot coordination. Our results say that on this benchmark, at equal
+compute, careful search is the stronger method, and that learned planners should be evaluated against such search
+at matched budgets. The code and every result row are provided with the paper.

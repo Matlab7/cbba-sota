@@ -1,0 +1,19 @@
+\begin{table}[t]
+\centering
+\small
+\caption{Mean gap to the best plan found by any run (\%) and CPU used (CPU seconds of all processes and threads / ($B_1 \times 8$)) at budget $B_1$ on 8 cores; range over the eight settings. CTAS-D: share of the instances solved within $B_1$, up to 200 tasks.}
+\label{tab:methods}
+\begin{tabular}{lcc}
+\toprule
+Method & Gap to best (\%) & CPU used \\
+\midrule
+ALNS (ours) & 0.0--1.5 & 0.99--1.00 \\
+CP-SAT LNS & 3.6--13.3 & 0.28--0.79 \\
+Parallel CP-SAT LNS & 5.5--13.5 & 0.99--1.00 \\
+CP-SAT model & 7.8--15.8 & 0.43--0.90 \\
+CTAS-D (MILP) & solves 0--100\% & 0.43--0.97 \\
+Restarts & 8.1--14.6 & 1.00--1.00 \\
+RL(s.$N$) [published] & 27.2--47.1 & 0.94--0.99 \\
+\bottomrule
+\end{tabular}
+\end{table}

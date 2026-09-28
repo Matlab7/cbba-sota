@@ -1,0 +1,66 @@
+\section{Experimental Setup}
+\label{sec:setup}
+
+\input{tables/settings}
+
+\paragraph{Instances.} We study the eight settings of the benchmark with 50 or more tasks (Table~\ref{tab:settings}).
+As pre-registered, the confirmatory test leaves out the eight 20-task settings, which exact methods reach (CP-SAT
+proves every val instance of SA-BT 25/5/20 optimal); the supplement reports three of them descriptively. Instances are generated with the benchmark's generator from disjoint seed ranges into three splits
+per setting: \emph{dev} (20 instances), on which ALNS and every competitor were tuned; \emph{val} (20 instances),
+used only for dry runs, anytime curves and reference solutions; and \emph{test} (50 instances), run once. On our
+test instances the released RL policy reproduces the published mean makespans of RL(g.) and RL(s.10) within half a
+standard deviation on all 16 settings of the benchmark, which confirms both the instances and our use of the policy.
+
+\paragraph{Competitors.} Every competitor is compared separately and runs on the same 8 cores as ALNS.
+\begin{itemize}
+\item \textbf{RL(s.$N$)}: the released policy of \citet{dai2025heterogeneous} in 8 single-threaded processes, each
+  sampling rollouts in lockstep batches until the budget is used; the best rollout counts. It draws \RLNlo{} to
+  \RLNhi{} times as many rollouts as the published RL(s.10) (Table~\ref{tab:settings}).
+\item \textbf{CP-SAT LNS}: LNS with the CP-SAT solver \cite{perron2026cpsat}. Each step frees a window of tasks
+  (critical chain, spatial, temporal or random), fixes all other coalitions and re-solves a CP model with one circuit
+  constraint per affected agent, with 8 threads per sub-solve, starting from our construction heuristic.
+\item \textbf{Parallel CP-SAT LNS}: the same with 8 single-threaded workers that improve one shared incumbent,
+  starting from the best of 8 construction streams, so that all cores stay busy.
+\item \textbf{CP-SAT model}: the full CP-SAT model of the problem (a circuit per agent over its candidate tasks,
+  coverage constraints, symmetry breaking between identical agents) solved by CP-SAT's parallel portfolio of
+  complete and LNS workers \cite{perron2023cpsatlp} with 8 threads, hinted with the best of 8 construction streams.
+\item \textbf{CTAS-D}: the MILP of \citet{fu2023robust} that the benchmark paper used, which we port from the
+  authors' public code to CP-SAT as the MIP solver (no Gurobi licence), with 8 threads and no warm start. The shipped
+  Gurobi solutions of the benchmark's 50 released test instances satisfy our model and reproduce their objective
+  values, and on ten of them our port finds, in 60\,s, plans 4.1\% shorter than the shipped 600-s Gurobi runs. On the
+  500-task settings it found no solution within $B_1$ on dev and used 55--87\,GB of memory, so it is counted as
+  failing there and not run.
+\item \textbf{Restarts}: 8 independent streams of our randomized constructions (Section~\ref{sec:search}); the best
+  plan finished within the budget counts.
+\end{itemize}
+The sub-solve length of parallel CP-SAT LNS (0.5--5\,s) and the arc restriction of the CP-SAT model (all arcs or the
+5--20 nearest tasks) were chosen per setting on dev, where CP-SAT LNS keeps its setting from earlier tuning (2\,s
+sub-solves, 10\,s on MA-AT 150/10/500). Every plan is scored by replaying it in the benchmark's simulator; RL is scored
+by its own rollout. A run without a plan, or whose plan does not finish all tasks before the simulator's limit,
+counts as makespan 200.
+
+\paragraph{Compute.} The budget $B_1$ of a setting is the computation time that the benchmark paper reports for
+RL(s.10), and $2B_1$ is its double. All runs used one host with two Intel Xeon Platinum 8480C processors in a container
+with a quota of 57.6 CPUs, running at most six lanes of 8 CPUs, one per physical core, with the jobs of all methods
+shuffled into the same lanes. Budgets start once the instance is loaded in a warm process (compiled kernels, loaded
+network weights) and include construction and model building. A lane starts a job only when at most 40\% of the
+container's CPU periods were throttled in the last second; a job that saw more throttling is re-run. A run that
+overruns its budget by more than 10\% + 0.25\,s is scored by the best plan it had found by the budget, or as a failure
+if it records none. We report the CPU time that each method actually used.
+
+\paragraph{Hypotheses and analysis.} The pre-registered hypotheses are:
+\textbf{C1}: on each setting, ALNS on 8 cores at $B_1$ has a lower mean makespan than each competitor on 8 cores at
+$B_1$ (46 tests: 8 settings $\times$ 6 competitors, without CTAS-D on the 500-task settings);
+\textbf{C1 at $2B_1$}: the same against parallel CP-SAT LNS, the CP-SAT model and restarts at $2B_1$ on the six settings
+up to 200 tasks (17 tests); and \textbf{C2}: ALNS on one core for 2\,s is better than each competitor on 8 cores at
+$B_1$ (46 tests). For each instance we compute the ratio of makespans ALNS / competitor and report its mean with a
+paired bootstrap 95\% confidence interval (10,000 resamples) \cite{efron1993introduction}. Each test is a one-sided
+paired $t$-test of the mean log ratio below zero, with Holm's correction \cite{holm1979simple} within each of the three
+families at $\alpha = 0.05$. C1 holds on a setting if all its tests are significant, and we claim C1 if it holds on at
+least six of the eight settings. There is no minimum effect size; we report effect sizes throughout.
+
+\paragraph{Pre-registration.} Hypotheses, competitors and their settings, budgets, instances, execution rules, analysis
+and decision rule were written down and frozen before any ALNS or CP-SAT run on the test split. The frozen document
+records the git object identifiers of the source trees, and our harness refuses to run on the test split unless the
+checked-out code is exactly those trees. The test split was run once. Its known weaknesses are listed in it and in
+Section~\ref{sec:discussion}. All seeds are fixed: one run per instance, method and budget.

@@ -1,0 +1,125 @@
+\section{Adaptive Large Neighbourhood Search}
+\label{sec:method}
+
+Our method is an adaptive large neighbourhood search (ALNS) \cite{shaw1998using,ropke2006adaptive,pisinger2010large}:
+it repeatedly removes a few tasks from the current plan and reinserts them, and it accepts the result by simulated
+annealing \cite{kirkpatrick1983optimization}. Its strength comes from a plan representation in which every move is
+feasible and cheap to evaluate exactly.
+
+\subsection{Plan representation}
+\label{sec:repr}
+
+A plan is a pair $(\pi, C)$ of a global order $\pi$ of the tasks and a coalition $C_j$ for every task; every agent
+visits its tasks in the order of $\pi$. A forward pass over $\pi$ computes the schedule in time
+$O(\sum_j |C_j|)$: for the next task $j$, each member's arrival follows from its previous task, $s_j$ is their
+maximum and $f_j = s_j + d_j$. The representation has three properties.
+\begin{enumerate}
+\item \emph{Deadlock-free.} Every precedence between two tasks on a route follows $\pi$, so no cycle can form.
+\item \emph{Exact.} We compute travel times exactly as the benchmark's simulator does, so the forward pass reproduces
+  the simulator's makespan bit for bit; our tests check this by replaying plans in the simulator, and every reported
+  result is the simulator's own score.
+\item \emph{Minimal covers.} Since the simulator does not let an agent join a task that is already covered, every
+  $C_j$ must be a minimal cover: no member can be left out without breaking coverage. The search keeps this invariant.
+\end{enumerate}
+Restricting the search to such plans loses nothing:
+\begin{proposition}
+For every deadlock-free plan there is a plan $(\pi, C)$ with minimal covers whose makespan is not larger.
+\end{proposition}
+\begin{proof}[Proof sketch]
+Let $\pi$ order the tasks by start time, breaking ties by a topological order of the route precedences (which exists
+because the plan does not deadlock); every route follows $\pi$, and the forward pass gives the same schedule. Now drop
+redundant members one at a time. Task $j$ then starts at the maximum of fewer arrivals, so not later. The dropped
+member $i$ goes straight from its previous location $p$ to its next task $k$; it used to arrive at $k$ at
+$f_j + \tau_{jk} \ge \alpha_{ij} + \tau_{jk} = f_p + \tau_{pj} + \tau_{jk} \ge f_p + \tau_{pk}$ by the triangle
+inequality, so it arrives no later. Since starts are monotone in arrivals, no task starts later and no agent returns
+later.
+\end{proof}
+
+\subsection{Exact insertion in linear time}
+\label{sec:insertion}
+
+The central operation inserts a task $j$ into a plan that lacks it: it chooses a position in $\pi$ and a coalition.
+Let the position be after the prefix $\pi_{1..p}$. The prefix schedule does not change, so the arrival of every agent
+at $j$ is known. We take the \emph{earliest-arrival cover}: add agents that contribute to an unmet requirement in
+order of arrival until $j$ is covered, then drop redundant members, latest arrival first. This is a minimal cover
+with the earliest possible start $s_j$ at that position.
+
+The new makespan follows in $O(|C_j|)$. The earliest-start schedule is a longest-path computation in the acyclic graph
+of the routes, so let the \emph{tail} $\theta_k$ of a task be the length of the longest path from its start to the
+end: $\theta_k = d_k$ plus the largest, over its members, of the travel to that member's next task plus that task's
+tail, or of the travel home. Inserting $j$ adds paths through $j$ and replaces each member's route arc $p \to k$ by
+$p \to j \to k$, which is never shorter by the triangle inequality. Hence the makespan after the insertion is exactly
+\begin{equation}
+  M' = \max\Big(M,\; s_j + d_j + \max_{i \in C_j} \big(\tau_{j k_i} + \theta_{k_i}\big)\Big),
+  \label{eq:insert}
+\end{equation}
+where $M$ is the old makespan, $k_i$ is member $i$'s next task after the position ($\tau_{jk_i} + \theta_{k_i}$ is
+replaced by the travel home if there is none), and the tails are those of the old plan, since no task after the
+position has a path to $j$. One sweep over $\pi$ updates the agents' arrivals at $j$ incrementally and scores every
+position; positions where no capable agent's arrival changed are skipped, and for plans with more than 64 positions
+only 64 are tried: the first, the last and those next to $j$'s nearest tasks.
+
+The search objective is the makespan plus $\lambda$ times the mean finish time ($\lambda = 0.1$), which breaks the
+many ties in makespan and rewards schedules with slack. For the second term, the delays that the new coalition causes
+at its members' next tasks give a lower bound for every position; positions are then evaluated best-first by this
+bound, with a forward pass that re-runs only agents whose state differs from the old schedule and stops as soon as
+none does, until the bound exceeds the best position found. The chosen insertion is thus exact, and the whole
+evaluation is identical to a full forward pass (which our tests check).
+
+\subsection{Search}
+\label{sec:search}
+
+\begin{algorithm}[t]
+\caption{ALNS worker (one process)}
+\label{alg:alns}
+\begin{algorithmic}[1]
+\STATE $x \gets$ best of randomized constructions, run for 5\% of the budget
+\STATE $x^* \gets x$; operator weights $w \gets 1$; temperature $t \gets t_0$
+\WHILE{time remains}
+  \STATE pick destroy $D$ and repair $R$ by roulette on $w$; $q \sim U\{1, \dots, q_{\max}\}$
+  \STATE $x' \gets R(D(x, q))$ \COMMENT{or exchange of route tails}
+  \IF{$g(x') \le g(x)$ or $u < e^{-(g(x') - g(x))/t}$}
+    \STATE $x \gets x'$; with probability 0.1 re-sort $\pi$ by start time
+    \IF{$x$ is better than $x^*$ (makespan, then $g$)} \STATE $x^* \gets x$ \ENDIF
+  \ENDIF
+  \STATE update scores; every 100 iterations update $w$; cool $t$
+  \STATE after 3000 iterations without a new best: $x \gets x^*$
+  \STATE every second: exchange $x^*$ with the other workers
+\ENDWHILE
+\RETURN $x^*$
+\end{algorithmic}
+\end{algorithm}
+
+Algorithm~\ref{alg:alns} shows one worker; $g$ is the search objective.
+
+\paragraph{Construction.} For the first 5\% of the budget, a worker builds plans by list scheduling
+\cite{kolisch1996serial} (repeatedly append the task whose earliest-arrival cover starts first), by the same with noisy scores, and, up to 100 tasks, by
+random-order best insertion, and keeps the best.
+
+\paragraph{Destroy operators} remove $q$ tasks, with $q$ uniform in $\{1, \dots, q_{\max}\}$ and
+$q_{\max} = \mathrm{clip}(\mathrm{round}(4\sqrt{50/m}), 2, 6)$: large instances are short of iterations and gain from
+many small moves. \emph{Random} removes uniformly; \emph{related} removes tasks close to a random seed task in a random
+mix of distance, start time and requirement \cite{shaw1998using}; \emph{worst wait} prefers tasks whose members wait
+longest; \emph{critical} removes tasks of the chain that determines the makespan (following the latest-arriving member
+back to its depot) and their spatial neighbours; \emph{route segment} removes consecutive tasks of one agent's route,
+half of the time the agent that returns last. Selection is randomised by rank as in \citet{ropke2006adaptive}. A sixth
+move exchanges the route tails of two agents with identical traits after a random position in $\pi$; it keeps all
+covers minimal and needs no repair.
+
+\paragraph{Repair operators} reinsert the removed tasks one at a time with the exact insertion of
+Section~\ref{sec:insertion}: in random order, in random order with arrival times perturbed by up to 20\% when
+choosing covers, largest requirement first, or by regret-2 (for up to ten removed tasks, else in random order).
+
+\paragraph{Acceptance and adaptation.} Candidates are accepted by simulated annealing on $g$, with the temperature
+cooled geometrically over the wall-clock budget from $t_0 = 0.01\, g_0 \min(1, (50/m)^{1.5})$ to $t_0 / 50$, where
+$g_0$ is the objective of the construction. Operator weights adapt by segment scores \cite{ropke2006adaptive}. After
+an accepted move the order $\pi$ is re-sorted by start time with probability 0.1; this is the same plan and schedule,
+but later insertions then see positions on a time line. After 3000 iterations without a new best plan, the search
+returns to the best plan.
+
+\paragraph{Parallel workers.} On $c$ cores, $c$ independent workers with different seeds exchange their best plans
+through shared memory every second: a worker publishes its best plan if it beats the shared one and adopts the shared
+plan if it is strictly better. The kernels are compiled with Numba; a worker runs \ItsFiftylo--\ItsFiftyhi{} iterations per
+second on the 50-task instances and about \ItsFivehundred{} on the 500-task ones. All parameters were set on a separate tuning split
+(Section~\ref{sec:setup}); several other components (elite pools with crossover, kicks, growing removal sizes, member
+swaps, delay-aware covers) were tried there and not kept.

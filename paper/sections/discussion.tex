@@ -1,0 +1,50 @@
+\section{Discussion}
+\label{sec:discussion}
+
+\paragraph{Why search wins here.} The learned policy builds a plan in one pass of sequential decisions, and sampling
+more rollouts adds diversity but no improvement of a given plan. ALNS spends the same time improving one plan with
+many cheap, exact moves: our representation keeps every move feasible, and Eq.~\eqref{eq:insert} scores an insertion
+in time linear in the coalition size, so a single core evaluates thousands of neighbours per second. The CP-SAT
+baselines search a richer neighbourhood per step but pay for building and solving a model at every step, which is why
+parallelising them helps little.
+
+\paragraph{Implications.} We do not claim that learning is the wrong tool for multi-robot coordination: a
+decentralised policy can react to events that a central plan cannot. But the static planning performance of
+learned policies should be measured against strong search at matched compute, on the same cores and with the CPU
+use reported. The published comparison missed plans \ConeBrlgainlo--\ConeBrlgainhi\% shorter, which a standard
+operations-research technique adapted to coalitions finds at the same budget, and largely already on one core in 2\,s.
+
+\paragraph{Limitations.}
+\begin{itemize}
+\item \emph{Static, centralised planning.} We evaluate plans for fully known, static instances, as the benchmark
+  does. The RL policy is decentralised and reactive, which matters under uncertainty and with dynamic arrivals; we
+  did not evaluate such settings in the confirmatory run. An exploratory dynamic variant did not pass the go/no-go
+  gates we had set on dev, and it is reported in the supplement as a negative result.
+\item \emph{One benchmark.} All instances come from one generator with Euclidean travel, one speed and a makespan
+  objective. We expect the representation to transfer to other objectives and travel models, but have not tested it.
+\item \emph{RL on CPU.} To match compute, the policy runs on the same CPU cores as every other method. On a GPU it
+  could draw more rollouts. It already draws \RLNlo{} to \RLNhi{} times the published number, which makes its plans
+  only \RLsamplegainlo--\RLsamplegainhi\% shorter than with ten rollouts.
+\item \emph{Unknown optimality gaps.} On 50 or more tasks no method proves optimality, and the certified bounds are
+  loose, so we report gaps to the best known plans and ratios between methods.
+\item \emph{Tuning.} ALNS was developed and tuned on the dev split of the same generator. Every competitor with a
+  parameter was tuned per setting on the same split, which favours the competitors.
+\item \emph{Pre-registration.} The val dry run was known before the freeze, the test-split results of the
+  constructor and of the RL policy had been seen in an earlier phase, and the released test set of the benchmark
+  (not blind) was used to choose CTAS-D's solver. No ALNS or CP-SAT variant and no CTAS-D port ran on the test split
+  before the freeze.
+\item \emph{Single host and seed.} All timed runs used one host and one seed per instance, method and budget. On
+  val, 52 cells measured on two different hosts agreed within 2\%.
+\item \emph{CTAS-D.} Our port solves the published model with an open solver on a time grid of $10^{-3}$ and counts
+  model building in the budget; it is not the benchmark paper's Gurobi run, although it beats that run on the
+  released 20-task instances.
+\end{itemize}
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+On the HeteroMRTA benchmark, an adaptive large neighbourhood search over a deadlock-free coalition representation
+with exact linear-time insertion finds plans \ConeBrlgainlo--\ConeBrlgainhi\% shorter than the published
+reinforcement-learning policy and \ConeBclasslo--\ConeBclasshi\% shorter than three CP-SAT baselines and restarts, while
+the exact MILP rarely finds a plan at all, at equal compute and under a pre-registered protocol. We release the solver, the harness, the pre-registration and every result row, so that future learned
+planners can be compared against this baseline at matched budgets.

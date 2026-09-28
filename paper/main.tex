@@ -1,0 +1,80 @@
+%%% AAMAS 2027 submission (main track, anonymous). Build: paper/build.sh
+\documentclass[sigconf,anonymous]{aamas}
+
+\usepackage{balance}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{amsmath}
+\usepackage{xspace}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,calc,patterns,decorations.pathreplacing}
+% fonts of the template (Linux Libertine, Inconsolata) installed in the user texmf: load their maps explicitly
+\pdfmapfile{+libertine.map}\pdfmapfile{+zi4.map}\pdfmapfile{+newtx.map}
+
+%%% AAMAS-2027 copyright block (do not change!)
+\makeatletter
+\gdef\@copyrightpermission{
+  \begin{minipage}{0.2\columnwidth}
+   \href{https://creativecommons.org/licenses/by/4.0/}{\includegraphics[width=0.90\textwidth]{by}}
+  \end{minipage}\hfill
+  \begin{minipage}{0.8\columnwidth}
+   \href{https://creativecommons.org/licenses/by/4.0/}{This work is licensed under a Creative Commons Attribution International 4.0 License.}
+  \end{minipage}
+  \vspace{5pt}
+}
+\makeatother
+
+\setcopyright{ifaamas}
+\acmConference[AAMAS 2027]{Proc.\@ of the 26th International Conference
+on Autonomous Agents and Multiagent Systems (AAMAS 2027)}{3--7 May 2027}{Hanoi, Vietnam}{M.~Baldoni, F.~Fang, W.~Yeoh, N.~Yorke-Smith (eds.)}
+\copyrightyear{2027}
+\acmYear{2027}
+\acmDOI{}
+\acmISBN{}
+
+\acmSubmissionID{<<OpenReview submission id>>}
+\submissionType{Research Paper Track}
+
+\input{tables/numbers}
+\newcommand{\alns}{ALNS\xspace}
+\newcommand{\Bone}{$B_1$\xspace}
+\newcommand{\Btwo}{$2B_1$\xspace}
+
+\title[ALNS for Heterogeneous Multi-Robot Coalition Scheduling]{Search Beats Learning at Equal Compute: A Pre-Registered
+Study of Heterogeneous Multi-Robot Coalition Formation and Scheduling}
+
+\author{Anonymous Author(s)}
+\affiliation{\institution{Anonymous Institution}\country{Anonymous}}
+
+\begin{abstract}
+\input{sections/abstract}
+\end{abstract}
+
+\keywords{Multi-robot task allocation; Coalition formation; Scheduling with synchronization; Large neighbourhood
+search; Constraint programming; Benchmarking}
+
+\begin{document}
+
+\pagestyle{fancy}
+\fancyhead{}
+
+\maketitle
+
+\input{sections/introduction}
+\input{sections/problem}
+\input{sections/method}
+\input{sections/related}
+\input{sections/setup}
+\input{sections/results}
+\input{sections/discussion}
+
+\section*{Use of AI Assistance}
+\input{sections/disclosure}
+
+\balance
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{refs}
+
+\end{document}
