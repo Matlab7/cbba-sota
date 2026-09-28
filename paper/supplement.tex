@@ -49,9 +49,12 @@ pre-registration, every result row of the test campaign and the scripts that pro
 \end{itemize}
 The benchmark itself (generator, simulator and released policy) is the public code of \citet{dai2025heterogeneous}; our
 instances are regenerated from their seeds (\texttt{scripts/gen\_instances.py --check} verifies all 1490 files). The
-test campaign runs with
-\texttt{anytime.py run --split test --grid test --n 50 --n-large 50 --lanes 6 --out runs/anytime\_test} from a clean
-checkout of the frozen code, and \texttt{docs/results/test/analyze.sh} produces its reports.
+test campaign runs from a clean checkout of the frozen code with
+\begin{quote}\small\ttfamily
+anytime.py run --split test --grid test --n 50 --n-large 50\\
+\hspace*{1em}--lanes 6 --out runs/anytime\_test
+\end{quote}
+and \texttt{docs/results/test/analyze.sh} produces its reports.
 
 \section{Exactness of the evaluator}
 \label{sec:s-exact}
