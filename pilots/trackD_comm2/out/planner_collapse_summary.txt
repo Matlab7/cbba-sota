@@ -1,0 +1,19 @@
+mean makespan and paired ratios (geo-mean), n = instances x seeds
+N2-dur.3/causal  MA-AT-25-5-50  n=20 OL-A=43.57 RH-A=47.32 OL-C=51.25 RH-C=51.88 RH-CA=50.40 | RH-A/RH-C 0.905[0.871,0.940] | RH-A/OL-A 1.072[1.032,1.115] | RH-C/OL-C 1.008[0.978,1.043] | RH-CA/RH-C 0.973[0.948,0.999]
+N2-dur.3/causal  MA-AT-50-5-50  n=20 OL-A=25.47 RH-A=25.96 OL-C=29.36 RH-C=29.22 RH-CA=28.40 | RH-A/RH-C 0.886[0.854,0.923] | RH-A/OL-A 1.022[0.993,1.052] | RH-C/OL-C 0.991[0.960,1.021] | RH-CA/RH-C 0.971[0.935,1.009]
+N2-dur.3/causal  SA-AT-50-5-50  n=20 OL-A=37.50 RH-A=36.58 OL-C=40.94 RH-C=39.22 RH-CA=40.16 | RH-A/RH-C 0.933[0.906,0.961] | RH-A/OL-A 0.976[0.949,1.003] | RH-C/OL-C 0.957[0.930,0.985] | RH-CA/RH-C 1.023[0.994,1.051]
+N2-dur.3/causal  SA-BT-50-5-50  n=20 OL-A=20.62 RH-A=20.58 OL-C=22.87 RH-C=22.81 RH-CA=22.88 | RH-A/RH-C 0.901[0.877,0.929] | RH-A/OL-A 0.997[0.981,1.015] | RH-C/OL-C 0.997[0.974,1.022] | RH-CA/RH-C 1.003[0.975,1.035]
+N3-mod/causal    MA-AT-25-5-50  n=20 OL-A=52.44 RH-A=54.19 OL-C=61.44 RH-C=61.95 RH-CA=60.15 | RH-A/RH-C 0.877[0.855,0.901] | RH-A/OL-A 1.028[0.996,1.064] | RH-C/OL-C 1.003[0.974,1.035] | RH-CA/RH-C 0.975[0.939,1.013]
+N3-mod/causal    MA-AT-50-5-50  n=20 OL-A=31.22 RH-A=31.64 OL-C=36.13 RH-C=36.16 RH-CA=35.38 | RH-A/RH-C 0.875[0.849,0.902] | RH-A/OL-A 1.014[0.989,1.041] | RH-C/OL-C 0.996[0.962,1.031] | RH-CA/RH-C 0.982[0.953,1.015]
+N3-mod/causal    SA-AT-50-5-50  n=20 OL-A=46.77 RH-A=46.25 OL-C=51.38 RH-C=48.44 RH-CA=48.52 | RH-A/RH-C 0.954[0.929,0.979] | RH-A/OL-A 0.989[0.957,1.021] | RH-C/OL-C 0.942[0.919,0.967] | RH-CA/RH-C 1.002[0.972,1.032]
+N3-mod/causal    SA-BT-50-5-50  n=20 OL-A=25.98 RH-A=25.47 OL-C=28.69 RH-C=28.00 RH-CA=27.46 | RH-A/RH-C 0.909[0.875,0.940] | RH-A/OL-A 0.981[0.950,1.010] | RH-C/OL-C 0.978[0.938,1.019] | RH-CA/RH-C 0.979[0.940,1.019]
+POOLED over settings
+  N2-dur.3/causal  RH-A/OL-A 1.016 [1.000,1.033] wins 32/80 p=0.06
+  N2-dur.3/causal  RH-A/RH-C 0.906 [0.890,0.923] wins 69/80 p=3.3e-17
+  N2-dur.3/causal  RH-C/OL-C 0.988 [0.973,1.004] wins 44/80 p=0.13
+  N2-dur.3/causal  RH-CA/RH-C 0.992 [0.976,1.008] wins 43/80 p=0.35
+  N3-mod/causal    RH-A/OL-A 1.003 [0.987,1.020] wins 38/80 p=0.72
+  N3-mod/causal    RH-A/RH-C 0.904 [0.888,0.919] wins 73/80 p=5.3e-19
+  N3-mod/causal    RH-C/OL-C 0.980 [0.962,0.998] wins 52/80 p=0.026
+  N3-mod/causal    RH-CA/RH-C 0.984 [0.967,1.002] wins 48/80 p=0.086
+replans/episode: {'OL-A': np.float64(0.0), 'RH-A': np.float64(39.30625), 'OL-C': np.float64(0.0), 'RH-C': np.float64(38.59375), 'RH-CA': np.float64(38.80625)} solver_s: {'OL-A': np.float64(0.0), 'RH-A': np.float64(0.81), 'OL-C': np.float64(0.0), 'RH-C': np.float64(0.07), 'RH-CA': np.float64(0.07)}

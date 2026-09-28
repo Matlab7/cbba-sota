@@ -1,0 +1,17 @@
+paired vs CEN-F (central rolling re-solve at the station + local fallback), same dispatcher planner; 3 settings x 10 inst x 2 seeds
+ R=0.3   INF-r /CEN-F 0.988 [0.958,1.017] wins 23/60 p=0.46
+ R=0.3   DTH1  /CEN-F 0.988 [0.952,1.025] wins 24/60 p=0.52
+ R=0.3   REP+  /CEN-F 1.024 [0.985,1.071] wins 20/60 p=0.28
+ R=0.3   LOC-F /CEN-F 0.977 [0.956,0.998] wins 16/60 p=0.041
+ R=0.2   INF-r /CEN-F 0.948 [0.902,0.992] wins 36/60 p=0.032
+ R=0.2   DTH1  /CEN-F 0.924 [0.880,0.964] wins 38/60 p=0.0015
+ R=0.2   REP+  /CEN-F 0.938 [0.904,0.969] wins 40/60 p=0.00074
+ R=0.2   LOC-F /CEN-F 0.967 [0.932,0.999] wins 33/60 p=0.065
+ R=0.15  INF-r /CEN-F 0.921 [0.869,0.969] wins 33/60 p=0.0049
+ R=0.15  DTH1  /CEN-F 0.907 [0.858,0.954] wins 34/60 p=0.00085
+ R=0.15  REP+  /CEN-F 0.965 [0.898,1.052] wins 33/60 p=0.39
+ R=0.15  LOC-F /CEN-F 1.052 [0.995,1.111] wins 23/60 p=0.087
+ R=0.1   INF-r /CEN-F 0.772 [0.728,0.818] wins 50/60 p=7.7e-12
+ R=0.1   DTH1  /CEN-F 0.792 [0.746,0.842] wins 49/60 p=8.9e-10
+ R=0.1   REP+  /CEN-F 0.818 [0.772,0.867] wins 50/60 p=7.5e-09
+ R=0.1   LOC-F /CEN-F 1.010 [0.946,1.080] wins 30/60 p=0.77

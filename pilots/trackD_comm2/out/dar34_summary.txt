@@ -1,0 +1,198 @@
+
+MA-AT-25-5-50 R=0.3 n=40 FULL 52.25
+  REP     /FULL 1.070 succ 1.00 wasted   3.0 vers    2526   DAR-r/REP 1.000 [0.935,1.076] w18/40
+  REP+    /FULL 1.112 succ 0.95 wasted   2.1 vers    1972   DAR-r/REP+ 0.962 [0.860,1.061] w21/40
+  INF-r   /FULL 1.010 succ 1.00 wasted   2.3 vers    1244   DAR-r/INF-r 1.059 [1.003,1.133] w17/40
+  CSR2    /FULL 1.027 succ 1.00 wasted   2.8 vers    2129   DAR-r/CSR2 1.042 [0.981,1.120] w19/40
+  CSR4    /FULL 1.014 succ 1.00 wasted   3.5 vers    1702   DAR-r/CSR4 1.055 [1.005,1.123] w12/40
+  CSR8    /FULL 1.056 succ 1.00 wasted   4.3 vers    1777   DAR-r/CSR8 1.013 [0.955,1.091] w20/40
+  DAR-r   /FULL 1.070 succ 0.97 wasted   2.8 vers    2015
+
+MA-AT-25-5-50 R=0.2 n=40 FULL 52.25
+  REP     /FULL 1.146 succ 1.00 wasted  12.7 vers    8907   DAR-r/REP 0.990 [0.918,1.081] w22/40
+  REP+    /FULL 1.075 succ 1.00 wasted  11.9 vers    7705   DAR-r/REP+ 1.056 [0.991,1.145] w17/40
+  INF-r   /FULL 1.063 succ 1.00 wasted  14.6 vers    4783   DAR-r/INF-r 1.068 [1.006,1.146] w17/40
+  CSR2    /FULL 1.102 succ 0.97 wasted  16.4 vers    8122   DAR-r/CSR2 1.030 [0.958,1.115] w17/40
+  CSR4    /FULL 1.134 succ 0.97 wasted  18.9 vers    8583   DAR-r/CSR4 1.001 [0.918,1.087] w21/40
+  CSR8    /FULL 1.127 succ 0.97 wasted  20.0 vers    7931   DAR-r/CSR8 1.008 [0.938,1.086] w28/40
+  DAR-r   /FULL 1.135 succ 0.97 wasted  15.5 vers    8460
+  REP+o   /FULL 1.090 succ 1.00 wasted  13.6 vers    9505
+  DAR-r+o /FULL 1.106 succ 0.97 wasted  17.6 vers   10230
+
+MA-AT-25-5-50 R=0.15 n=40 FULL 52.25
+  REP     /FULL 1.322 succ 1.00 wasted  22.9 vers   19425   DAR-r/REP 0.932 [0.862,1.007] w25/40
+  REP+    /FULL 1.214 succ 1.00 wasted  21.6 vers   15982   DAR-r/REP+ 1.015 [0.936,1.113] w24/40
+  INF-r   /FULL 1.128 succ 1.00 wasted  25.8 vers    8999   DAR-r/INF-r 1.093 [1.006,1.209] w18/40
+  CSR2    /FULL 1.174 succ 1.00 wasted  28.9 vers   15443   DAR-r/CSR2 1.049 [0.956,1.160] w19/40
+  CSR4    /FULL 1.230 succ 0.97 wasted  33.5 vers   16273   DAR-r/CSR4 1.002 [0.914,1.100] w21/40
+  CSR8    /FULL 1.233 succ 0.97 wasted  33.5 vers   15279   DAR-r/CSR8 1.000 [0.904,1.106] w24/40
+  DAR-r   /FULL 1.232 succ 0.95 wasted  29.8 vers   16908
+  REP+o   /FULL 1.323 succ 0.88 wasted  23.0 vers   17559
+  DAR-r+o /FULL 1.139 succ 1.00 wasted  29.8 vers   17169
+
+MA-AT-25-5-50 R=0.1 n=40 FULL 52.25
+  REP     /FULL 1.526 succ 0.95 wasted  33.1 vers   30314   DAR-r/REP 0.875 [0.810,0.941] w32/40
+  REP+    /FULL 1.479 succ 0.95 wasted  33.8 vers   24412   DAR-r/REP+ 0.902 [0.802,1.002] w24/40
+  INF-r   /FULL 1.205 succ 1.00 wasted  42.2 vers   12439   DAR-r/INF-r 1.108 [1.037,1.195] w11/40
+  CSR2    /FULL 1.350 succ 0.95 wasted  44.5 vers   25250   DAR-r/CSR2 0.989 [0.913,1.066] w21/40
+  CSR4    /FULL 1.363 succ 0.95 wasted  48.1 vers   24188   DAR-r/CSR4 0.979 [0.873,1.082] w18/40
+  CSR8    /FULL 1.258 succ 1.00 wasted  51.5 vers   23810   DAR-r/CSR8 1.061 [0.980,1.146] w16/40
+  DAR-r   /FULL 1.335 succ 1.00 wasted  49.2 vers   25515
+  REP+o   /FULL 1.367 succ 0.97 wasted  33.5 vers   29257
+  DAR-r+o /FULL 1.277 succ 0.97 wasted  47.7 vers   27538
+
+MA-AT-50-5-50 R=0.3 n=40 FULL 30.01
+  REP     /FULL 0.986 succ 1.00 wasted   1.0 vers     824   DAR-r/REP 1.027 [0.999,1.058] w16/40
+  REP+    /FULL 1.006 succ 1.00 wasted   0.7 vers     754   DAR-r/REP+ 1.007 [0.976,1.038] w16/40
+  INF-r   /FULL 1.009 succ 1.00 wasted   1.8 vers     636   DAR-r/INF-r 1.003 [0.971,1.036] w16/40
+  CSR2    /FULL 1.015 succ 1.00 wasted   2.4 vers     790   DAR-r/CSR2 0.997 [0.959,1.035] w16/40
+  CSR4    /FULL 1.053 succ 1.00 wasted   2.8 vers     767   DAR-r/CSR4 0.962 [0.930,0.990] w22/40
+  CSR8    /FULL 1.031 succ 1.00 wasted   2.7 vers     805   DAR-r/CSR8 0.982 [0.953,1.011] w20/40
+  DAR-r   /FULL 1.013 succ 1.00 wasted   1.1 vers     823
+
+MA-AT-50-5-50 R=0.2 n=40 FULL 30.01
+  REP     /FULL 1.031 succ 1.00 wasted   8.4 vers    3835   DAR-r/REP 1.041 [0.981,1.138] w21/40
+  REP+    /FULL 1.021 succ 1.00 wasted   6.6 vers    3017   DAR-r/REP+ 1.051 [0.960,1.179] w20/40
+  INF-r   /FULL 1.037 succ 1.00 wasted  11.2 vers    2325   DAR-r/INF-r 1.035 [0.958,1.151] w21/40
+  CSR2    /FULL 1.028 succ 1.00 wasted  13.4 vers    3944   DAR-r/CSR2 1.044 [0.958,1.159] w26/40
+  CSR4    /FULL 1.048 succ 1.00 wasted  15.9 vers    3602   DAR-r/CSR4 1.024 [0.943,1.145] w25/40
+  CSR8    /FULL 1.101 succ 0.97 wasted  15.8 vers    3685   DAR-r/CSR8 0.975 [0.873,1.095] w27/40
+  DAR-r   /FULL 1.073 succ 0.97 wasted  11.6 vers    3675
+  REP+o   /FULL 1.025 succ 1.00 wasted  12.9 vers    4889
+  DAR-r+o /FULL 1.024 succ 1.00 wasted  18.2 vers    5808
+
+MA-AT-50-5-50 R=0.15 n=40 FULL 30.01
+  REP     /FULL 1.100 succ 1.00 wasted  21.6 vers   10197   DAR-r/REP 0.984 [0.935,1.041] w20/40
+  REP+    /FULL 1.111 succ 0.97 wasted  19.2 vers    8044   DAR-r/REP+ 0.974 [0.878,1.050] w16/40
+  INF-r   /FULL 1.101 succ 1.00 wasted  30.1 vers    8329   DAR-r/INF-r 0.982 [0.934,1.035] w23/40
+  CSR2    /FULL 1.057 succ 1.00 wasted  33.6 vers    9902   DAR-r/CSR2 1.024 [0.977,1.075] w15/40
+  CSR4    /FULL 1.070 succ 1.00 wasted  36.4 vers   10105   DAR-r/CSR4 1.011 [0.967,1.060] w20/40
+  CSR8    /FULL 1.130 succ 0.97 wasted  40.7 vers   11972   DAR-r/CSR8 0.957 [0.857,1.031] w24/40
+  DAR-r   /FULL 1.082 succ 1.00 wasted  32.7 vers   10087
+  REP+o   /FULL 1.058 succ 1.00 wasted  29.4 vers   12426
+  DAR-r+o /FULL 1.076 succ 1.00 wasted  41.4 vers   15152
+
+MA-AT-50-5-50 R=0.1 n=40 FULL 30.01
+  REP     /FULL 1.212 succ 1.00 wasted  42.7 vers   23358   DAR-r/REP 0.964 [0.923,1.010] w23/40
+  REP+    /FULL 1.132 succ 1.00 wasted  45.8 vers   19494   DAR-r/REP+ 1.032 [0.988,1.082] w13/40
+  INF-r   /FULL 1.140 succ 1.00 wasted  65.8 vers   20088   DAR-r/INF-r 1.025 [0.990,1.065] w15/40
+  CSR2    /FULL 1.213 succ 0.97 wasted  66.5 vers   22666   DAR-r/CSR2 0.963 [0.886,1.021] w16/40
+  CSR4    /FULL 1.145 succ 1.00 wasted  76.0 vers   25789   DAR-r/CSR4 1.021 [0.985,1.064] w22/40
+  CSR8    /FULL 1.161 succ 1.00 wasted  78.2 vers   29572   DAR-r/CSR8 1.006 [0.973,1.046] w24/40
+  DAR-r   /FULL 1.169 succ 1.00 wasted  68.7 vers   25016
+  REP+o   /FULL 1.221 succ 0.95 wasted  53.5 vers   28061
+  DAR-r+o /FULL 1.155 succ 1.00 wasted  73.0 vers   34259
+
+SA-AT-50-5-50 R=0.3 n=40 FULL 43.39
+  REP     /FULL 1.024 succ 1.00 wasted   3.1 vers    3701   DAR-r/REP 1.048 [0.979,1.117] w14/40
+  REP+    /FULL 1.007 succ 1.00 wasted   3.0 vers    3199   DAR-r/REP+ 1.065 [1.000,1.135] w15/40
+  INF-r   /FULL 1.101 succ 1.00 wasted   2.5 vers    2338   DAR-r/INF-r 0.974 [0.906,1.049] w26/40
+  CSR2    /FULL 1.104 succ 1.00 wasted   2.5 vers    3333   DAR-r/CSR2 0.972 [0.907,1.043] w23/40
+  CSR4    /FULL 1.089 succ 1.00 wasted   3.7 vers    3139   DAR-r/CSR4 0.985 [0.924,1.050] w21/40
+  CSR8    /FULL 1.072 succ 1.00 wasted   3.2 vers    3017   DAR-r/CSR8 1.001 [0.937,1.067] w21/40
+  DAR-r   /FULL 1.073 succ 1.00 wasted   3.1 vers    3798
+
+SA-AT-50-5-50 R=0.2 n=40 FULL 43.39
+  REP     /FULL 1.210 succ 1.00 wasted  13.6 vers   16453   DAR-r/REP 0.947 [0.892,1.004] w23/40
+  REP+    /FULL 1.175 succ 0.97 wasted  12.2 vers   12630   DAR-r/REP+ 0.976 [0.881,1.074] w20/40
+  INF-r   /FULL 1.147 succ 1.00 wasted  19.1 vers   10703   DAR-r/INF-r 1.000 [0.929,1.078] w20/40
+  CSR2    /FULL 1.119 succ 1.00 wasted  20.1 vers   15774   DAR-r/CSR2 1.025 [0.966,1.088] w21/40
+  CSR4    /FULL 1.172 succ 1.00 wasted  25.2 vers   15405   DAR-r/CSR4 0.978 [0.920,1.040] w23/40
+  CSR8    /FULL 1.191 succ 1.00 wasted  24.3 vers   15185   DAR-r/CSR8 0.963 [0.895,1.033] w20/40
+  DAR-r   /FULL 1.147 succ 1.00 wasted  17.8 vers   15884
+  REP+o   /FULL 1.200 succ 1.00 wasted  11.7 vers   17107
+  DAR-r+o /FULL 1.172 succ 1.00 wasted  18.4 vers   18964
+
+SA-AT-50-5-50 R=0.15 n=40 FULL 43.39
+  REP     /FULL 1.513 succ 1.00 wasted  25.4 vers   41950   DAR-r/REP 0.825 [0.740,0.931] w33/40
+  REP+    /FULL 1.430 succ 0.95 wasted  25.5 vers   34862   DAR-r/REP+ 0.873 [0.768,0.992] w29/40
+  INF-r   /FULL 1.156 succ 1.00 wasted  35.8 vers   21232   DAR-r/INF-r 1.080 [1.003,1.182] w14/40
+  CSR2    /FULL 1.306 succ 1.00 wasted  37.9 vers   35717   DAR-r/CSR2 0.956 [0.859,1.070] w21/40
+  CSR4    /FULL 1.300 succ 1.00 wasted  42.1 vers   34323   DAR-r/CSR4 0.960 [0.862,1.075] w23/40
+  CSR8    /FULL 1.257 succ 1.00 wasted  46.3 vers   34892   DAR-r/CSR8 0.993 [0.901,1.098] w22/40
+  DAR-r   /FULL 1.248 succ 0.97 wasted  36.9 vers   30913
+  REP+o   /FULL 1.359 succ 1.00 wasted  24.3 vers   37924
+  DAR-r+o /FULL 1.238 succ 1.00 wasted  38.5 vers   39878
+
+SA-AT-50-5-50 R=0.1 n=40 FULL 43.39
+  REP     /FULL 2.366 succ 0.88 wasted  41.7 vers  133988   DAR-r/REP 0.742 [0.618,0.891] w29/40
+  REP+    /FULL 1.921 succ 0.90 wasted  42.7 vers  101346   DAR-r/REP+ 0.914 [0.799,1.039] w24/40
+  INF-r   /FULL 1.217 succ 1.00 wasted  57.6 vers   28889   DAR-r/INF-r 1.443 [1.272,1.647] w6/40
+  CSR2    /FULL 1.672 succ 1.00 wasted  55.1 vers   78418   DAR-r/CSR2 1.050 [0.916,1.209] w20/40
+  CSR4    /FULL 1.823 succ 0.88 wasted  63.6 vers   81736   DAR-r/CSR4 0.963 [0.781,1.170] w17/40
+  CSR8    /FULL 1.840 succ 0.88 wasted  61.5 vers  100604   DAR-r/CSR8 0.954 [0.785,1.141] w20/40
+  DAR-r   /FULL 1.755 succ 0.85 wasted  57.8 vers   89280
+  REP+o   /FULL 2.092 succ 0.85 wasted  40.1 vers  122567
+  DAR-r+o /FULL 1.700 succ 0.88 wasted  52.5 vers  110735
+
+SA-BT-50-5-50 R=0.3 n=40 FULL 24.05
+  REP     /FULL 0.994 succ 1.00 wasted   0.8 vers     527   DAR-r/REP 1.006 [0.995,1.018] w8/40
+  REP+    /FULL 0.999 succ 1.00 wasted   0.2 vers     483   DAR-r/REP+ 1.001 [0.989,1.013] w9/40
+  INF-r   /FULL 1.005 succ 1.00 wasted   0.5 vers     342   DAR-r/INF-r 0.995 [0.969,1.025] w12/40
+  CSR2    /FULL 1.009 succ 1.00 wasted   1.2 vers     532   DAR-r/CSR2 0.991 [0.973,1.007] w13/40
+  CSR4    /FULL 1.003 succ 1.00 wasted   1.0 vers     541   DAR-r/CSR4 0.997 [0.977,1.014] w13/40
+  CSR8    /FULL 1.001 succ 1.00 wasted   0.8 vers     548   DAR-r/CSR8 0.999 [0.973,1.028] w11/40
+  DAR-r   /FULL 1.000 succ 1.00 wasted   0.5 vers     521
+
+SA-BT-50-5-50 R=0.2 n=40 FULL 24.05
+  REP     /FULL 1.019 succ 1.00 wasted   7.0 vers    2284   DAR-r/REP 1.015 [0.987,1.048] w23/40
+  REP+    /FULL 1.025 succ 1.00 wasted   5.3 vers    1592   DAR-r/REP+ 1.009 [0.979,1.044] w18/40
+  INF-r   /FULL 1.114 succ 1.00 wasted   7.7 vers    1477   DAR-r/INF-r 0.929 [0.882,0.975] w32/40
+  CSR2    /FULL 1.058 succ 1.00 wasted  10.5 vers    2257   DAR-r/CSR2 0.978 [0.942,1.014] w22/40
+  CSR4    /FULL 1.091 succ 0.97 wasted  11.6 vers    2233   DAR-r/CSR4 0.949 [0.837,1.026] w25/40
+  CSR8    /FULL 1.074 succ 1.00 wasted  11.5 vers    2754   DAR-r/CSR8 0.963 [0.929,0.997] w29/40
+  DAR-r   /FULL 1.035 succ 1.00 wasted   9.5 vers    2360
+  REP+o   /FULL 1.024 succ 1.00 wasted  11.5 vers    3410
+  DAR-r+o /FULL 1.041 succ 1.00 wasted  16.9 vers    4649
+
+SA-BT-50-5-50 R=0.15 n=40 FULL 24.05
+  REP     /FULL 1.090 succ 1.00 wasted  21.0 vers    7321   DAR-r/REP 0.986 [0.950,1.016] w16/40
+  REP+    /FULL 1.093 succ 1.00 wasted  18.1 vers    5635   DAR-r/REP+ 0.984 [0.948,1.016] w16/40
+  INF-r   /FULL 1.094 succ 1.00 wasted  24.3 vers    6399   DAR-r/INF-r 0.982 [0.959,1.005] w21/40
+  CSR2    /FULL 1.101 succ 1.00 wasted  30.0 vers    7289   DAR-r/CSR2 0.977 [0.942,1.008] w22/40
+  CSR4    /FULL 1.122 succ 1.00 wasted  30.9 vers    8221   DAR-r/CSR4 0.958 [0.929,0.984] w27/40
+  CSR8    /FULL 1.147 succ 1.00 wasted  31.6 vers    9977   DAR-r/CSR8 0.937 [0.908,0.963] w32/40
+  DAR-r   /FULL 1.075 succ 1.00 wasted  29.8 vers    7934
+  REP+o   /FULL 1.081 succ 1.00 wasted  24.4 vers   10070
+  DAR-r+o /FULL 1.089 succ 1.00 wasted  35.0 vers   14244
+
+SA-BT-50-5-50 R=0.1 n=40 FULL 24.05
+  REP     /FULL 1.182 succ 1.00 wasted  41.5 vers   18479   DAR-r/REP 1.028 [1.000,1.054] w14/40
+  REP+    /FULL 1.163 succ 1.00 wasted  40.2 vers   16273   DAR-r/REP+ 1.044 [1.019,1.071] w11/40
+  INF-r   /FULL 1.179 succ 1.00 wasted  51.7 vers   17412   DAR-r/INF-r 1.030 [1.012,1.048] w12/40
+  CSR2    /FULL 1.181 succ 1.00 wasted  57.9 vers   19298   DAR-r/CSR2 1.028 [1.002,1.054] w13/40
+  CSR4    /FULL 1.200 succ 1.00 wasted  63.1 vers   22800   DAR-r/CSR4 1.012 [0.989,1.033] w17/40
+  CSR8    /FULL 1.233 succ 1.00 wasted  66.3 vers   30152   DAR-r/CSR8 0.985 [0.962,1.007] w24/40
+  DAR-r   /FULL 1.214 succ 1.00 wasted  61.7 vers   23650
+  REP+o   /FULL 1.176 succ 1.00 wasted  44.5 vers   27413
+  DAR-r+o /FULL 1.183 succ 1.00 wasted  61.4 vers   35829
+
+POOLED over 4 settings
+ R=0.3 /FULL: REP=1.018 REP+=1.030 INF-r=1.031 CSR2=1.038 CSR4=1.039 CSR8=1.039 DAR-r=1.038
+    DAR-r/REP    1.020 [0.995,1.047] wins 56/160 p_sup=0.932 p_TOST3%=0.229
+    DAR-r/REP+   1.008 [0.977,1.041] wins 61/160 p_sup=0.68 p_TOST3%=0.0969
+    DAR-r/INF-r  1.007 [0.982,1.036] wins 71/160 p_sup=0.705 p_TOST3%=0.0542
+    DAR-r/CSR2   1.000 [0.975,1.029] wins 71/160 p_sup=0.509 p_TOST3%=0.0185
+    DAR-r/CSR4   0.999 [0.976,1.024] wins 68/160 p_sup=0.467 p_TOST3%=0.0104
+    DAR-r/CSR8   0.999 [0.975,1.025] wins 72/160 p_sup=0.465 p_TOST3%=0.0165
+ R=0.2 /FULL: REP=1.099 REP+=1.072 INF-r=1.089 CSR2=1.076 CSR4=1.110 CSR8=1.122 DAR-r=1.096 REP+o=1.082 DAR-r+o=1.084
+    DAR-r/REP    0.998 [0.967,1.034] wins 89/160 p_sup=0.451 p_TOST3%=0.0542
+    DAR-r/REP+   1.023 [0.981,1.068] wins 75/160 p_sup=0.852 p_TOST3%=0.366
+    DAR-r/INF-r  1.007 [0.973,1.047] wins 90/160 p_sup=0.636 p_TOST3%=0.115
+    DAR-r/CSR2   1.019 [0.983,1.056] wins 86/160 p_sup=0.843 p_TOST3%=0.278
+    DAR-r/CSR4   0.988 [0.941,1.034] wins 94/160 p_sup=0.294 p_TOST3%=0.23
+    DAR-r/CSR8   0.977 [0.941,1.017] wins 104/160 p_sup=0.121 p_TOST3%=0.377
+ R=0.15 /FULL: REP=1.244 REP+=1.205 INF-r=1.119 CSR2=1.156 CSR4=1.177 CSR8=1.191 DAR-r=1.157 REP+o=1.197 DAR-r+o=1.134
+    DAR-r/REP    0.929 [0.893,0.968] wins 94/160 p_sup=0.000178 p_TOST3%=0.984
+    DAR-r/REP+   0.960 [0.918,1.003] wins 85/160 p_sup=0.04 p_TOST3%=0.688
+    DAR-r/INF-r  1.033 [1.000,1.072] wins 76/160 p_sup=0.964 p_TOST3%=0.567
+    DAR-r/CSR2   1.001 [0.963,1.041] wins 77/160 p_sup=0.512 p_TOST3%=0.0771
+    DAR-r/CSR4   0.983 [0.947,1.021] wins 91/160 p_sup=0.186 p_TOST3%=0.273
+    DAR-r/CSR8   0.971 [0.930,1.015] wins 102/160 p_sup=0.0953 p_TOST3%=0.492
+ R=0.1 /FULL: REP=1.508 REP+=1.391 INF-r=1.185 CSR2=1.341 CSR4=1.359 CSR8=1.349 DAR-r=1.350 REP+o=1.424 DAR-r+o=1.312
+    DAR-r/REP    0.895 [0.847,0.944] wins 98/160 p_sup=6.11e-05 p_TOST3%=0.998
+    DAR-r/REP+   0.971 [0.927,1.016] wins 72/160 p_sup=0.107 p_TOST3%=0.501
+    DAR-r/INF-r  1.140 [1.093,1.193] wins 44/160 p_sup=1 p_TOST3%=1
+    DAR-r/CSR2   1.007 [0.963,1.052] wins 70/160 p_sup=0.622 p_TOST3%=0.16
+    DAR-r/CSR4   0.993 [0.935,1.054] wins 74/160 p_sup=0.412 p_TOST3%=0.219
+    DAR-r/CSR8   1.001 [0.948,1.053] wins 84/160 p_sup=0.513 p_TOST3%=0.145

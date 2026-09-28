@@ -1,0 +1,102 @@
+
+MA-AT-25-5-50  R=0.3  n=20  FULL mean 57.39
+  DAR    /FULL 1.019  succ 1.00  wasted   1.4  abandons  20.6
+  DAR-r  /FULL 1.084  succ 0.95  wasted   2.5  abandons  26.1   DAR/DAR-r 0.941 [0.832,1.054] wins 11/20 p=0.336
+  REP    /FULL 0.973  succ 1.00  wasted   2.0  abandons  17.6   DAR/REP 1.047 [0.981,1.124] wins 5/20 p=0.21
+  LOC-F  /FULL 0.970  succ 1.00  wasted   0.6  abandons  16.9   DAR/LOC-F 1.050 [1.009,1.098] wins 7/20 p=0.0381
+  CEN-F  /FULL 1.023  succ 1.00  wasted   0.1  abandons  20.1   DAR/CEN-F 0.996 [0.925,1.076] wins 9/20 p=0.926
+
+MA-AT-25-5-50  R=0.2  n=20  FULL mean 57.39
+  DAR    /FULL 1.209  succ 0.95  wasted   8.0  abandons  33.3
+  DAR-r  /FULL 1.045  succ 1.00  wasted  14.5  abandons  26.4   DAR/DAR-r 1.157 [1.037,1.327] wins 6/20 p=0.0403
+  REP    /FULL 1.137  succ 1.00  wasted  11.4  abandons  32.6   DAR/REP 1.063 [0.939,1.216] wins 9/20 p=0.377
+  LOC-F  /FULL 1.134  succ 1.00  wasted   2.3  abandons  29.4   DAR/LOC-F 1.066 [0.941,1.240] wins 9/20 p=0.39
+  CEN-F  /FULL 1.215  succ 1.00  wasted   1.3  abandons  34.8   DAR/CEN-F 0.995 [0.881,1.135] wins 11/20 p=0.942
+
+MA-AT-25-5-50  R=0.15  n=20  FULL mean 57.39
+  DAR    /FULL 1.223  succ 1.00  wasted  16.6  abandons  46.9
+  DAR-r  /FULL 1.163  succ 0.95  wasted  31.3  abandons  31.4   DAR/DAR-r 1.052 [0.966,1.144] wins 9/20 p=0.262
+  REP    /FULL 1.300  succ 1.00  wasted  21.8  abandons  62.7   DAR/REP 0.941 [0.849,1.039] wins 13/20 p=0.27
+  LOC-F  /FULL 1.453  succ 1.00  wasted   3.5  abandons  62.6   DAR/LOC-F 0.842 [0.746,0.947] wins 14/20 p=0.0123
+  CEN-F  /FULL 1.296  succ 0.95  wasted   2.8  abandons  46.2   DAR/CEN-F 0.944 [0.858,1.053] wins 15/20 p=0.289
+
+MA-AT-25-5-50  R=0.1  n=20  FULL mean 57.39
+  DAR    /FULL 1.767  succ 0.75  wasted  29.1  abandons  78.5
+  DAR-r  /FULL 1.291  succ 1.00  wasted  48.0  abandons  49.3   DAR/DAR-r 1.369 [1.148,1.685] wins 3/20 p=0.00552
+  REP    /FULL 1.488  succ 0.95  wasted  33.2  abandons  75.3   DAR/REP 1.188 [1.025,1.432] wins 6/20 p=0.0621
+  LOC-F  /FULL 1.689  succ 0.95  wasted   9.1  abandons  61.4   DAR/LOC-F 1.046 [0.869,1.289] wins 12/20 p=0.665
+  CEN-F  /FULL 1.634  succ 0.95  wasted   3.0  abandons  60.3   DAR/CEN-F 1.081 [0.911,1.306] wins 10/20 p=0.417
+
+MA-AT-50-5-50  R=0.3  n=20  FULL mean 31.24
+  DAR    /FULL 1.015  succ 1.00  wasted   1.1  abandons   7.0
+  DAR-r  /FULL 0.988  succ 1.00  wasted   0.9  abandons   3.9   DAR/DAR-r 1.028 [0.974,1.096] wins 6/20 p=0.382
+  REP    /FULL 0.964  succ 1.00  wasted   0.8  abandons   3.8   DAR/REP 1.053 [1.006,1.115] wins 8/20 p=0.0731
+  LOC-F  /FULL 0.985  succ 1.00  wasted   0.8  abandons   3.5   DAR/LOC-F 1.031 [0.956,1.120] wins 8/20 p=0.466
+  CEN-F  /FULL 0.998  succ 1.00  wasted   0.7  abandons   4.3   DAR/CEN-F 1.017 [0.941,1.111] wins 10/20 p=0.698
+
+MA-AT-50-5-50  R=0.2  n=20  FULL mean 31.24
+  DAR    /FULL 1.016  succ 1.00  wasted   6.8  abandons   7.4
+  DAR-r  /FULL 1.002  succ 1.00  wasted  12.3  abandons   4.8   DAR/DAR-r 1.014 [0.967,1.062] wins 9/20 p=0.585
+  REP    /FULL 1.016  succ 1.00  wasted   7.0  abandons   7.1   DAR/REP 1.000 [0.961,1.044] wins 11/20 p=0.999
+  LOC-F  /FULL 1.056  succ 1.00  wasted   3.7  abandons   7.2   DAR/LOC-F 0.962 [0.903,1.017] wins 11/20 p=0.223
+  CEN-F  /FULL 1.060  succ 1.00  wasted   1.6  abandons   7.8   DAR/CEN-F 0.958 [0.909,1.005] wins 11/20 p=0.126
+
+MA-AT-50-5-50  R=0.15  n=20  FULL mean 31.24
+  DAR    /FULL 1.075  succ 1.00  wasted  16.3  abandons   7.7
+  DAR-r  /FULL 1.070  succ 1.00  wasted  32.5  abandons   9.2   DAR/DAR-r 1.004 [0.942,1.077] wins 11/20 p=0.913
+  REP    /FULL 1.073  succ 1.00  wasted  21.8  abandons  10.1   DAR/REP 1.001 [0.949,1.055] wins 8/20 p=0.967
+  LOC-F  /FULL 1.195  succ 1.00  wasted   8.3  abandons  10.4   DAR/LOC-F 0.900 [0.849,0.949] wins 15/20 p=0.00167
+  CEN-F  /FULL 1.133  succ 1.00  wasted   3.5  abandons   9.1   DAR/CEN-F 0.948 [0.891,1.004] wins 12/20 p=0.106
+
+MA-AT-50-5-50  R=0.1  n=20  FULL mean 31.24
+  DAR    /FULL 1.552  succ 0.90  wasted  44.6  abandons  32.9
+  DAR-r  /FULL 1.153  succ 1.00  wasted  70.5  abandons  11.4   DAR/DAR-r 1.346 [1.087,1.751] wins 6/20 p=0.0297
+  REP    /FULL 1.229  succ 1.00  wasted  43.5  abandons  22.4   DAR/REP 1.262 [1.049,1.598] wins 9/20 p=0.0507
+  LOC-F  /FULL 1.377  succ 1.00  wasted  15.1  abandons  24.9   DAR/LOC-F 1.127 [0.906,1.485] wins 12/20 p=0.374
+  CEN-F  /FULL 1.411  succ 1.00  wasted   9.6  abandons  17.1   DAR/CEN-F 1.100 [0.898,1.393] wins 11/20 p=0.421
+
+SA-BT-50-5-50  R=0.3  n=20  FULL mean 24.06
+  DAR    /FULL 1.015  succ 1.00  wasted   0.3  abandons   0.2
+  DAR-r  /FULL 1.007  succ 1.00  wasted   0.7  abandons   0.2   DAR/DAR-r 1.008 [0.998,1.020] wins 3/20 p=0.195
+  REP    /FULL 1.009  succ 1.00  wasted   1.0  abandons   0.2   DAR/REP 1.005 [0.995,1.019] wins 5/20 p=0.421
+  LOC-F  /FULL 0.991  succ 1.00  wasted   0.1  abandons   0.2   DAR/LOC-F 1.024 [1.004,1.049] wins 3/20 p=0.0651
+  CEN-F  /FULL 0.994  succ 1.00  wasted   0.1  abandons   0.2   DAR/CEN-F 1.021 [1.001,1.047] wins 4/20 p=0.104
+
+SA-BT-50-5-50  R=0.2  n=20  FULL mean 24.06
+  DAR    /FULL 1.023  succ 1.00  wasted   4.2  abandons   0.8
+  DAR-r  /FULL 1.031  succ 1.00  wasted   8.9  abandons   1.1   DAR/DAR-r 0.992 [0.949,1.036] wins 9/20 p=0.749
+  REP    /FULL 1.033  succ 1.00  wasted   6.8  abandons   1.4   DAR/REP 0.990 [0.959,1.026] wins 11/20 p=0.576
+  LOC-F  /FULL 1.040  succ 1.00  wasted   2.0  abandons   0.6   DAR/LOC-F 0.984 [0.940,1.024] wins 11/20 p=0.475
+  CEN-F  /FULL 1.070  succ 1.00  wasted   0.5  abandons   1.1   DAR/CEN-F 0.956 [0.902,1.011] wins 12/20 p=0.146
+
+SA-BT-50-5-50  R=0.15  n=20  FULL mean 24.06
+  DAR    /FULL 1.222  succ 0.95  wasted  14.0  abandons  10.7
+  DAR-r  /FULL 1.072  succ 1.00  wasted  29.4  abandons   2.4   DAR/DAR-r 1.140 [0.993,1.436] wins 11/20 p=0.237
+  REP    /FULL 1.126  succ 1.00  wasted  20.6  abandons   3.6   DAR/REP 1.085 [0.926,1.385] wins 10/20 p=0.463
+  LOC-F  /FULL 1.107  succ 1.00  wasted   4.2  abandons   1.9   DAR/LOC-F 1.104 [0.935,1.418] wins 9/20 p=0.391
+  CEN-F  /FULL 1.125  succ 1.00  wasted   1.9  abandons   1.9   DAR/CEN-F 1.086 [0.928,1.386] wins 11/20 p=0.471
+
+SA-BT-50-5-50  R=0.1  n=20  FULL mean 24.06
+  DAR    /FULL 1.479  succ 0.90  wasted  36.8  abandons  19.4
+  DAR-r  /FULL 1.232  succ 1.00  wasted  61.6  abandons   6.8   DAR/DAR-r 1.201 [0.975,1.605] wins 13/20 p=0.187
+  REP    /FULL 1.210  succ 1.00  wasted  41.9  abandons   9.9   DAR/REP 1.222 [1.005,1.606] wins 8/20 p=0.13
+  LOC-F  /FULL 1.446  succ 1.00  wasted  10.8  abandons   9.8   DAR/LOC-F 1.023 [0.841,1.318] wins 15/20 p=0.854
+  CEN-F  /FULL 1.414  succ 1.00  wasted   3.2  abandons  11.6   DAR/CEN-F 1.046 [0.839,1.396] wins 16/20 p=0.743
+
+POOLED over settings (log-ratio DAR/arm):
+  R=0.3   DAR/DAR-r  0.991 [0.947,1.037] wins 20/60 p=0.715
+  R=0.3   DAR/REP    1.035 [1.006,1.065] wins 18/60 p=0.0262
+  R=0.3   DAR/LOC-F  1.035 [1.004,1.068] wins 18/60 p=0.0344
+  R=0.3   DAR/CEN-F  1.011 [0.974,1.051] wins 23/60 p=0.566
+  R=0.2   DAR/DAR-r  1.052 [1.004,1.112] wins 24/60 p=0.0564
+  R=0.2   DAR/REP    1.017 [0.971,1.069] wins 31/60 p=0.487
+  R=0.2   DAR/LOC-F  1.003 [0.953,1.062] wins 31/60 p=0.917
+  R=0.2   DAR/CEN-F  0.969 [0.921,1.021] wins 34/60 p=0.23
+  R=0.15  DAR/DAR-r  1.064 [0.997,1.163] wins 31/60 p=0.13
+  R=0.15  DAR/REP    1.007 [0.939,1.105] wins 31/60 p=0.862
+  R=0.15  DAR/LOC-F  0.942 [0.871,1.041] wins 38/60 p=0.195
+  R=0.15  DAR/CEN-F  0.991 [0.923,1.088] wins 38/60 p=0.827
+  R=0.1   DAR/DAR-r  1.303 [1.150,1.497] wins 22/60 p=0.00031
+  R=0.1   DAR/REP    1.224 [1.096,1.388] wins 23/60 p=0.00197
+  R=0.1   DAR/LOC-F  1.064 [0.942,1.218] wins 39/60 p=0.358
+  R=0.1   DAR/CEN-F  1.075 [0.956,1.229] wins 37/60 p=0.274
