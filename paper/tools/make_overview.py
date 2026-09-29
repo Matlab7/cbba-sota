@@ -25,6 +25,7 @@ INK, GREY, MUTED, LIGHT = "#2F3A45", "#8C949C", "#55606B", "#F4F6F8"
 SKILL = {"cam": BLUE, "grip": ORANGE, "arm": GREEN, "sense": PINK}  # skill colours (dots)
 DRONE_SK, ROVER_SK, LEG_SK = ("cam", "sense"), ("grip", "cam"), ("arm", "sense")
 FADE = 0.42  # unchanged content of the dynamic map
+CANCEL = "#7D8791"  # assignments dropped by the re-plan
 
 out: list[str] = []
 
@@ -51,18 +52,35 @@ def tabler(name: str, cx, cy, size, color, width=2.0, filled=False) -> None:
 
 def defs() -> None:
     add("<defs>")
-    for name, col in (("blue", BLUE), ("orange", ORANGE), ("green", GREEN), ("grey", "#6B7580"), ("verm", VERM)):
-        add(f'<marker id="ah-{name}" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="14" markerHeight="14" '
-            f'markerUnits="userSpaceOnUse" orient="auto"><path d="M0,0 L10,5 L0,10 L3,5 z" fill="{col}"/></marker>')
+    for name, col in (("blue", BLUE), ("orange", ORANGE), ("green", GREEN), ("grey", "#6B7580"), ("verm", VERM),
+                      ("cancel", CANCEL)):
+        # small heads for the diagrams of panels (b) and (c), large ones for the robot-to-task arrows of the maps
+        for mid, size in (("ah", 14), ("ahL", 28)):
+            add(f'<marker id="{mid}-{name}" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="{size}" '
+                f'markerHeight="{size}" markerUnits="userSpaceOnUse" orient="auto">'
+                f'<path d="M0,0 L10,5 L0,10 L3,5 z" fill="{col}"/></marker>')
     add('<pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">'
         '<rect width="8" height="8" fill="#F1F3F5"/><path d="M0,0 L0,8" stroke="#9AA3AD" stroke-width="3"/></pattern>')
     add("</defs>")
 
 
-def arrow(d, color, name, width=5, dash=None) -> None:
+def arrow(d, color, name, width=5, dash=None, big=False) -> None:
     dash_attr = f' stroke-dasharray="{dash}"' if dash else ""
     add(f'<path d="{d}" fill="none" stroke="{color}" stroke-width="{width}" stroke-linecap="round"{dash_attr} '
-        f'marker-end="url(#ah-{name})"/>')
+        f'marker-end="url(#{"ahL" if big else "ah"}-{name})"/>')
+
+
+def curve(p0, p1, p2, p3) -> str:
+    return "M{:.0f},{:.0f} C{:.0f},{:.0f} {:.0f},{:.0f} {:.0f},{:.0f}".format(*p0, *p1, *p2, *p3)
+
+
+def cancelled(p0, p1, p2, p3) -> None:
+    """An assignment dropped by the re-plan: the old robot-to-task arrow, grey and dashed, struck through."""
+    arrow(curve(p0, p1, p2, p3), CANCEL, "cancel", width=4.5, dash="10 8", big=True)
+    mx = (p0[0] + 3 * p1[0] + 3 * p2[0] + p3[0]) / 8  # the curve's point at t = 1/2
+    my = (p0[1] + 3 * p1[1] + 3 * p2[1] + p3[1]) / 8
+    add(f'<circle cx="{mx:.1f}" cy="{my:.1f}" r="15" fill="white" opacity="0.9"/>')
+    cross(mx, my, r=10)
 
 
 def dots(cx, cy, skills, r=7) -> None:
@@ -263,6 +281,14 @@ def terrain(ox, oy, cid) -> None:
     add(f'<rect x="{ox}" y="{oy}" width="{w}" height="{h}" rx="18" fill="none" stroke="#C5CDC2" stroke-width="3"/>')
 
 
+def drone_to_fire(p):
+    return p(92, 96), p(110, 140), p(130, 170), p(146, 185)
+
+
+def rover_to_rubble(p):
+    return p(118, 385), p(190, 380), p(240, 360), p(276, 342)
+
+
 def scene(ox, oy, dynamic: bool) -> None:
     """One map frame at (ox, oy) (600 x 450). In the dynamic frame, what did not change is faded."""
     def p(x, y):
@@ -289,14 +315,10 @@ def scene(ox, oy, dynamic: bool) -> None:
     rubble(*p(320, 325), 0.95)
     dots(*p(320, 364), ("grip", "arm"))
     hourglass(*p(378, 304), 0.8)
-    arrow("M{:.0f},{:.0f} C{:.0f},{:.0f} {:.0f},{:.0f} {:.0f},{:.0f}".format(*p(492, 380), *p(440, 370),
-                                                                           *p(400, 355), *p(362, 342)), GREEN, "green")
+    arrow(curve(p(492, 380), p(440, 370), p(400, 355), p(362, 342)), GREEN, "green", big=True)
     if not dynamic:
-        arrow("M{:.0f},{:.0f} C{:.0f},{:.0f} {:.0f},{:.0f} {:.0f},{:.0f}".format(*p(92, 96), *p(110, 140),
-                                                                               *p(130, 170), *p(146, 185)), BLUE, "blue")
-        arrow("M{:.0f},{:.0f} C{:.0f},{:.0f} {:.0f},{:.0f} {:.0f},{:.0f}".format(*p(118, 385), *p(190, 380),
-                                                                               *p(240, 360), *p(276, 342)),
-              ORANGE, "orange")
+        arrow(curve(*drone_to_fire(p)), BLUE, "blue", big=True)
+        arrow(curve(*rover_to_rubble(p)), ORANGE, "orange", big=True)
     legged(*p(516, 386), 0.72)
     dots(*p(522, 428), LEG_SK)
     dots(*p(72, 98), DRONE_SK)
@@ -307,13 +329,13 @@ def scene(ox, oy, dynamic: bool) -> None:
     add("</g>")
     if dynamic:  # what changed, at full strength
         link(tx - 8, ty + 14, *p(100, 375), lost=True)
+        cancelled(*drone_to_fire(p))  # the drone is re-planned to the new task
+        cancelled(*rover_to_rubble(p))  # the rover has failed
         halo(*p(470, 88), 42)
         ruin(*p(470, 84), 0.62)
         dots(*p(470, 118), ("cam", "sense"))
         burst(*p(522, 58), 30)
-        arrow("M{:.0f},{:.0f} C{:.0f},{:.0f} {:.0f},{:.0f} {:.0f},{:.0f}".format(*p(112, 58), *p(220, 20),
-                                                                               *p(340, 40), *p(426, 76)),
-              BLUE, "blue", width=5.5, dash="13 9")
+        arrow(curve(p(112, 58), p(220, 20), p(340, 40), p(426, 76)), BLUE, "blue", width=5.5, dash="13 9", big=True)
         text(*p(236, 78), "replan", size=25, weight="bold", fill=BLUE)
         drone(*p(72, 60), 0.72)
         rover(*p(80, 388), 0.68, broken=True)
@@ -331,6 +353,10 @@ def legend(x0, y0) -> None:
     text(x0 + 360, y1 + 9, "radio link", size=25)
     dots(x0 + 520, y1, ("cam", "grip", "arm", "sense"))
     text(x0 + 565, y1 + 9, "skills (robot has / task needs)", size=25)
+    arrow(f"M{x0 + 925},{y1} L{x0 + 1000},{y1}", CANCEL, "cancel", width=4.5, dash="10 8", big=True)
+    add(f'<circle cx="{x0 + 960}" cy="{y1}" r="13" fill="white" opacity="0.9"/>')
+    cross(x0 + 960, y1, r=8)
+    text(x0 + 1012, y1 + 9, "dropped assignment", size=25)
     hourglass(x0 + 30, y2, 0.7)
     text(x0 + 64, y2 + 9, "coalition task: starts when all members are there", size=25)
     burst(x0 + 625, y2, 22, label="")

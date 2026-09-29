@@ -1,10 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="2400" height="680" viewBox="0 0 2400 680">
 <defs>
 <marker id="ah-blue" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="14" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,0 L10,5 L0,10 L3,5 z" fill="#0072B2"/></marker>
+<marker id="ahL-blue" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="28" markerHeight="28" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,0 L10,5 L0,10 L3,5 z" fill="#0072B2"/></marker>
 <marker id="ah-orange" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="14" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,0 L10,5 L0,10 L3,5 z" fill="#E69F00"/></marker>
+<marker id="ahL-orange" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="28" markerHeight="28" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,0 L10,5 L0,10 L3,5 z" fill="#E69F00"/></marker>
 <marker id="ah-green" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="14" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,0 L10,5 L0,10 L3,5 z" fill="#009E73"/></marker>
+<marker id="ahL-green" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="28" markerHeight="28" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,0 L10,5 L0,10 L3,5 z" fill="#009E73"/></marker>
 <marker id="ah-grey" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="14" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,0 L10,5 L0,10 L3,5 z" fill="#6B7580"/></marker>
+<marker id="ahL-grey" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="28" markerHeight="28" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,0 L10,5 L0,10 L3,5 z" fill="#6B7580"/></marker>
 <marker id="ah-verm" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="14" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,0 L10,5 L0,10 L3,5 z" fill="#D55E00"/></marker>
+<marker id="ahL-verm" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="28" markerHeight="28" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,0 L10,5 L0,10 L3,5 z" fill="#D55E00"/></marker>
+<marker id="ah-cancel" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="14" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,0 L10,5 L0,10 L3,5 z" fill="#7D8791"/></marker>
+<marker id="ahL-cancel" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="28" markerHeight="28" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,0 L10,5 L0,10 L3,5 z" fill="#7D8791"/></marker>
 <pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="#F1F3F5"/><path d="M0,0 L0,8" stroke="#9AA3AD" stroke-width="3"/></pattern>
 </defs>
 <rect width="2400" height="680" fill="white"/>
@@ -142,9 +149,9 @@
 <path d="M-9,21 L9,21 L2,10 L-2,10 z M-7,-18 L7,-18 L1,-8 L-1,-8 z" fill="#E69F00"/>
 <path d="M-19,-26 L19,-26 M-19,26 L19,26" stroke="#2F3A45" stroke-width="5" stroke-linecap="round"/>
 </g>
-<path d="M508,476 C456,466 416,451 378,438" fill="none" stroke="#009E73" stroke-width="5" stroke-linecap="round" marker-end="url(#ah-green)"/>
-<path d="M108,192 C126,236 146,266 162,281" fill="none" stroke="#0072B2" stroke-width="5" stroke-linecap="round" marker-end="url(#ah-blue)"/>
-<path d="M134,481 C206,476 256,456 292,438" fill="none" stroke="#E69F00" stroke-width="5" stroke-linecap="round" marker-end="url(#ah-orange)"/>
+<path d="M508,476 C456,466 416,451 378,438" fill="none" stroke="#009E73" stroke-width="5" stroke-linecap="round" marker-end="url(#ahL-green)"/>
+<path d="M108,192 C126,236 146,266 162,281" fill="none" stroke="#0072B2" stroke-width="5" stroke-linecap="round" marker-end="url(#ahL-blue)"/>
+<path d="M134,481 C206,476 256,456 292,438" fill="none" stroke="#E69F00" stroke-width="5" stroke-linecap="round" marker-end="url(#ahL-orange)"/>
 <g transform="translate(532.0,482.0) scale(0.72)">
 <path d="M-26,0 L-34,18 L-28,36" fill="none" stroke="#2F3A45" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
 <circle cx="-28" cy="37" r="3.5" fill="#2F3A45"/>
@@ -318,7 +325,7 @@
 <path d="M-9,21 L9,21 L2,10 L-2,10 z M-7,-18 L7,-18 L1,-8 L-1,-8 z" fill="#E69F00"/>
 <path d="M-19,-26 L19,-26 M-19,26 L19,26" stroke="#2F3A45" stroke-width="5" stroke-linecap="round"/>
 </g>
-<path d="M1172,476 C1120,466 1080,451 1042,438" fill="none" stroke="#009E73" stroke-width="5" stroke-linecap="round" marker-end="url(#ah-green)"/>
+<path d="M1172,476 C1120,466 1080,451 1042,438" fill="none" stroke="#009E73" stroke-width="5" stroke-linecap="round" marker-end="url(#ahL-green)"/>
 <g transform="translate(1196.0,482.0) scale(0.72)">
 <path d="M-26,0 L-34,18 L-28,36" fill="none" stroke="#2F3A45" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
 <circle cx="-28" cy="37" r="3.5" fill="#2F3A45"/>
@@ -341,6 +348,12 @@
 </g>
 <path d="M972.0,230.0 L780.0,471.0" stroke="#8FAFCB" stroke-width="3.5" stroke-dasharray="1 8" stroke-linecap="round" opacity="0.55"/>
 <path d="M867.0,341.5 L885.0,359.5 M867.0,359.5 L885.0,341.5" stroke="#D55E00" stroke-width="5.5" stroke-linecap="round"/>
+<path d="M772,192 C790,236 810,266 826,281" fill="none" stroke="#7D8791" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="10 8" marker-end="url(#ahL-cancel)"/>
+<circle cx="799.8" cy="247.4" r="15" fill="white" opacity="0.9"/>
+<path d="M789.8,237.4 L809.8,257.4 M789.8,257.4 L809.8,237.4" stroke="#D55E00" stroke-width="5.5" stroke-linecap="round"/>
+<path d="M798,481 C870,476 920,456 956,438" fill="none" stroke="#7D8791" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="10 8" marker-end="url(#ahL-cancel)"/>
+<circle cx="890.5" cy="464.4" r="15" fill="white" opacity="0.9"/>
+<path d="M880.5,454.4 L900.5,474.4 M880.5,474.4 L900.5,454.4" stroke="#D55E00" stroke-width="5.5" stroke-linecap="round"/>
 <circle cx="1150.0" cy="184.0" r="42" fill="white" opacity="0.92" stroke="#D5DBD2" stroke-width="2"/>
 <g transform="translate(1150.0,180.0) scale(0.62)">
 <ellipse cx="0" cy="34" rx="50" ry="9" fill="#000" opacity="0.10"/>
@@ -360,7 +373,7 @@
 <circle cx="1159.5" cy="214.0" r="7" fill="#CC79A7" stroke="white" stroke-width="2"/>
 <polygon points="1202.0,124.0 1206.8,132.9 1215.0,127.0 1215.5,137.1 1225.5,135.3 1221.5,144.6 1231.2,147.3 1223.6,154.0 1231.2,160.7 1221.5,163.4 1225.5,172.7 1215.5,170.9 1215.0,181.0 1206.8,175.1 1202.0,184.0 1197.2,175.1 1189.0,181.0 1188.5,170.9 1178.5,172.7 1182.5,163.4 1172.8,160.7 1180.4,154.0 1172.8,147.3 1182.5,144.6 1178.5,135.3 1188.5,137.1 1189.0,127.0 1197.2,132.9" fill="#D55E00" stroke="white" stroke-width="2.5"/>
 <text x="1202.0" y="161.0" font-family="Linux Biolinum O" font-size="19" font-weight="bold" font-style="normal" text-anchor="middle" fill="white">NEW</text>
-<path d="M792,154 C900,116 1020,136 1106,172" fill="none" stroke="#0072B2" stroke-width="5.5" stroke-linecap="round" stroke-dasharray="13 9" marker-end="url(#ah-blue)"/>
+<path d="M792,154 C900,116 1020,136 1106,172" fill="none" stroke="#0072B2" stroke-width="5.5" stroke-linecap="round" stroke-dasharray="13 9" marker-end="url(#ahL-blue)"/>
 <text x="916.0" y="174.0" font-family="Linux Biolinum O" font-size="25" font-weight="bold" font-style="normal" text-anchor="start" fill="#0072B2">replan</text>
 <g transform="translate(752.0,156.0) scale(0.72)">
 <path d="M-30,-22 L30,22 M-30,22 L30,-22" stroke="#2F3A45" stroke-width="6" stroke-linecap="round"/>
@@ -406,6 +419,10 @@
 <circle cx="545.5" cy="584.0" r="7" fill="#009E73" stroke="white" stroke-width="2"/>
 <circle cx="564.5" cy="584.0" r="7" fill="#CC79A7" stroke="white" stroke-width="2"/>
 <text x="581.0" y="593.0" font-family="Linux Biolinum O" font-size="25" font-weight="normal" font-style="normal" text-anchor="start" fill="#2F3A45">skills (robot has / task needs)</text>
+<path d="M941,584 L1016,584" fill="none" stroke="#7D8791" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="10 8" marker-end="url(#ahL-cancel)"/>
+<circle cx="976" cy="584" r="13" fill="white" opacity="0.9"/>
+<path d="M968.0,576.0 L984.0,592.0 M968.0,592.0 L984.0,576.0" stroke="#D55E00" stroke-width="5.5" stroke-linecap="round"/>
+<text x="1028.0" y="593.0" font-family="Linux Biolinum O" font-size="25" font-weight="normal" font-style="normal" text-anchor="start" fill="#2F3A45">dropped assignment</text>
 <g transform="translate(46.0,634.0) scale(0.7)">
 <path d="M-15,-24 L15,-24 L2,0 L15,24 L-15,24 L-2,0 z" fill="white" stroke="#2F3A45" stroke-width="3" stroke-linejoin="round"/>
 <path d="M-9,21 L9,21 L2,10 L-2,10 z M-7,-18 L7,-18 L1,-8 L-1,-8 z" fill="#E69F00"/>
