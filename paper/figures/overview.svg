@@ -373,9 +373,10 @@
 <path d="M1091.8,448.1 L1111.8,468.1 M1091.8,468.1 L1111.8,448.1" stroke="#D55E00" stroke-width="5.5" stroke-linecap="round"/>
 <circle cx="1058.0" cy="400.0" r="21" fill="white" stroke="#D55E00" stroke-width="5.9"/>
 <path d="M1043.7,385.7 L1072.3,414.3" stroke="#D55E00" stroke-width="5.9"/>
-<text x="1088.0" y="408.0" font-family="Linux Biolinum O" font-size="23" font-weight="bold" font-style="normal" text-anchor="start" fill="#D55E00">no</text>
-<circle cx="1130.0" cy="400.0" r="8" fill="#E69F00" stroke="white" stroke-width="2"/>
-<text x="1144.0" y="408.0" font-family="Linux Biolinum O" font-size="23" font-weight="bold" font-style="normal" text-anchor="start" fill="#D55E00">left</text>
+<rect x="1008.0" y="340.0" width="100" height="30" rx="8" fill="white" opacity="0.88"/>
+<text x="1015.0" y="362.0" font-family="Linux Biolinum O" font-size="23" font-weight="bold" font-style="normal" text-anchor="start" fill="#D55E00">no</text>
+<circle cx="1056.0" cy="354.0" r="8" fill="#E69F00" stroke="white" stroke-width="2"/>
+<text x="1070.0" y="362.0" font-family="Linux Biolinum O" font-size="23" font-weight="bold" font-style="normal" text-anchor="start" fill="#D55E00">left</text>
 <circle cx="1150.0" cy="184.0" r="42" fill="white" opacity="0.92" stroke="#D5DBD2" stroke-width="2"/>
 <g transform="translate(1150.0,180.0) scale(0.62)">
 <ellipse cx="0" cy="34" rx="50" ry="9" fill="#000" opacity="0.10"/>
@@ -720,8 +721,8 @@
   <path d="M17 8l1 -1" />
   <path d="M14 3h-4" />
 </g>
-<text x="1980.0" y="520.0" font-family="Linux Biolinum O" font-size="20" font-weight="bold" font-style="normal" text-anchor="middle" fill="#2F3A45">same 8 cores</text>
-<text x="1980.0" y="542.0" font-family="Linux Biolinum O" font-size="18" font-weight="normal" font-style="normal" text-anchor="middle" fill="#55606B">same budget</text>
+<text x="1980.0" y="520.0" font-family="Linux Biolinum O" font-size="20" font-weight="bold" font-style="normal" text-anchor="middle" fill="#2F3A45">same budget</text>
+<text x="1980.0" y="542.0" font-family="Linux Biolinum O" font-size="18" font-weight="normal" font-style="normal" text-anchor="middle" fill="#55606B">for every method</text>
 <rect x="2068" y="454" width="148" height="98" rx="12" fill="#F4F6F8" stroke="#AEB6BE" stroke-width="2.5"/>
 <g transform="translate(2126.0,466.0) scale(1.3333)" fill="none" stroke="#009E73" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
   
@@ -746,4 +747,17 @@
 <text x="2304.0" y="542.0" font-family="Linux Biolinum O" font-size="18" font-weight="normal" font-style="normal" text-anchor="middle" fill="#55606B">Holm tests</text>
 <path d="M2056,503 L2062,503" stroke="#6B7580" stroke-width="3.5" marker-end="url(#ah-grey)"/>
 <path d="M2218,503 L2224,503" stroke="#6B7580" stroke-width="3.5" marker-end="url(#ah-grey)"/>
+<text x="1902.0" y="592.0" font-family="Linux Biolinum O" font-size="23" font-weight="bold" font-style="normal" text-anchor="start" fill="#55606B">test set</text>
+<rect x="1906" y="604" width="472" height="68" rx="12" fill="#F4F6F8" stroke="#AEB6BE" stroke-width="2.5"/>
+<text x="1965.0" y="638.0" font-family="Linux Biolinum O" font-size="30" font-weight="bold" font-style="normal" text-anchor="middle" fill="#2F3A45">8</text>
+<text x="1965.0" y="662.0" font-family="Linux Biolinum O" font-size="18" font-weight="normal" font-style="normal" text-anchor="middle" fill="#55606B">settings</text>
+<path d="M2024,616 L2024,660" stroke="#C9CED3" stroke-width="2"/>
+<text x="2083.0" y="638.0" font-family="Linux Biolinum O" font-size="30" font-weight="bold" font-style="normal" text-anchor="middle" fill="#2F3A45">400</text>
+<text x="2083.0" y="662.0" font-family="Linux Biolinum O" font-size="18" font-weight="normal" font-style="normal" text-anchor="middle" fill="#55606B">instances</text>
+<path d="M2142,616 L2142,660" stroke="#C9CED3" stroke-width="2"/>
+<text x="2201.0" y="638.0" font-family="Linux Biolinum O" font-size="30" font-weight="bold" font-style="normal" text-anchor="middle" fill="#2F3A45">25–150</text>
+<text x="2201.0" y="662.0" font-family="Linux Biolinum O" font-size="18" font-weight="normal" font-style="normal" text-anchor="middle" fill="#55606B">robots</text>
+<path d="M2260,616 L2260,660" stroke="#C9CED3" stroke-width="2"/>
+<text x="2319.0" y="638.0" font-family="Linux Biolinum O" font-size="30" font-weight="bold" font-style="normal" text-anchor="middle" fill="#2F3A45">50–500</text>
+<text x="2319.0" y="662.0" font-family="Linux Biolinum O" font-size="18" font-weight="normal" font-style="normal" text-anchor="middle" fill="#55606B">tasks</text>
 </svg>

@@ -361,10 +361,11 @@ def scene(ox, oy, dynamic: bool) -> None:
         # the rover had the only gripper, so no coalition can serve the rubble task any more
         cancelled(*legged_to_rubble(p))
         blocked(*p(378, 304), 21)
-        mx, my = p(408, 312)
-        text(mx, my, "no", size=23, weight="bold", fill=VERM)
-        dots(mx + 42, my - 8, ("grip",), r=8)
-        text(mx + 56, my, "left", size=23, weight="bold", fill=VERM)
+        mx, my = p(378, 266)  # the reason, above the sign
+        add(f'<rect x="{mx - 50:.1f}" y="{my - 22:.1f}" width="100" height="30" rx="8" fill="white" opacity="0.88"/>')
+        text(mx - 43, my, "no", size=23, weight="bold", fill=VERM)
+        dots(mx - 2, my - 8, ("grip",), r=8)
+        text(mx + 12, my, "left", size=23, weight="bold", fill=VERM)
         halo(*p(470, 88), 42)
         ruin(*p(470, 84), 0.62)
         dots(*p(470, 118), ("cam", "sense"))
@@ -532,7 +533,7 @@ def panel_c(x0, y0) -> None:
     ya = max(sy[3], ry[4]) + 42
     add(f'<path d="M{x0 + 4},{ya} L{x0 + 4},{ya + 12} L{x0 + 476},{ya + 12} L{x0 + 476},{ya}" fill="none" '
         f'stroke="#8C949C" stroke-width="3"/>')
-    boxes = [("stopwatch", INK, "same 8 cores", "same budget"), ("device-desktop-check", GREEN, "simulator",
+    boxes = [("stopwatch", INK, "same budget", "for every method"), ("device-desktop-check", GREEN, "simulator",
                                                                   "scores all plans"),
              ("chart-dots", BLUE, "paired ratios", "Holm tests")]
     bxs, by = [x0 + 78 + k * 162 for k in range(3)], ya + 90
@@ -547,6 +548,18 @@ def panel_c(x0, y0) -> None:
     for a, b in pairwise(bxs):
         add(f'<path d="M{a + 76},{by + 5} L{b - 80},{by + 5}" stroke="#6B7580" stroke-width="3.5" '
             f'marker-end="url(#ah-grey)"/>')
+    # the test set at a glance
+    ty = by + 94
+    text(x0, ty, "test set", size=23, weight="bold", fill=MUTED)
+    add(f'<rect x="{x0 + 4}" y="{ty + 12}" width="472" height="68" rx="12" fill="{LIGHT}" stroke="#AEB6BE" '
+        f'stroke-width="2.5"/>')
+    stats = [("8", "settings"), ("400", "instances"), ("25–150", "robots"), ("50–500", "tasks")]
+    for k, (num, lab) in enumerate(stats):
+        cx = x0 + 4 + 59 + k * 118
+        if k:
+            add(f'<path d="M{cx - 59},{ty + 24} L{cx - 59},{ty + 68}" stroke="#C9CED3" stroke-width="2"/>')
+        text(cx, ty + 46, num, size=30, weight="bold", anchor="middle")
+        text(cx, ty + 70, lab, size=18, anchor="middle", fill=MUTED)
 
 
 def main() -> None:
