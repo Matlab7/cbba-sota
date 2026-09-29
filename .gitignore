@@ -11,3 +11,4 @@ data/
 image.pngpilots/*/_snap/
 pilots/*/out/*.jsonl
 .omc/
+!demo/site/data/
