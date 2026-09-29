@@ -5,13 +5,16 @@
 \centering
 \includegraphics[width=\textwidth]{figures/overview}
 \caption{Overview. (a) Heterogeneous robots (drones, rovers, legged robots; dots are skills) leave their stations to
-serve tasks that need combined skills; a task starts only when its whole coalition has arrived (hourglass), and robots
-stay in contact directly or through a relay unless they are out of range. In the static setting, which the benchmark
-and our confirmatory study consider, all tasks are known at the start; in a dynamic setting, tasks appear and robots
-fail during execution, so the plan must be repaired (explored in the supplement). (b) ALNS keeps one global task order
-with a minimal coalition per task and repeatedly removes tasks, re-inserts them exactly, accepts by annealing and
-adapts its operator weights. (c) Every method gets the same budget on the same cores and the benchmark's simulator
-scores every plan, under a pre-registered protocol.}
+serve tasks that need combined skills; a task starts only when its whole coalition has arrived, and robots stay in
+contact directly or through a relay unless they are out of range. In the static setting, which the benchmark and our
+confirmatory study consider, all tasks are known at the start; in a dynamic setting (right; unchanged parts faded),
+tasks appear and robots fail during execution, so the plan must be repaired (explored in the supplement). (b) A plan is
+one global task order with a minimal coalition per task; robots follow the order, so the plan cannot deadlock and its
+schedule, with waiting, joint starts and the makespan, is computed exactly. ALNS repeatedly removes a few tasks,
+re-inserts each at its best position with its coalition, scored exactly in time linear in the coalition size, accepts
+by simulated annealing and adapts its operator weights. (c) Every method was tuned on dev and dry-run on val before the
+protocol was frozen and the test split run once; all get the same 8 cores and budget, the benchmark's simulator scores
+every plan, and paired ratios are tested with Holm's correction.}
 \label{fig:overview}
 \end{figure*}
 
