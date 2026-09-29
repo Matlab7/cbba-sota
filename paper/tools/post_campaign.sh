@@ -7,7 +7,8 @@ set -e
 cd "$(dirname "$0")/../.."
 PY=.venv/bin/python
 if [ "$1" = "--wait" ]; then
-  while pgrep -f "anytime.py run --split test" > /dev/null; do sleep 60; done
+  # only the campaign's python process (a shell whose command line merely mentions it does not count)
+  while pgrep -f '^[^ ]*python[0-9.]* scripts/anytime[.]py run --split test' > /dev/null; do sleep 60; done
 fi
 remaining=$($PY - <<'EOF'
 import random, sys
