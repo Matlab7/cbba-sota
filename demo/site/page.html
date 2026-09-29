@@ -8,8 +8,8 @@
 :root {
   --bg: #F3F5F6; --surface: #FFFFFF; --ink: #1D2630; --muted: #5B6773; --line: #D9DFE4;
   --accent: #0072B2; --accent-ink: #FFFFFF; --warn: #D55E00;
-  --map: #EEF2EE; --map-grid: #E1E7E1; --task-open: #9AA6B2; --task-fill: #FFFFFF;
-  --gather: #F6D9A8; --work: #E69F00; --done: #B9DEC8; --done-edge: #3E9E6E; --route: rgba(29,38,48,.12);
+  --map: #EEF2EE; --map-grid: #E1E7E1; --task-open: #6F7C89; --task-fill: #FFFFFF;
+  --gather: #F6D9A8; --work: #E69F00; --done: #009E73; --done-edge: #00694C; --route: rgba(29,38,48,.12);
   --font-display: "Barlow Semi Condensed", "Arial Narrow", system-ui, sans-serif;
   --font-body: "Source Sans 3", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-data: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
@@ -18,16 +18,16 @@
   :root:not([data-theme="light"]) {
     --bg: #0F1419; --surface: #161D24; --ink: #E4E9ED; --muted: #9AA7B3; --line: #2A333D;
     --accent: #4FA6DC; --accent-ink: #0B1116; --warn: #F08A4B;
-    --map: #1B232B; --map-grid: #222C35; --task-open: #7E8B97; --task-fill: #1B232B;
-    --gather: #6B5427; --work: #E6A23A; --done: #24503A; --done-edge: #58B886; --route: rgba(228,233,237,.10);
+    --map: #1B232B; --map-grid: #222C35; --task-open: #9AA7B3; --task-fill: #1B232B;
+    --gather: #6B5427; --work: #E6A23A; --done: #35B98A; --done-edge: #8FDDBE; --route: rgba(228,233,237,.10);
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #0F1419; --surface: #161D24; --ink: #E4E9ED; --muted: #9AA7B3; --line: #2A333D;
   --accent: #4FA6DC; --accent-ink: #0B1116; --warn: #F08A4B;
-  --map: #1B232B; --map-grid: #222C35; --task-open: #7E8B97; --task-fill: #1B232B;
-  --gather: #6B5427; --work: #E6A23A; --done: #24503A; --done-edge: #58B886; --route: rgba(228,233,237,.10);
+  --map: #1B232B; --map-grid: #222C35; --task-open: #9AA7B3; --task-fill: #1B232B;
+  --gather: #6B5427; --work: #E6A23A; --done: #35B98A; --done-edge: #8FDDBE; --route: rgba(228,233,237,.10);
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -171,13 +171,13 @@ footer { color: var(--muted); font-size: .88rem; display: grid; gap: .4rem; }
       <div class="legend-item"><svg width="22" height="22" viewBox="0 0 22 22"><rect x="4" y="4" width="14" height="14" rx="2" fill="var(--muted)"/></svg>
         <span>Station of a robot type. Robots leave from it at time 0 and must return to it.</span></div>
       <div class="legend-item"><svg width="22" height="22" viewBox="0 0 22 22"><circle cx="11" cy="11" r="6" fill="var(--task-fill)" stroke="var(--task-open)" stroke-width="2"/></svg>
-        <span>Task not started yet.</span></div>
+        <span>Task not started yet (open ring).</span></div>
       <div class="legend-item"><svg width="22" height="22" viewBox="0 0 22 22"><circle cx="11" cy="11" r="6" fill="var(--gather)" stroke="var(--work)" stroke-width="2"/></svg>
         <span>Coalition gathering: some robots have arrived and wait for the rest.</span></div>
       <div class="legend-item"><svg width="22" height="22" viewBox="0 0 22 22"><circle cx="11" cy="11" r="6" fill="var(--work)"/></svg>
         <span>Task in progress: all needed skills are on site.</span></div>
-      <div class="legend-item"><svg width="22" height="22" viewBox="0 0 22 22"><circle cx="11" cy="11" r="5" fill="var(--done)" stroke="var(--done-edge)" stroke-width="1.5"/></svg>
-        <span>Task done.</span></div>
+      <div class="legend-item"><svg width="22" height="22" viewBox="0 0 22 22"><circle cx="11" cy="11" r="6" fill="var(--done)" stroke="var(--done-edge)" stroke-width="1.5"/></svg>
+        <span>Task done (solid green).</span></div>
       <div class="legend-item"><svg width="22" height="22" viewBox="0 0 22 22"><circle cx="11" cy="11" r="4" fill="var(--muted)"/><circle cx="11" cy="11" r="7.5" fill="none" stroke="var(--warn)" stroke-width="1.8"/></svg>
         <span>Robot waiting at a task for its partners (ring).</span></div>
     </div>
@@ -200,7 +200,7 @@ footer { color: var(--muted); font-size: .88rem; display: grid; gap: .4rem; }
 <script>
 (() => {
   "use strict";
-  const SPECIES = ["#4477AA", "#EE6677", "#228833", "#CCBB44", "#66CCEE", "#AA3377", "#BBBBBB", "#882255", "#44AA99", "#999933"];
+  const SPECIES = ["#4477AA", "#EE6677", "#8C5A2B", "#CCBB44", "#66CCEE", "#AA3377", "#BBBBBB", "#882255", "#44AA99", "#999933"];
   const CASES = [
     { id: "large", label: "150 robots · 500 tasks", tag: "largest win" },
     { id: "small", label: "25 robots · 50 tasks", tag: "easy to follow" },
@@ -289,7 +289,7 @@ footer { color: var(--muted); font-size: .88rem; display: grid; gap: .4rem; }
       const st = m.start[j], fin = m.finish[j], x = X(task.x), y = Y(task.y);
       g.beginPath();
       if (fin !== null && time >= fin) {
-        done++; g.arc(x, y, tr * 0.8, 0, 2 * Math.PI); g.fillStyle = css.done; g.fill();
+        done++; g.arc(x, y, tr, 0, 2 * Math.PI); g.fillStyle = css.done; g.fill();
         g.lineWidth = Math.max(1, tr * 0.25); g.strokeStyle = css["done-edge"]; g.stroke();
       } else if (st !== null && time >= st) {
         active++; g.arc(x, y, tr * 1.15, 0, 2 * Math.PI); g.fillStyle = css.work; g.fill();
@@ -461,7 +461,7 @@ footer { color: var(--muted); font-size: .88rem; display: grid; gap: .4rem; }
     }
     data = cache[id];
     [...$("cases").children].forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.id === id)));
-    setPlaying(false); t = data.methods[0].makespan + 0.01; renderStatic(); frame();
+    setPlaying(false); t = 0; renderStatic(); frame(); setPlaying(true);
   }
 
   function init() {
