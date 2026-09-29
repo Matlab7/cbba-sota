@@ -93,8 +93,6 @@ Budgets include construction and model building. Parameters are the dev choices 
   was seen. No ALNS or CP-SAT variant and no CTAS-D port has run on the test split.
 - The RALTestSet is not blind; it also chose CTAS-D's backend.
 - The competitors were tuned on dev, where ALNS was tuned too.
-- The code, the experimental design and the analysis were developed with an AI coding assistant (Claude Code, Anthropic
-  Claude models); the paper discloses this as the AAMAS 2027 policy requires.
 
 ## Seeds
 
@@ -117,3 +115,9 @@ Budgets include construction and model building. Parameters are the dev choices 
   10 on SA-BT-50-5-50, MA-AT-50-5-50, MA-AT-150-10-500; 20 on MA-AT-50-5-200; 5 on MA-AT-150-5-500.
 - Instances: `data/hetero/<setting>/test/env_<i>.pkl`, regenerated from their seeds; `gen_instances.py --check` found
   all 1490 test, dev and val files equal to their seeds' generation, with distinct fingerprints (2026-09-28).
+
+## Corrections after the freeze
+
+- 2026-09-29: removed an inaccurate disclosure bullet on AI assistance (the frozen text is in commit `2e53eab`). The
+  authors proposed the experimental design; an AI coding assistant wrote code and reviewed the design. This correction
+  changes no hypothesis, competitor, budget, instance, execution rule or analysis.
