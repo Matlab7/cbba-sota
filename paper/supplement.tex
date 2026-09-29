@@ -9,6 +9,7 @@
 \usepackage{amsmath}
 \usepackage{graphicx}
 \usepackage{xspace}
+\setlength{\emergencystretch}{1em}  % no line past the margin
 \usepackage[numbers,sort&compress]{natbib}
 \usepackage{xr-hyper}
 \usepackage[hidelinks]{hyperref}
@@ -20,8 +21,7 @@
 \renewcommand{\thefigure}{S\arabic{figure}}
 \renewcommand{\thesection}{S\arabic{section}}
 
-\title{Supplementary Material\\[0.3ex]\large Search Beats Learning at Equal Compute: A Pre-Registered Study of
-Heterogeneous Multi-Robot Coalition Formation and Scheduling}
+\title{Supplementary Material\\[0.3ex]\large Search Beats Learning at Equal Compute for Multi-Robot Coalition Scheduling}
 \author{Anonymous submission}
 \date{}
 
@@ -121,7 +121,7 @@ a complete hint. CP-LNS runs one such search and gives each solver call 8 thread
 single-threaded searches that share the best plan (makespan, then summed return times).
 
 \paragraph{CTAS-D.} Our port rebuilds the model of the benchmark's C++/Gurobi code (planner mode
-\texttt{TEAMPLANNER\_CONDET}): per species a continuous flow on the task graph with binary arc indicators, shared task
+\texttt{TEAMPLANNER\_\allowbreak CONDET}): per species a continuous flow on the task graph with binary arc indicators, shared task
 start times with big-M synchronisation on every used arc, cumulative capability coverage per required trait, and the
 flow rounding and path split into per-agent routes. The benchmark authors' makespan objective is not in the public
 code; we recovered it from their 50 shipped Gurobi solutions as the energy cost plus 100 times the makespan. Plugged
@@ -175,7 +175,7 @@ alternately a noisy dispatch and a random-order best insertion; the best plan an
 \section{Full results on the test instances}
 \label{sec:s-full}
 
-{\small\input{tables/supp_gaps}}
+{\small\setlength{\tabcolsep}{4pt}\input{tables/supp_gaps}}
 
 \section{Reference solutions on the validation instances}
 \label{sec:s-refs}

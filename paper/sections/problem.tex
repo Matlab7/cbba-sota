@@ -8,7 +8,8 @@ common speed $v$. Task $j$ has a location $x_j$, a duration $d_j$ and a requirem
 times are Euclidean, $\tau_{jk} = \lVert x_j - x_k \rVert / v$ between tasks and $\tau^0_{ij} = \lVert o_i - x_j \rVert
 / v$ between agent $i$'s depot and task $j$.
 
-A plan gives every task a coalition $C_j \subseteq A$ that covers it, $\sum_{i \in C_j} a_i \ge r_j$ componentwise,
+A plan gives every task $j$ a coalition $C_j \subseteq A$ whose traits cover its requirement,
+$\sum_{i \in C_j} a_i \ge r_j$ componentwise,
 and every agent a route, the sequence of the tasks whose coalitions it belongs to. Agents leave their depots at time 0.
 Task $j$ starts when the last member arrives, $s_j = \max_{i \in C_j} \alpha_{ij}$, where $\alpha_{ij}$ is the arrival
 time of member $i$, and it occupies all members until $f_j = s_j + d_j$. A member then travels to the next task on its

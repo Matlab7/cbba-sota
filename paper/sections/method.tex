@@ -96,7 +96,7 @@ Algorithm~\ref{alg:alns} shows one worker; $g$ is the search objective.
 \cite{kolisch1996serial} (repeatedly append the task whose earliest-arrival cover starts first), by the same with noisy scores, and, up to 100 tasks, by
 random-order best insertion, and keeps the best.
 
-\paragraph{Destroy operators} remove $q$ tasks, with $q$ uniform in $\{1, \dots, q_{\max}\}$ and
+\paragraph{Destroy operators} remove $q$ tasks, where $q$ is uniform in $\{1, \dots, q_{\max}\}$ and
 $q_{\max} = \mathrm{clip}(\mathrm{round}(4\sqrt{50/m}), 2, 6)$: large instances are short of iterations and gain from
 many small moves. \emph{Random} removes uniformly; \emph{related} removes tasks close to a random seed task in a random
 mix of distance, start time and requirement \cite{shaw1998using}; \emph{worst wait} prefers tasks whose members wait
