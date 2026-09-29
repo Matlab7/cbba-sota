@@ -8,3 +8,4 @@
 *.pdf
 !by.pdf
 !figures/*.pdf
+figures/overview_preview.png

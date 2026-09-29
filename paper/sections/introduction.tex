@@ -3,15 +3,15 @@
 
 \begin{figure*}[t]
 \centering
-\resizebox{\textwidth}{!}{\input{figures/overview}}
-\caption{Overview. (a) A heterogeneous team (drones, rovers, legged robots; coloured dots are skills) leaves its
-stations to serve tasks that need combined skills; a task starts only when its whole coalition has arrived, so the first
-member waits. Robots in range can talk directly or through relays, others cannot; the benchmark, and our study, plan
-centrally for a fully known instance. (b) ALNS keeps one global task order with a minimal coalition per task, which
-cannot deadlock, and repeatedly removes tasks, re-inserts them at exactly evaluated positions, accepts by annealing and
-adapts its operator weights, on 8 workers that share their best plan. (c) Every method gets the same 8 cores and the
-same budget, every plan is scored by the benchmark's simulator, and the whole protocol was frozen before the single
-test run.}
+\includegraphics[width=\textwidth]{figures/overview}
+\caption{Overview. (a) Heterogeneous robots (drones, rovers, legged robots; dots are skills) leave their stations to
+serve tasks that need combined skills; a task starts only when its whole coalition has arrived (hourglass), and robots
+stay in contact directly or through a relay unless they are out of range. In the static setting, which the benchmark
+and our confirmatory study consider, all tasks are known at the start; in a dynamic setting, tasks appear and robots
+fail during execution, so the plan must be repaired (explored in the supplement). (b) ALNS keeps one global task order
+with a minimal coalition per task and repeatedly removes tasks, re-inserts them exactly, accepts by annealing and
+adapts its operator weights. (c) Every method gets the same budget on the same cores and the benchmark's simulator
+scores every plan, under a pre-registered protocol.}
 \label{fig:overview}
 \end{figure*}
 
