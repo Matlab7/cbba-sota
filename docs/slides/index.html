@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Search Beats Learning — 팀 공유</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/white.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+:root{
+  --ink:#1d2330; --mute:#667085; --line:#e4e7ec; --bg:#fbfbfd; --card:#ffffff;
+  --blue:#0072B2; --orange:#E69F00; --verm:#D55E00; --green:#009E73; --pink:#CC79A7; --sky:#56B4E9;
+  --r-main-font:'Pretendard',system-ui,sans-serif; --r-heading-font:'Pretendard',system-ui,sans-serif;
+  --r-main-color:var(--ink); --r-heading-color:var(--ink); --r-link-color:var(--blue);
+  --r-main-font-size:30px; --r-background-color:var(--bg);
+}
+.reveal{font-weight:400;letter-spacing:-.01em}
+.reveal h1,.reveal h2,.reveal h3{font-weight:800;letter-spacing:-.03em;text-transform:none}
+.reveal h2{font-size:1.45em;margin-bottom:.45em}
+.reveal h3{font-size:1.0em;color:var(--mute);font-weight:600}
+.reveal section{text-align:left}
+.reveal .center{text-align:center}
+.kicker{font-size:.55em;font-weight:700;color:var(--blue);letter-spacing:.12em;text-transform:uppercase;margin-bottom:.2em}
+.mute{color:var(--mute)} .small{font-size:.7em} .tiny{font-size:.55em}
+.b{color:var(--blue);font-weight:700} .o{color:var(--verm);font-weight:700} .g{color:var(--green);font-weight:700}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:36px;align-items:start}
+.cols.c3{grid-template-columns:repeat(3,1fr)} .cols.w{grid-template-columns:1.25fr 1fr}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 22px;box-shadow:0 1px 2px rgba(16,24,40,.05)}
+.card h4{margin:0 0 .3em;font-size:.8em;font-weight:800;text-transform:none}
+.card p,.card li{font-size:.68em;line-height:1.45;margin:0}
+.big{font-size:2.4em;font-weight:900;letter-spacing:-.04em;line-height:1}
+.pill{display:inline-block;padding:2px 12px;border-radius:999px;font-size:.55em;font-weight:700;background:#eef4fb;color:var(--blue);margin-right:6px}
+.pill.warn{background:#fdf1e8;color:var(--verm)} .pill.ok{background:#e7f6f1;color:var(--green)}
+.reveal ul{margin-left:1em} .reveal li{margin:.25em 0;line-height:1.4}
+.reveal table{font-size:.55em;border-collapse:collapse;margin:0}
+.reveal table th{border-bottom:2px solid var(--ink);font-weight:800;padding:.35em .7em}
+.reveal table td{border-bottom:1px solid var(--line);padding:.3em .7em}
+.reveal table tr.hl td{background:#eef4fb;font-weight:700}
+.eq{background:#fff;border-left:4px solid var(--blue);border-radius:8px;padding:6px 18px;margin:.4em 0;font-size:.85em}
+.note{font-size:.55em;color:var(--mute);margin-top:.6em}
+.reveal img.fig,.reveal .fig{max-width:100%;max-height:560px;margin:0;border:none;box-shadow:none;background:#fff;border-radius:10px}
+.reveal .slide-number{font-family:'Pretendard';background:transparent;color:var(--mute)}
+.reveal .progress{color:var(--blue);height:4px}
+.fragment.blur{filter:blur(6px)} .fragment.blur.visible{filter:none}
+.banner{position:absolute;top:-10px;right:0;font-size:.45em}
+
+/* ---- Timeline ---- */
+.tl{position:relative;margin-top:30px}
+.tl .row{display:grid;grid-template-columns:130px 26px 1fr;align-items:start;margin:10px 0}
+.tl .d{font-size:.55em;color:var(--mute);font-weight:700;text-align:right;padding-top:3px}
+.tl .dot{width:14px;height:14px;border-radius:50%;background:var(--blue);margin:8px auto 0}
+.tl .dot.x{background:var(--verm)} .tl .dot.ok{background:var(--green)}
+.tl .t{font-size:.7em;line-height:1.4}
+.tl .d{font-size:.62em} .tl .t b{font-weight:800}
+
+/* ---- Sync animation ---- */
+.present .anim-robot{animation:var(--a) 6s cubic-bezier(.45,.05,.3,1) infinite}
+@keyframes r1{0%{transform:translate(0,0)}25%,100%{transform:translate(330px,95px)}}
+@keyframes r2{0%{transform:translate(0,0)}55%,100%{transform:translate(265px,-60px)}}
+@keyframes r3{0%{transform:translate(0,0)}78%,100%{transform:translate(-165px,-100px)}}
+.present .wait1{animation:w1 6s linear infinite} .present .wait2{animation:w2 6s linear infinite}
+@keyframes w1{0%,25%{width:0}78%,100%{width:320px}}
+@keyframes w2{0%,55%{width:0}78%,100%{width:137px}}
+.present .taskfill{animation:tf 6s linear infinite}
+@keyframes tf{0%,78%{fill:#fff}80%,100%{fill:#e7f6f1}}
+.present .startlbl{animation:sl 6s linear infinite}
+@keyframes sl{0%,78%{opacity:0}82%,100%{opacity:1}}
+
+/* ---- Insertion strip ---- */
+.strip{display:flex;gap:10px;align-items:center;margin:24px 0 8px;height:70px}
+.tk{width:64px;height:58px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8em;background:#fff;border:2px solid #98a2b3}
+.tk.new{border-color:var(--verm);color:var(--verm);background:#fdf1e8}
+.tk.gone{opacity:.2;border-style:dashed}
+
+/* ---- ALNS loop ---- */
+.loop text{font-family:'Pretendard';font-weight:700}
+.present .spin{transform-origin:300px 250px;animation:spin 8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ---- Bars ---- */
+.bars{margin-top:14px}
+.bar{display:grid;grid-template-columns:200px 1fr 120px;align-items:center;gap:14px;margin:9px 0;font-size:.58em}
+.bar .lab{text-align:right;font-weight:700}
+.bar .trk{position:relative;height:26px;background:#f2f4f7;border-radius:6px}
+.bar .rng{position:absolute;top:0;bottom:0;border-radius:6px;background:var(--c,var(--blue));transform-origin:left;transform:scaleX(0);transition:transform 1.1s cubic-bezier(.2,.8,.2,1)}
+.present .bar .rng{transform:scaleX(1)}
+.bar .one{position:absolute;top:-6px;bottom:-6px;width:2px;background:var(--ink)}
+.bar .val{font-variant-numeric:tabular-nums;color:var(--mute)}
+</style>
+</head>
+<body>
+<div class="reveal"><div class="slides">
+
+<!-- 1. Title -->
+<section data-auto-animate class="center">
+  <div class="kicker" data-id="k">AAMAS 2027 · 팀 공유 브리핑 · 2026-09-29</div>
+  <h1 data-id="t" style="font-size:2.2em;line-height:1.1">Search Beats Learning<br>at Equal Compute</h1>
+  <p class="mute" style="font-size:.75em">이종 다중로봇 coalition 형성 + 스케줄링에 대한<br>pre-registered 비교 연구</p>
+  <p class="small" style="margin-top:1.4em"><span class="pill">ALNS</span><span class="pill">HeteroMRTA</span><span class="pill">CP-SAT</span><span class="pill">RL baseline</span><span class="pill warn">수치: val dry run (test run 진행 중)</span></p>
+  <p class="tiny mute" style="margin-top:2em">← → 이동 · <b>F</b> 전체화면 · <b>O</b> 개요 · <b>S</b> 발표자 노트</p>
+  <aside class="notes">repo: cbba-sota, paper/ 디렉터리. 모든 숫자는 paper/tables/numbers.tex 매크로에서 가져왔고, 현재 val split dry run 기반. test split 확증 실행이 끝나면 숫자가 바뀔 수 있음.</aside>
+</section>
+
+<!-- 2. TL;DR -->
+<section>
+  <div class="kicker">한 장 요약</div>
+  <h2>질문 → 답</h2>
+  <div class="cols">
+    <div class="card fragment fade-up">
+      <h4>질문</h4>
+      <p>“RL policy가 SOTA”라는 HeteroMRTA(RA-L 2025) 주장이 <b>같은 코어·같은 시간</b>에서 비교해도 살아남는가?</p>
+    </div>
+    <div class="card fragment fade-up">
+      <h4>답: 아니다</h4>
+      <p>계획 표현 하나 잘 잡은 <b>ALNS</b>가 8개 설정 모두에서 모든 경쟁자를 유의하게 이김 (46/46 test, Holm).</p>
+    </div>
+  </div>
+  <div class="cols c3" style="margin-top:28px">
+    <div class="center fragment zoom-in"><div class="big b">20–32%</div><div class="small mute">RL 대비 makespan 단축</div></div>
+    <div class="center fragment zoom-in"><div class="big g">3–13%</div><div class="small mute">CP-SAT 3종 · restarts 대비</div></div>
+    <div class="center fragment zoom-in"><div class="big o">4 / 8</div><div class="small mute">1코어·2초 ALNS가 8코어 전부를 이긴 설정 수</div></div>
+  </div>
+</section>
+
+<!-- 3. Journey -->
+<section>
+  <div class="kicker">여기까지 온 길</div>
+  <h2>연구 방향의 변천</h2>
+  <div class="tl">
+    <div class="row fragment"><div class="d">출발</div><div class="dot"></div><div class="t"><b>cbba-sota</b>: 분산 경매(CBBA) 계열로 multi-robot coalition SOTA를 노림</div></div>
+    <div class="row fragment"><div class="d">09-27</div><div class="dot"></div><div class="t"><b>방향 탐색</b>: 조사 8 agent → 후보 10개 → judge 3관점 → red team. 상위 3개 모두 <span class="o">kill</span> — 정적·완전정보 인스턴스에서는 <b>분산 메커니즘이 기여할 여지 없음</b></div></div>
+    <div class="row fragment"><div class="d">09-27</div><div class="dot ok"></div><div class="t"><b>Arena 결정</b>: HeteroMRTA. 파일럿에서 중앙 LNS가 RL(s.10)보다 13% 짧음 → “대규모 coalition 스케줄링 경험적 SOTA”로 포지셔닝</div></div>
+    <div class="row fragment"><div class="d">09-28</div><div class="dot"></div><div class="t"><b>Track S</b> (정적 planner, ALNS v1→v2) + <b>Track D</b> (동적/열화 네트워크, SPARC) 병행</div></div>
+    <div class="row fragment"><div class="d">09-28</div><div class="dot x"></div><div class="t"><b>Track D</b>: gate K1·K6 발동 (SPARC가 rolling constructor 대비 1.5%만 우위) → 동적 주장 철회, supplement의 negative result로</div></div>
+    <div class="row fragment"><div class="d">09-28</div><div class="dot"></div><div class="t"><b>Baseline 강화</b>: parallel CP-SAT LNS, CP-SAT full model, CTAS-D 오픈솔버 포팅 → val dry run에서 C1 8/8</div></div>
+    <div class="row fragment"><div class="d">09-28</div><div class="dot ok"></div><div class="t"><b>Pre-registration 동결</b> (2e53eab) → test split 확증 실행 시작 · 타겟 RA-L → <b>AAMAS 2027</b></div></div>
+  </div>
+</section>
+
+<!-- 4. Problem picture -->
+<section>
+  <div class="kicker">문제</div>
+  <h2 style="margin-bottom:.2em">이종 로봇 팀의 coalition 스케줄링</h2>
+  <img class="fig" src="fig/overview.svg" alt="Overview figure" style="width:100%;height:auto;max-height:none">
+  <p class="note">Paper Figure 1. (a) 여러 skill 조합이 필요한 task, 전원이 도착해야 시작 → 먼저 온 로봇은 대기 (b) ALNS (c) compute-matched 프로토콜</p>
+</section>
+
+<!-- 5. Sync animation -->
+<section>
+  <div class="kicker">왜 어려운가</div>
+  <h2>동기화: 마지막 멤버가 도착해야 시작</h2>
+  <div class="cols w">
+    <svg viewBox="0 0 560 360" width="100%">
+      <rect x="0" y="0" width="560" height="360" rx="14" fill="#f3faf6"/>
+      <!-- task -->
+      <rect class="taskfill" x="355" y="150" width="90" height="70" rx="12" stroke="#1d2330" stroke-width="2" fill="#fff"/>
+      <text x="400" y="182" text-anchor="middle" font-size="20" font-weight="800">task j</text>
+      <text x="400" y="205" text-anchor="middle" font-size="14" fill="#667085">r_j = (1,1,1)</text>
+      <text class="startlbl" x="400" y="245" text-anchor="middle" font-size="16" font-weight="800" fill="#009E73">start s_j!</text>
+      <!-- depots -->
+      <rect x="20" y="70" width="46" height="46" rx="8" fill="#0072B2" opacity=".15"/>
+      <rect x="85" y="230" width="46" height="46" rx="8" fill="#E69F00" opacity=".2"/>
+      <!-- robots -->
+      <g class="anim-robot" style="--a:r1"><circle cx="43" cy="93" r="17" fill="#0072B2"/><text x="43" y="99" text-anchor="middle" fill="#fff" font-size="15" font-weight="800">A</text></g>
+      <g class="anim-robot" style="--a:r2"><circle cx="108" cy="253" r="17" fill="#E69F00"/><text x="108" y="259" text-anchor="middle" fill="#fff" font-size="15" font-weight="800">B</text></g>
+      <rect x="520" y="270" width="36" height="36" rx="8" fill="#CC79A7" opacity=".2"/>
+      <g class="anim-robot" style="--a:r3"><circle cx="538" cy="288" r="17" fill="#CC79A7"/><text x="538" y="294" text-anchor="middle" fill="#fff" font-size="15" font-weight="800">C</text></g>
+      <!-- wait bars -->
+      <text x="20" y="330" font-size="13" fill="#667085">대기 A</text><rect class="wait1" x="70" y="320" height="10" rx="4" fill="#0072B2" width="0"/>
+      <text x="20" y="350" font-size="13" fill="#667085">대기 B</text><rect class="wait2" x="70" y="340" height="10" rx="4" fill="#E69F00" width="0"/>
+    </svg>
+    <div>
+      <ul class="small">
+        <li class="fragment">task는 skill 벡터 요구량 $r_j$ → <b>한 로봇으로 불가</b>, coalition 필요</li>
+        <li class="fragment">시작 시각 = 멤버 도착의 <b>max</b> → 늦은 한 명이 모든 downstream task 지연</li>
+        <li class="fragment">공유 task 순서가 엇갈리면 <b class="o">deadlock</b>: A는 $j\to k$, B는 $k \to j$</li>
+        <li class="fragment">Gerkey 분류상 <b>ST-MR-TA</b>: coalition 형성 + routing + scheduling 한 문제</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 6. Formulation -->
+<section>
+  <div class="kicker">정식화 · Dai et al. 2025 그대로</div>
+  <h2>문제 정의</h2>
+  <div class="cols">
+    <div class="small">
+      <p>agent $i\in A$: trait $a_i\in\{0,1\}^K$, depot $o_i$, 속도 $v$<br>task $j\in T$: 위치 $x_j$, 소요 $d_j$, 요구 $r_j\in\mathbb N^K$</p>
+      <p class="fragment">이동시간 (Euclidean)
+      $$\tau_{jk}=\frac{\lVert x_j-x_k\rVert}{v}$$</p>
+    </div>
+    <div>
+      <div class="eq fragment">coverage: $\displaystyle\sum_{i\in C_j} a_i \;\ge\; r_j$ (성분별)</div>
+      <div class="eq fragment">start: $\displaystyle s_j=\max_{i\in C_j}\alpha_{ij},\qquad f_j=s_j+d_j$</div>
+      <div class="eq fragment">travel: $\alpha_{ik}=f_j+\tau_{jk}$ ($i$의 다음 task가 $k$)</div>
+      <div class="eq fragment" style="border-color:var(--verm)">목표: $\min\; M=\max_i\,(\text{depot 귀환 시각})$ — makespan</div>
+    </div>
+  </div>
+  <p class="note fragment">벤치마크: SA-BT (단일 skill, binary) · SA-AT (additive, 최대 2) · MA-AT (다중 skill). 시뮬레이터 limit 200 초과 = 실패 (makespan 200으로 계산)</p>
+</section>
+
+<!-- 7. Representation -->
+<section data-auto-animate>
+  <div class="kicker">방법 ① 표현</div>
+  <h2>계획 = 전역 순서 $\pi$ + 최소 coalition $C_j$</h2>
+  <div class="strip" data-id="strip">
+    <div class="tk" data-id="t3">3</div><div class="tk" data-id="t7">7</div><div class="tk" data-id="t1">1</div><div class="tk" data-id="t5">5</div><div class="tk" data-id="t2">2</div><div class="tk" data-id="t6">6</div>
+  </div>
+  <p class="small mute">모든 agent는 자기 task를 $\pi$ 순서대로 방문 → forward pass $O(\sum_j |C_j|)$로 스케줄 계산</p>
+  <div class="cols c3" style="margin-top:20px">
+    <div class="card fragment"><h4 class="b">Deadlock-free</h4><p>모든 route 선행관계가 $\pi$를 따름 → cycle 불가</p></div>
+    <div class="card fragment"><h4 class="g">Exact</h4><p>시뮬레이터와 동일한 이동시간 → makespan 재현 (수백 plan 테스트)</p></div>
+    <div class="card fragment"><h4 class="o">Minimal cover</h4><p>시뮬레이터는 이미 cover된 task에 합류 불가 → 불필요 멤버 없음 유지</p></div>
+  </div>
+</section>
+
+<!-- 8. Proposition -->
+<section>
+  <div class="kicker">방법 ① 이 제한으로 잃는 것 없음</div>
+  <h2>Proposition</h2>
+  <div class="card" style="border-left:5px solid var(--blue)"><p style="font-size:.8em">모든 deadlock-free 계획에 대해, makespan이 더 크지 않은 minimal-cover 계획 $(\pi,C)$가 존재한다.</p></div>
+  <ol class="small" style="margin-top:20px">
+    <li class="fragment">$\pi$ = 시작시각 순 정렬 (동률은 route 선행관계 topological order) → 같은 스케줄</li>
+    <li class="fragment">중복 멤버 $i$를 하나씩 제거: task $j$는 더 적은 도착의 max → 늦어지지 않음</li>
+    <li class="fragment">제거된 $i$는 이전 위치 $p$에서 다음 task $k$로 직행. triangle inequality:
+      <div class="eq">$$f_j+\tau_{jk}\;\ge\;\alpha_{ij}+\tau_{jk}\;=\;f_p+\tau_{pj}+\tau_{jk}\;\ge\;f_p+\tau_{pk}$$</div></li>
+    <li class="fragment">시작시각은 도착에 대해 monotone → 어떤 task도, 어떤 귀환도 늦어지지 않음 ∎</li>
+  </ol>
+</section>
+
+<!-- 9. Insertion anim -->
+<section data-auto-animate>
+  <div class="kicker">방법 ② 핵심 연산</div>
+  <h2>삽입: task $j$를 $\pi$의 어디에?</h2>
+  <div class="strip" data-id="strip">
+    <div class="tk" data-id="t3">3</div><div class="tk" data-id="t7">7</div><div class="tk new" data-id="tj">j</div><div class="tk" data-id="t1">1</div><div class="tk" data-id="t5">5</div><div class="tk" data-id="t2">2</div><div class="tk" data-id="t6">6</div>
+  </div>
+  <ul class="small">
+    <li>prefix $\pi_{1..p}$ 스케줄 불변 → 각 agent의 $j$ 도착시각 이미 앎</li>
+    <li class="fragment"><b>earliest-arrival cover</b>: 도착 순으로 부족한 요구 채울 때까지 추가 → 늦은 순으로 중복 제거 ⇒ 그 위치에서 가장 이른 시작 $s_j$인 minimal cover</li>
+  </ul>
+</section>
+
+<!-- 10. Insertion formula -->
+<section>
+  <div class="kicker">방법 ② 선형시간 정확 평가</div>
+  <h2>tail $\theta$로 $O(|C_j|)$ 평가</h2>
+  <p class="small">tail $\theta_k$ = task $k$ 시작부터 끝까지 최장경로 (route DAG의 longest path)</p>
+  <div class="eq fragment">$$\theta_k = d_k + \max_{i\in C_k}\big(\tau_{k,\,\text{next}_i(k)}+\theta_{\text{next}_i(k)}\ \text{or}\ \tau^{\text{home}}_{ik}\big)$$</div>
+  <div class="eq fragment" style="border-color:var(--verm);font-size:1em">$$M'=\max\Big(M,\; s_j+d_j+\max_{i\in C_j}\big(\tau_{j k_i}+\theta_{k_i}\big)\Big)$$</div>
+  <ul class="small fragment">
+    <li>arc $p\to k$ 를 $p\to j\to k$ 로 교체 → triangle inequality로 절대 짧아지지 않음 ⇒ <b>근사 아닌 정확값</b></li>
+    <li>한 번의 sweep으로 모든 위치 점수화 · 64개 초과 시 64개 후보만 (처음·끝·$j$ 근접)</li>
+    <li>탐색 목적 $g = M + \lambda\cdot\overline{f}$ ($\lambda=0.1$): makespan 동률 깨기 + slack 보상</li>
+  </ul>
+</section>
+
+<!-- 11. ALNS loop -->
+<section>
+  <div class="kicker">방법 ③ 탐색</div>
+  <h2>ALNS worker 루프</h2>
+  <div class="cols w">
+    <svg class="loop" viewBox="0 0 600 500" width="100%">
+      <circle cx="300" cy="250" r="170" fill="none" stroke="#e4e7ec" stroke-width="18"/>
+      <g class="spin"><circle cx="300" cy="80" r="11" fill="#0072B2"/></g>
+      <g><rect x="215" y="40" width="170" height="70" rx="14" fill="#fdf1e8" stroke="#D55E00" stroke-width="2"/><text x="300" y="72" text-anchor="middle" font-size="22" fill="#D55E00">Destroy</text><text x="300" y="96" text-anchor="middle" font-size="14" fill="#667085">q개 task 제거</text></g>
+      <g><rect x="410" y="215" width="170" height="70" rx="14" fill="#eef4fb" stroke="#0072B2" stroke-width="2"/><text x="495" y="247" text-anchor="middle" font-size="22" fill="#0072B2">Repair</text><text x="495" y="271" text-anchor="middle" font-size="14" fill="#667085">정확 삽입</text></g>
+      <g><rect x="215" y="390" width="170" height="70" rx="14" fill="#e7f6f1" stroke="#009E73" stroke-width="2"/><text x="300" y="422" text-anchor="middle" font-size="22" fill="#009E73">Accept (SA)</text><text x="300" y="446" text-anchor="middle" font-size="14" fill="#667085">annealing</text></g>
+      <g><rect x="20" y="215" width="170" height="70" rx="14" fill="#f7eef4" stroke="#CC79A7" stroke-width="2"/><text x="105" y="247" text-anchor="middle" font-size="22" fill="#CC79A7">Adapt</text><text x="105" y="271" text-anchor="middle" font-size="14" fill="#667085">operator 가중치</text></g>
+      <text x="300" y="245" text-anchor="middle" font-size="20" fill="#1d2330">8 workers</text>
+      <text x="300" y="270" text-anchor="middle" font-size="14" fill="#667085">1초마다 best 공유</text>
+    </svg>
+    <div class="small">
+      <p class="fragment"><b class="o">Destroy</b>: random · related (Shaw) · worst-wait · critical chain · route segment + 동일 trait agent 간 route-tail 교환</p>
+      <p class="fragment"><b class="b">Repair</b>: random · 도착시각 20% 교란 · 요구 큰 순 · regret-2</p>
+      <p class="fragment"><b class="g">Accept</b>: $g(x')\le g(x)$ 또는 $u\lt e^{-(g(x')-g(x))/t}$</p>
+      <p class="fragment mute" style="font-size:.78em;line-height:1.6">$q\sim U\{1..q_{\max}\}$, $q_{\max}=\mathrm{clip}(\mathrm{round}(4\sqrt{50/m}),2,6)$<br>$t_0=0.01\,g_0\min(1,(50/m)^{1.5})\to t_0/50$ · 3000 iter 무개선 시 best로 복귀<br>Numba 커널: 50-task 7,700–12,800 it/s, 500-task ≈4,300 it/s (worker당)</p>
+    </div>
+  </div>
+</section>
+
+<!-- 12. Protocol -->
+<section>
+  <div class="kicker">평가 프로토콜</div>
+  <h2>Compute-matched + Pre-registered</h2>
+  <div class="cols c3">
+    <div class="card fragment fade-up"><h4 class="b">같은 코어</h4><p>모든 방법 8 physical core lane (Xeon 8480C, 최대 6 lane). CPU 사용량 실측 보고. throttling >40% 면 재실행</p></div>
+    <div class="card fragment fade-up"><h4 class="g">같은 시간</h4><p>$B_1$ = 논문이 보고한 RL(s.10) 계산시간, $2B_1$도. 모델 빌드·construction 포함. 초과 >10%+0.25s → budget 시점 best</p></div>
+    <div class="card fragment fade-up"><h4 class="o">사전 동결</h4><p>가설·경쟁자·budget·분석·결정규칙 + <b>git tree hash</b> 동결. harness가 hash 불일치 시 test 실행 거부. test는 1회</p></div>
+  </div>
+  <div class="card fragment" style="margin-top:22px"><p><b>Split</b>: dev 20 (튜닝, 모든 경쟁자도 설정별 튜닝) · val 20 (dry run, 기준해) · test 50 (확증 1회). 공개 RL policy가 16개 설정 모두에서 논문 평균을 ½σ 이내로 재현 → 인스턴스·사용법 검증</p></div>
+</section>
+
+<!-- 13. Competitors -->
+<section>
+  <div class="kicker">경쟁자 (전부 8코어)</div>
+  <h2>누구와 싸웠나</h2>
+  <table>
+    <tr><th>방법</th><th>내용</th></tr>
+    <tr class="fragment"><td><b>RL(s.$N$)</b></td><td>공개 policy, 8 프로세스가 budget 끝날 때까지 rollout ($N$ = 발표치의 3–24배)</td></tr>
+    <tr class="fragment"><td><b>CP-SAT LNS</b></td><td>task window 해제 후 agent별 circuit 제약으로 재해결, sub-solve당 8 thread</td></tr>
+    <tr class="fragment"><td><b>Parallel CP-SAT LNS</b></td><td>8 single-thread worker가 공유 incumbent 개선 → 코어 100% 사용</td></tr>
+    <tr class="fragment"><td><b>CP-SAT model</b></td><td>전체 모델 + CP-SAT portfolio, construction hint</td></tr>
+    <tr class="fragment"><td><b>CTAS-D</b></td><td>벤치마크가 쓴 exact MILP, Gurobi→CP-SAT 포팅. 공개 Gurobi 해 재현, 60s에 4.1% 더 짧은 해</td></tr>
+    <tr class="fragment"><td><b>Restarts</b></td><td>우리 randomized construction 8 stream</td></tr>
+  </table>
+</section>
+
+<!-- 14. Settings -->
+<section>
+  <div class="kicker">설정</div>
+  <h2>50 task 이상 8개 설정</h2>
+  <div class="cols w">
+    <table>
+      <tr><th>Setting (agent/species/task)</th><th>$B_1$ (s)</th><th>RL $N$</th></tr>
+      <tr><td>SA-BT 25/5/50</td><td>13.45</td><td>154–192</td></tr>
+      <tr><td>SA-BT 50/5/50</td><td>19.14</td><td>144–162</td></tr>
+      <tr><td>SA-AT 50/5/50</td><td>29.80</td><td>140–166</td></tr>
+      <tr><td>MA-AT 25/5/50</td><td>16.34</td><td>157–241</td></tr>
+      <tr><td>MA-AT 50/5/50</td><td>23.43</td><td>135–194</td></tr>
+      <tr><td>MA-AT 50/5/200</td><td>75.20</td><td>40–67</td></tr>
+      <tr class="hl"><td>MA-AT 150/10/500</td><td>560.20</td><td>32–36</td></tr>
+      <tr class="hl"><td>MA-AT 150/5/500</td><td>560.50</td><td>32–40</td></tr>
+    </table>
+    <div class="small">
+      <p>20-task 설정 8개는 제외: exact 방법이 도달 (SA-BT 25/5/20은 CP-SAT가 val 전부 최적 증명) → supplement에 기술적 보고</p>
+      <p class="fragment">500-task: CTAS-D는 dev에서 해 없음 + 55–87 GB 메모리 → 실패 처리, 미실행</p>
+    </div>
+  </div>
+</section>
+
+<!-- 15. Hypotheses & stats -->
+<section>
+  <div class="kicker">가설 · 통계</div>
+  <h2>C1 / C2 와 검정</h2>
+  <div class="cols">
+    <div class="small">
+      <p class="fragment"><b class="b">C1</b>: 8코어 ALNS @$B_1$ &lt; 각 경쟁자 8코어 @$B_1$ <span class="mute">(46 tests)</span></p>
+      <p class="fragment"><b class="b">C1 @$2B_1$</b>: vs PCPSAT·CP-SAT model·Restarts, ≤200 task <span class="mute">(17)</span></p>
+      <p class="fragment"><b class="o">C2</b>: <u>1코어·2초</u> ALNS &lt; 각 경쟁자 8코어 @$B_1$ <span class="mute">(46)</span></p>
+      <p class="fragment">결정규칙: 설정 내 모든 test 유의 ⇒ 설정 통과, <b>8개 중 ≥6</b>이면 C1 주장</p>
+    </div>
+    <div>
+      <div class="eq fragment">$$\rho_n=\frac{M_n^{\text{ALNS}}}{M_n^{\text{comp}}},\quad \bar\rho\ \text{+ paired bootstrap 95\% CI}$$</div>
+      <div class="eq fragment">$$H_0:\ \mathbb E[\log\rho]\ge 0 \quad\text{vs}\quad H_1:\ \mathbb E[\log\rho]\lt 0$$</div>
+      <p class="small fragment">one-sided paired $t$-test · family별 Holm 보정 ($\alpha=0.05$) · 최소 effect size 없음, effect size 전부 보고</p>
+    </div>
+  </div>
+</section>
+
+<!-- 16. C1 bars -->
+<section>
+  <div class="kicker">결과 C1 <span class="pill warn">val dry run</span></div>
+  <h2>makespan 비 ALNS / 경쟁자 (8개 설정 범위)</h2>
+  <p class="tiny mute">막대 = 설정별 평균비의 최소–최대. 세로선 1.0 오른쪽 = 경쟁자가 나음. 전부 왼쪽.</p>
+  <div class="bars">
+    <div class="bar"><div class="lab">CP-SAT LNS</div><div class="trk"><div class="rng" style="left:73.8%;width:6.9%;--c:var(--green)"></div><div class="one" style="left:83.3%"></div></div><div class="val">0.885–0.968</div></div>
+    <div class="bar"><div class="lab">Par. CP-SAT LNS</div><div class="trk"><div class="rng" style="left:74.1%;width:5.2%;--c:var(--green)"></div><div class="one" style="left:83.3%"></div></div><div class="val">0.889–0.951</div></div>
+    <div class="bar"><div class="lab">CP-SAT model</div><div class="trk"><div class="rng" style="left:72.3%;width:5.3%;--c:var(--green)"></div><div class="one" style="left:83.3%"></div></div><div class="val">0.867–0.930</div></div>
+    <div class="bar"><div class="lab">Restarts</div><div class="trk"><div class="rng" style="left:73.8%;width:4.1%;--c:#98a2b3"></div><div class="one" style="left:83.3%"></div></div><div class="val">0.885–0.934</div></div>
+    <div class="bar"><div class="lab">RL(s.N)</div><div class="trk"><div class="rng" style="left:56.7%;width:9.9%;--c:var(--verm)"></div><div class="one" style="left:83.3%"></div></div><div class="val">0.680–0.799</div></div>
+    <div class="bar"><div class="lab">CTAS-D (MILP)</div><div class="trk"><div class="rng" style="left:10.6%;width:34.3%;--c:var(--pink)"></div><div class="one" style="left:83.3%"></div></div><div class="val">0.127–0.538</div></div>
+  </div>
+  <p class="small" style="margin-top:14px"><span class="pill ok">C1 8/8 설정</span><span class="pill ok">46/46 유의 (max adj. p = 0.013)</span><span class="pill ok">410/410 paired run 승</span><span class="pill">$2B_1$: 6/6, 17/17</span></p>
+  <p class="tiny mute">축 0–1.2 선형. CTAS-D는 60개 중 12개만 budget 내 해 발견 (실패 = 200).</p>
+</section>
+
+<!-- 17. Methods: gap & CPU -->
+<section>
+  <div class="kicker">결과 · 방법별 <span class="pill warn">val dry run</span></div>
+  <h2>best-known 대비 gap 과 실제 CPU 사용</h2>
+  <div class="cols w">
+    <table>
+      <tr><th>방법</th><th>Gap to best (%)</th><th>CPU used</th></tr>
+      <tr class="hl"><td>ALNS (ours)</td><td>0.0–1.5</td><td>0.99–1.00</td></tr>
+      <tr><td>CP-SAT LNS</td><td>3.6–13.3</td><td class="o">0.28–0.79</td></tr>
+      <tr><td>Parallel CP-SAT LNS</td><td>5.5–13.5</td><td>0.99–1.00</td></tr>
+      <tr><td>CP-SAT model</td><td>7.8–15.8</td><td>0.43–0.90</td></tr>
+      <tr><td>CTAS-D (MILP)</td><td>solves 0–100%</td><td>0.43–0.97</td></tr>
+      <tr><td>Restarts</td><td>8.1–14.6</td><td>1.00</td></tr>
+      <tr><td>RL(s.N)</td><td class="o">27.2–47.1</td><td>0.94–0.99</td></tr>
+    </table>
+    <div class="small">
+      <p class="fragment"><b>병렬화가 CP-SAT를 못 살림</b>: threaded LNS는 sub-model 빌드가 직렬이라 코어의 28–79%만 사용. 완전 병렬 버전도 비슷</p>
+      <p class="fragment"><b>Restarts만으로</b> RL보다 13–23% 짧음 → 좋은 constructor가 격차 대부분, 탐색이 나머지</p>
+      <p class="fragment"><b>8 worker vs 1</b>: 0.4–2.7%만 개선 → 우위는 병렬성보다 <b>코어당 효율</b></p>
+    </div>
+  </div>
+</section>
+
+<!-- 18. Budget figure / C2 -->
+<section>
+  <div class="kicker">결과 C2 · anytime <span class="pill warn">val dry run</span></div>
+  <h2 style="margin-bottom:.15em">1코어로도 이미 앞선다</h2>
+  <img class="fig" src="fig/budget.svg" alt="Gap vs budget" style="display:block;width:960px;height:auto;max-height:none;margin:0 auto">
+  <p class="small">C2 (1코어·2초 vs 8코어 @$B_1$): <b>4/8</b> 설정 — 결정규칙상 <span class="o">미충족</span>. 실패: SA-BT 50/5/50, SA-AT 50/5/50, 500-task 2개 (대부분 CP-SAT LNS 대비 비유의). RL 대비는 <b>전 설정</b> 16.7–24.7% 단축, 7–280배 짧은 시간.</p>
+</section>
+
+<!-- 19. Reference quality -->
+<section>
+  <div class="kicker">sanity check</div>
+  <h2>“ALNS가 자기 자신과만 가까운 것 아닌가?”</h2>
+  <div class="cols">
+    <div class="card"><h4>독립 기준해 실험 (val)</h4><p>Parallel CP-SAT LNS · CP-SAT full model을 8코어 300s ($B_1$의 10–20배) construction에서만 시작</p></div>
+    <div class="card fragment"><h4 class="g">결과</h4><p>50+ task val 70개 중 <b>0개</b>도 ALNS 기반 best에 도달 못함. 평균 2.8–12.0% 더 김. CP-SAT certified lower bound는 12–58% 아래 → 최적성 gap 불명</p></div>
+  </div>
+  <img class="fig fragment" src="fig/c1_val.png" alt="Anytime curves on val" style="max-height:290px;margin-top:16px">
+</section>
+
+<!-- 20. Why -->
+<section>
+  <div class="kicker">해석</div>
+  <h2>왜 탐색이 이기나</h2>
+  <div class="cols c3">
+    <div class="card fragment fade-up"><h4 class="o">RL</h4><p>한 번의 순차 결정으로 plan 구성. rollout을 늘리면 다양성은 늘지만 <b>주어진 plan을 개선하지 않음</b></p></div>
+    <div class="card fragment fade-up"><h4 class="b">ALNS</h4><p>같은 시간에 plan 하나를 싸고 정확한 move 수천 번으로 개선. 모든 move feasible + $O(|C_j|)$ 평가</p></div>
+    <div class="card fragment fade-up"><h4 class="g">CP-SAT</h4><p>step당 이웃은 더 풍부하지만 매 step 모델 빌드·풀이 비용 → 병렬화 효과 미미</p></div>
+  </div>
+  <p class="fragment" style="margin-top:26px;font-size:.8em">메시지: 학습이 틀렸다는 게 아님 — <b>learned planner는 같은 compute의 강한 탐색과 비교돼야</b> 한다.</p>
+</section>
+
+<!-- 21. Track D -->
+<section>
+  <div class="kicker">Negative result</div>
+  <h2>Track D: 동적 / 열화 네트워크</h2>
+  <div class="cols">
+    <div class="small">
+      <p>DynHeteroMRTA-X 환경 + SPARC planner + T2 통신 계층을 1주 구축, dev에서 go/no-go gate 사전 설정</p>
+      <ul>
+        <li class="fragment"><b>K0</b> 통과: executor ↔ env bit-for-bit 일치</li>
+        <li class="fragment"><b class="o">K1 발동</b>: SPARC-L / rolling constructor = 0.9847 [0.981, 0.989] → 1.5%만 우위</li>
+        <li class="fragment"><b class="o">K6 발동</b>: 분할 네트워크에선 INF-r이 가장 robust</li>
+      </ul>
+    </div>
+    <div class="card fragment"><h4>결론</h4><p>동적 방법 주장(C1-dyn) 철회 → supplement의 negative result. 논문 한계에 명시: “정적·중앙 계획만 평가, RL의 분산·반응성 장점은 미평가”</p></div>
+  </div>
+</section>
+
+<!-- 22. Limitations -->
+<section>
+  <div class="kicker">정직하게</div>
+  <h2>한계</h2>
+  <div class="cols small">
+    <ul>
+      <li class="fragment"><b>정적·중앙 계획</b>만 (벤치마크와 동일)</li>
+      <li class="fragment"><b>벤치마크 1개</b>: Euclidean, 단일 속도, makespan</li>
+      <li class="fragment"><b>RL을 CPU에서</b>: GPU면 rollout 더 가능 (이미 발표치의 3–24배)</li>
+      <li class="fragment"><b>최적성 gap 불명</b>: 50+ task는 아무도 최적 증명 못함</li>
+    </ul>
+    <ul>
+      <li class="fragment"><b>튜닝</b>: ALNS는 같은 generator dev에서 개발 (경쟁자도 설정별 튜닝)</li>
+      <li class="fragment"><b>Prereg</b>: val dry run 결과는 동결 전 알려짐, constructor/RL test 결과 일부 기존에 봄</li>
+      <li class="fragment"><b>단일 host·seed</b>: val 52 cell 두 host 간 2% 이내 일치</li>
+      <li class="fragment"><b>CTAS-D</b>: 논문의 Gurobi 실행 아님 (오픈 솔버 포팅)</li>
+    </ul>
+  </div>
+</section>
+
+<!-- 23. Status -->
+<section>
+  <div class="kicker">현재 상태 · 다음 할 일</div>
+  <h2>Timeline</h2>
+  <div class="tl">
+    <div class="row"><div class="d">09-28</div><div class="dot ok"></div><div class="t">Prereg 동결 <code>2e53eab</code> · test campaign 시작 (5,400 job, 6 lane, ≈22h)</div></div>
+    <div class="row fragment"><div class="d">test 완료 후</div><div class="dot"></div><div class="t"><code>docs/results/test/analyze.sh</code> → <code>paper/tools/make_tables.py</code>로 표·매크로 재생성 → <b>이 슬라이드 숫자도 교체</b></div></div>
+    <div class="row fragment"><div class="d">10-01 AoE</div><div class="dot x"></div><div class="t">AAMAS 2027 <b>abstract 등록</b> (OpenReview)</div></div>
+    <div class="row fragment"><div class="d">10-08 AoE</div><div class="dot x"></div><div class="t"><b>Paper 제출</b>: 본문 8쪽, supplement zip ≤ 25 MB, double-blind</div></div>
+  </div>
+  <p class="note fragment">팀원 부탁: 숫자는 손으로 치지 말 것 — 전부 <code>paper/tables/numbers.tex</code> 매크로에서 생성. 논문 내용 외부 공유 금지 (익명 심사).</p>
+</section>
+
+<!-- 24. End -->
+<section data-auto-animate class="center">
+  <div class="kicker" data-id="k">요약</div>
+  <h1 data-id="t" style="font-size:1.6em;line-height:1.2">좋은 표현 + 정확한 선형시간 삽입<br>= 같은 compute에서 RL보다 20–32% 짧은 계획</h1>
+  <p class="small mute" style="margin-top:1em">코드 <code>cbba_sota/</code> · 논문 <code>paper/</code> · 사전등록 <code>docs/prereg-phase1.md</code> · 결과 <code>docs/results/</code></p>
+</section>
+
+</div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/math/math.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
+<script>
+Reveal.initialize({
+  hash:true, slideNumber:'c/t', progress:true, center:false, transition:'slide', backgroundTransition:'fade',
+  width:1280, height:720, margin:0.06,
+  autoAnimateDuration:0.8,
+  katex:{ version:'latest', delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}], ignoredTags:['script','noscript','style','textarea','pre','code'] },
+  plugins:[RevealMath.KaTeX, RevealNotes]
+});
+</script>
+</body>
+</html>
