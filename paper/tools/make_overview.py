@@ -25,7 +25,7 @@ INK, GREY, MUTED, LIGHT = "#2F3A45", "#8C949C", "#55606B", "#F4F6F8"
 SKILL = {"cam": BLUE, "grip": ORANGE, "arm": GREEN, "sense": PINK}  # skill colours (dots)
 DRONE_SK, ROVER_SK, LEG_SK = ("cam", "sense"), ("grip", "cam"), ("arm", "sense")
 FADE = 0.42  # unchanged content of the dynamic map
-CANCEL = "#7D8791"  # assignments dropped by the re-plan
+CANCEL = "#7D8791"  # moves cancelled by the re-plan
 
 out: list[str] = []
 
@@ -75,12 +75,21 @@ def curve(p0, p1, p2, p3) -> str:
 
 
 def cancelled(p0, p1, p2, p3) -> None:
-    """An assignment dropped by the re-plan: the old robot-to-task arrow, grey and dashed, struck through."""
+    """A move cancelled by the re-plan: the old robot-to-task arrow, grey and dashed, struck through."""
     arrow(curve(p0, p1, p2, p3), CANCEL, "cancel", width=4.5, dash="10 8", big=True)
     mx = (p0[0] + 3 * p1[0] + 3 * p2[0] + p3[0]) / 8  # the curve's point at t = 1/2
     my = (p0[1] + 3 * p1[1] + 3 * p2[1] + p3[1]) / 8
     add(f'<circle cx="{mx:.1f}" cy="{my:.1f}" r="15" fill="white" opacity="0.9"/>')
     cross(mx, my, r=10)
+
+
+def tag(cx, cy, label, fill=None, size=22) -> None:
+    """Identifier pill: robots (r1, r2, ...) filled in their colour, tasks (t1, t2, ...) white."""
+    w, h = 0.62 * size * len(label) + 12, size + 6
+    stroke, ink = (fill, "white") if fill else (INK, INK)
+    add(f'<rect x="{cx - w / 2:.1f}" y="{cy - h / 2:.1f}" width="{w:.1f}" height="{h}" rx="{h / 2}" '
+        f'fill="{fill or "white"}" stroke="{stroke}" stroke-width="2"/>')
+    text(cx, cy + 0.36 * size, label, size=size, weight="bold", anchor="middle", fill=ink)
 
 
 def dots(cx, cy, skills, r=7) -> None:
@@ -214,6 +223,14 @@ def warning(cx, cy, s=1.0) -> None:
     add("</g>")
 
 
+def blocked(cx, cy, r=20) -> None:
+    """No-entry sign: a task that no remaining coalition can serve."""
+    d = r * 0.68
+    add(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{r}" fill="white" stroke="{VERM}" stroke-width="{r * 0.28:.1f}"/>')
+    add(f'<path d="M{cx - d:.1f},{cy - d:.1f} L{cx + d:.1f},{cy + d:.1f}" stroke="{VERM}" '
+        f'stroke-width="{r * 0.28:.1f}"/>')
+
+
 def cross(cx, cy, r=9) -> None:
     add(f'<path d="M{cx - r:.1f},{cy - r:.1f} L{cx + r:.1f},{cy + r:.1f} M{cx - r:.1f},{cy + r:.1f} '
         f'L{cx + r:.1f},{cy - r:.1f}" stroke="{VERM}" stroke-width="5.5" stroke-linecap="round"/>')
@@ -289,6 +306,10 @@ def rover_to_rubble(p):
     return p(118, 385), p(190, 380), p(240, 360), p(276, 342)
 
 
+def legged_to_rubble(p):
+    return p(492, 380), p(440, 370), p(400, 355), p(362, 342)
+
+
 def scene(ox, oy, dynamic: bool) -> None:
     """One map frame at (ox, oy) (600 x 450). In the dynamic frame, what did not change is faded."""
     def p(x, y):
@@ -314,31 +335,47 @@ def scene(ox, oy, dynamic: bool) -> None:
     dots(*p(500, 224), ("cam", "sense"))
     rubble(*p(320, 325), 0.95)
     dots(*p(320, 364), ("grip", "arm"))
-    hourglass(*p(378, 304), 0.8)
-    arrow(curve(p(492, 380), p(440, 370), p(400, 355), p(362, 342)), GREEN, "green", big=True)
+    tag(*p(210, 164), "t1")
+    tag(*p(274, 286), "t2")
+    tag(*p(540, 152), "t3")
     if not dynamic:
+        hourglass(*p(378, 304), 0.8)
         arrow(curve(*drone_to_fire(p)), BLUE, "blue", big=True)
         arrow(curve(*rover_to_rubble(p)), ORANGE, "orange", big=True)
+        arrow(curve(*legged_to_rubble(p)), GREEN, "green", big=True)
     legged(*p(516, 386), 0.72)
     dots(*p(522, 428), LEG_SK)
+    tag(*p(574, 428), "r3", GREEN)
     dots(*p(72, 98), DRONE_SK)
     dots(*p(80, 428), ROVER_SK)
     if not dynamic:
         drone(*p(72, 60), 0.72)
         rover(*p(80, 388), 0.68)
+        tag(*p(134, 100), "r1", BLUE)
+        tag(*p(134, 428), "r2", ORANGE)
     add("</g>")
     if dynamic:  # what changed, at full strength
         link(tx - 8, ty + 14, *p(100, 375), lost=True)
-        cancelled(*drone_to_fire(p))  # the drone is re-planned to the new task
+        cancelled(*drone_to_fire(p))  # the drone serves the new task first
         cancelled(*rover_to_rubble(p))  # the rover has failed
+        # the rover had the only gripper, so no coalition can serve the rubble task any more
+        cancelled(*legged_to_rubble(p))
+        blocked(*p(378, 304), 21)
+        mx, my = p(408, 312)
+        text(mx, my, "no", size=23, weight="bold", fill=VERM)
+        dots(mx + 42, my - 8, ("grip",), r=8)
+        text(mx + 56, my, "left", size=23, weight="bold", fill=VERM)
         halo(*p(470, 88), 42)
         ruin(*p(470, 84), 0.62)
         dots(*p(470, 118), ("cam", "sense"))
+        tag(*p(424, 116), "t4")
         burst(*p(522, 58), 30)
         arrow(curve(p(112, 58), p(220, 20), p(340, 40), p(426, 76)), BLUE, "blue", width=5.5, dash="13 9", big=True)
-        text(*p(236, 78), "replan", size=25, weight="bold", fill=BLUE)
+        text(*p(138, 72), "replan: t4 → t1 → t3", size=23, weight="bold", fill=BLUE)
         drone(*p(72, 60), 0.72)
         rover(*p(80, 388), 0.68, broken=True)
+        tag(*p(134, 100), "r1", BLUE)
+        tag(*p(134, 428), "r2", "#8C949C")
         warning(*p(130, 352), 0.85)
 
 
@@ -356,15 +393,17 @@ def legend(x0, y0) -> None:
     arrow(f"M{x0 + 925},{y1} L{x0 + 1000},{y1}", CANCEL, "cancel", width=4.5, dash="10 8", big=True)
     add(f'<circle cx="{x0 + 960}" cy="{y1}" r="13" fill="white" opacity="0.9"/>')
     cross(x0 + 960, y1, r=8)
-    text(x0 + 1012, y1 + 9, "dropped assignment", size=25)
+    text(x0 + 1012, y1 + 9, "cancelled move", size=25)
     hourglass(x0 + 30, y2, 0.7)
-    text(x0 + 64, y2 + 9, "coalition task: starts when all members are there", size=25)
-    burst(x0 + 625, y2, 22, label="")
-    text(x0 + 655, y2 + 9, "new task", size=25)
-    warning(x0 + 790, y2, 0.7)
-    text(x0 + 816, y2 + 9, "failure", size=25)
-    link(x0 + 930, y2, x0 + 990, y2, lost=True)
-    text(x0 + 1002, y2 + 9, "link lost", size=25)
+    text(x0 + 64, y2 + 9, "coalition task: waits for all members", size=25)
+    burst(x0 + 480, y2, 22, label="")
+    text(x0 + 510, y2 + 9, "new task", size=25)
+    warning(x0 + 645, y2, 0.7)
+    text(x0 + 671, y2 + 9, "failure", size=25)
+    link(x0 + 780, y2, x0 + 840, y2, lost=True)
+    text(x0 + 852, y2 + 9, "link lost", size=25)
+    blocked(x0 + 982, y2, 15)
+    text(x0 + 1008, y2 + 9, "infeasible task", size=25)
 
 
 # --- panels (b) and (c) ------------------------------------------------------------------------------------------
@@ -378,7 +417,7 @@ def card(x, y, w, h, dashed=False) -> None:
 
 def gantt(x0, y0) -> None:
     """Schedule of the plan: each robot in the global order; the coalition task starts when both have arrived."""
-    t0, k = x0 + 70, 45.0  # x of time 0, px per time unit
+    t0, k = x0 + 96, 45.0  # x of time 0, px per time unit
     rows = [(drone, BLUE, 0.4), (rover, ORANGE, 0.36), (legged, GREEN, 0.38)]
     ys = [y0 + 22, y0 + 64, y0 + 106]
     fire_c, rub_c, ruin_c = "#F3B08A", "#C3C9CF", "#A9B5C2"
@@ -392,21 +431,22 @@ def gantt(x0, y0) -> None:
     def travel(y, a, b):
         add(f'<path d="M{t0 + a * k:.1f},{y} L{t0 + b * k:.1f},{y}" stroke="#8C949C" stroke-width="2.5"/>')
 
-    for (fn, _, s), y in zip(rows, ys):
+    for i, ((fn, col, s), y) in enumerate(zip(rows, ys)):
         fn(x0 + 28, y + (6 if fn is legged else 2), s)
+        tag(x0 + 72, y, f"r{i + 1}", col, size=18)
     travel(ys[0], 0, 1.5)
-    bar(ys[0], 1.5, 3.4, fire_c, "fire")
+    bar(ys[0], 1.5, 3.4, fire_c, "t1 fire")
     travel(ys[0], 3.4, 5.0)
-    bar(ys[0], 5.0, 6.8, ruin_c, "ruin")
+    bar(ys[0], 5.0, 6.8, ruin_c, "t3 ruin")
     travel(ys[0], 6.8, 8.2)
     travel(ys[1], 0, 3.2)
-    bar(ys[1], 3.2, 6.0, rub_c, "rubble")
+    bar(ys[1], 3.2, 6.0, rub_c, "t2 rubble")
     travel(ys[1], 6.0, 7.4)
     travel(ys[2], 0, 1.8)
     add(f'<rect x="{t0 + 1.8 * k:.1f}" y="{ys[2] - 11}" width="{1.4 * k:.1f}" height="22" rx="4" fill="url(#hatch)" '
         f'stroke="#9AA3AD" stroke-width="1.5"/>')
     text(t0 + 2.5 * k, ys[2] + 42, "waits", size=19, anchor="middle", fill=MUTED)
-    bar(ys[2], 3.2, 6.0, rub_c, "rubble")
+    bar(ys[2], 3.2, 6.0, rub_c, "t2 rubble")
     travel(ys[2], 6.0, 7.0)
     add(f'<path d="M{t0 + 3.2 * k:.1f},{ys[1] - 22} L{t0 + 3.2 * k:.1f},{ys[2] + 26}" stroke="{VERM}" '
         f'stroke-width="3" stroke-dasharray="6 5"/>')
@@ -433,6 +473,7 @@ def panel_b(x0, y0) -> None:
             card(x - 44, cy - 42, 88, 84)
             glyph(x, cy - 8, 0.52)
             dots(x, cy + 28, sk, r=6)
+            tag(x - 36, cy - 36, f"t{k + 1}", size=19)
         if k:
             add(f'<path d="M{xs[k - 1] + 48},{cy} L{x - 52},{cy}" stroke="#6B7580" stroke-width="4" '
                 f'marker-end="url(#ah-grey)"/>')

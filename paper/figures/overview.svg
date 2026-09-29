@@ -144,14 +144,20 @@
 </g>
 <circle cx="326.5" cy="460.0" r="7" fill="#E69F00" stroke="white" stroke-width="2"/>
 <circle cx="345.5" cy="460.0" r="7" fill="#009E73" stroke="white" stroke-width="2"/>
+<rect x="206.4" y="246.0" width="39.3" height="28" rx="14.0" fill="white" stroke="#2F3A45" stroke-width="2"/>
+<text x="226.0" y="267.9" font-family="Linux Biolinum O" font-size="22" font-weight="bold" font-style="normal" text-anchor="middle" fill="#2F3A45">t1</text>
+<rect x="270.4" y="368.0" width="39.3" height="28" rx="14.0" fill="white" stroke="#2F3A45" stroke-width="2"/>
+<text x="290.0" y="389.9" font-family="Linux Biolinum O" font-size="22" font-weight="bold" font-style="normal" text-anchor="middle" fill="#2F3A45">t2</text>
+<rect x="536.4" y="234.0" width="39.3" height="28" rx="14.0" fill="white" stroke="#2F3A45" stroke-width="2"/>
+<text x="556.0" y="255.9" font-family="Linux Biolinum O" font-size="22" font-weight="bold" font-style="normal" text-anchor="middle" fill="#2F3A45">t3</text>
 <g transform="translate(394.0,400.0) scale(0.8)">
 <path d="M-15,-24 L15,-24 L2,0 L15,24 L-15,24 L-2,0 z" fill="white" stroke="#2F3A45" stroke-width="3" stroke-linejoin="round"/>
 <path d="M-9,21 L9,21 L2,10 L-2,10 z M-7,-18 L7,-18 L1,-8 L-1,-8 z" fill="#E69F00"/>
 <path d="M-19,-26 L19,-26 M-19,26 L19,26" stroke="#2F3A45" stroke-width="5" stroke-linecap="round"/>
 </g>
-<path d="M508,476 C456,466 416,451 378,438" fill="none" stroke="#009E73" stroke-width="5" stroke-linecap="round" marker-end="url(#ahL-green)"/>
 <path d="M108,192 C126,236 146,266 162,281" fill="none" stroke="#0072B2" stroke-width="5" stroke-linecap="round" marker-end="url(#ahL-blue)"/>
 <path d="M134,481 C206,476 256,456 292,438" fill="none" stroke="#E69F00" stroke-width="5" stroke-linecap="round" marker-end="url(#ahL-orange)"/>
+<path d="M508,476 C456,466 416,451 378,438" fill="none" stroke="#009E73" stroke-width="5" stroke-linecap="round" marker-end="url(#ahL-green)"/>
 <g transform="translate(532.0,482.0) scale(0.72)">
 <path d="M-26,0 L-34,18 L-28,36" fill="none" stroke="#2F3A45" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
 <circle cx="-28" cy="37" r="3.5" fill="#2F3A45"/>
@@ -167,6 +173,8 @@
 </g>
 <circle cx="528.5" cy="524.0" r="7" fill="#009E73" stroke="white" stroke-width="2"/>
 <circle cx="547.5" cy="524.0" r="7" fill="#CC79A7" stroke="white" stroke-width="2"/>
+<rect x="570.4" y="510.0" width="39.3" height="28" rx="14.0" fill="#009E73" stroke="#009E73" stroke-width="2"/>
+<text x="590.0" y="531.9" font-family="Linux Biolinum O" font-size="22" font-weight="bold" font-style="normal" text-anchor="middle" fill="white">r3</text>
 <circle cx="78.5" cy="194.0" r="7" fill="#0072B2" stroke="white" stroke-width="2"/>
 <circle cx="97.5" cy="194.0" r="7" fill="#CC79A7" stroke="white" stroke-width="2"/>
 <circle cx="86.5" cy="524.0" r="7" fill="#E69F00" stroke="white" stroke-width="2"/>
@@ -193,6 +201,10 @@
 <circle cx="0" cy="16" r="12" fill="#2F3A45"/><circle cx="0" cy="16" r="4.5" fill="#B8BEC4"/>
 <circle cx="27" cy="16" r="12" fill="#2F3A45"/><circle cx="27" cy="16" r="4.5" fill="#B8BEC4"/>
 </g>
+<rect x="130.4" y="182.0" width="39.3" height="28" rx="14.0" fill="#0072B2" stroke="#0072B2" stroke-width="2"/>
+<text x="150.0" y="203.9" font-family="Linux Biolinum O" font-size="22" font-weight="bold" font-style="normal" text-anchor="middle" fill="white">r1</text>
+<rect x="130.4" y="510.0" width="39.3" height="28" rx="14.0" fill="#E69F00" stroke="#E69F00" stroke-width="2"/>
+<text x="150.0" y="531.9" font-family="Linux Biolinum O" font-size="22" font-weight="bold" font-style="normal" text-anchor="middle" fill="white">r2</text>
 </g>
 <path d="M626,299.0 L648,299.0 L648,281.0 L670,321.0 L648,361.0 L648,343.0 L626,343.0 z" fill="#B3BAC1"/>
 <clipPath id="mapB"><rect x="680" y="96" width="600" height="450" rx="18"/></clipPath>
@@ -320,12 +332,12 @@
 </g>
 <circle cx="990.5" cy="460.0" r="7" fill="#E69F00" stroke="white" stroke-width="2"/>
 <circle cx="1009.5" cy="460.0" r="7" fill="#009E73" stroke="white" stroke-width="2"/>
-<g transform="translate(1058.0,400.0) scale(0.8)">
-<path d="M-15,-24 L15,-24 L2,0 L15,24 L-15,24 L-2,0 z" fill="white" stroke="#2F3A45" stroke-width="3" stroke-linejoin="round"/>
-<path d="M-9,21 L9,21 L2,10 L-2,10 z M-7,-18 L7,-18 L1,-8 L-1,-8 z" fill="#E69F00"/>
-<path d="M-19,-26 L19,-26 M-19,26 L19,26" stroke="#2F3A45" stroke-width="5" stroke-linecap="round"/>
-</g>
-<path d="M1172,476 C1120,466 1080,451 1042,438" fill="none" stroke="#009E73" stroke-width="5" stroke-linecap="round" marker-end="url(#ahL-green)"/>
+<rect x="870.4" y="246.0" width="39.3" height="28" rx="14.0" fill="white" stroke="#2F3A45" stroke-width="2"/>
+<text x="890.0" y="267.9" font-family="Linux Biolinum O" font-size="22" font-weight="bold" font-style="normal" text-anchor="middle" fill="#2F3A45">t1</text>
+<rect x="934.4" y="368.0" width="39.3" height="28" rx="14.0" fill="white" stroke="#2F3A45" stroke-width="2"/>
+<text x="954.0" y="389.9" font-family="Linux Biolinum O" font-size="22" font-weight="bold" font-style="normal" text-anchor="middle" fill="#2F3A45">t2</text>
+<rect x="1200.4" y="234.0" width="39.3" height="28" rx="14.0" fill="white" stroke="#2F3A45" stroke-width="2"/>
+<text x="1220.0" y="255.9" font-family="Linux Biolinum O" font-size="22" font-weight="bold" font-style="normal" text-anchor="middle" fill="#2F3A45">t3</text>
 <g transform="translate(1196.0,482.0) scale(0.72)">
 <path d="M-26,0 L-34,18 L-28,36" fill="none" stroke="#2F3A45" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
 <circle cx="-28" cy="37" r="3.5" fill="#2F3A45"/>
@@ -341,6 +353,8 @@
 </g>
 <circle cx="1192.5" cy="524.0" r="7" fill="#009E73" stroke="white" stroke-width="2"/>
 <circle cx="1211.5" cy="524.0" r="7" fill="#CC79A7" stroke="white" stroke-width="2"/>
+<rect x="1234.4" y="510.0" width="39.3" height="28" rx="14.0" fill="#009E73" stroke="#009E73" stroke-width="2"/>
+<text x="1254.0" y="531.9" font-family="Linux Biolinum O" font-size="22" font-weight="bold" font-style="normal" text-anchor="middle" fill="white">r3</text>
 <circle cx="742.5" cy="194.0" r="7" fill="#0072B2" stroke="white" stroke-width="2"/>
 <circle cx="761.5" cy="194.0" r="7" fill="#CC79A7" stroke="white" stroke-width="2"/>
 <circle cx="750.5" cy="524.0" r="7" fill="#E69F00" stroke="white" stroke-width="2"/>
@@ -354,6 +368,14 @@
 <path d="M798,481 C870,476 920,456 956,438" fill="none" stroke="#7D8791" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="10 8" marker-end="url(#ahL-cancel)"/>
 <circle cx="890.5" cy="464.4" r="15" fill="white" opacity="0.9"/>
 <path d="M880.5,454.4 L900.5,474.4 M880.5,474.4 L900.5,454.4" stroke="#D55E00" stroke-width="5.5" stroke-linecap="round"/>
+<path d="M1172,476 C1120,466 1080,451 1042,438" fill="none" stroke="#7D8791" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="10 8" marker-end="url(#ahL-cancel)"/>
+<circle cx="1101.8" cy="458.1" r="15" fill="white" opacity="0.9"/>
+<path d="M1091.8,448.1 L1111.8,468.1 M1091.8,468.1 L1111.8,448.1" stroke="#D55E00" stroke-width="5.5" stroke-linecap="round"/>
+<circle cx="1058.0" cy="400.0" r="21" fill="white" stroke="#D55E00" stroke-width="5.9"/>
+<path d="M1043.7,385.7 L1072.3,414.3" stroke="#D55E00" stroke-width="5.9"/>
+<text x="1088.0" y="408.0" font-family="Linux Biolinum O" font-size="23" font-weight="bold" font-style="normal" text-anchor="start" fill="#D55E00">no</text>
+<circle cx="1130.0" cy="400.0" r="8" fill="#E69F00" stroke="white" stroke-width="2"/>
+<text x="1144.0" y="408.0" font-family="Linux Biolinum O" font-size="23" font-weight="bold" font-style="normal" text-anchor="start" fill="#D55E00">left</text>
 <circle cx="1150.0" cy="184.0" r="42" fill="white" opacity="0.92" stroke="#D5DBD2" stroke-width="2"/>
 <g transform="translate(1150.0,180.0) scale(0.62)">
 <ellipse cx="0" cy="34" rx="50" ry="9" fill="#000" opacity="0.10"/>
@@ -371,10 +393,12 @@
 </g>
 <circle cx="1140.5" cy="214.0" r="7" fill="#0072B2" stroke="white" stroke-width="2"/>
 <circle cx="1159.5" cy="214.0" r="7" fill="#CC79A7" stroke="white" stroke-width="2"/>
+<rect x="1084.4" y="198.0" width="39.3" height="28" rx="14.0" fill="white" stroke="#2F3A45" stroke-width="2"/>
+<text x="1104.0" y="219.9" font-family="Linux Biolinum O" font-size="22" font-weight="bold" font-style="normal" text-anchor="middle" fill="#2F3A45">t4</text>
 <polygon points="1202.0,124.0 1206.8,132.9 1215.0,127.0 1215.5,137.1 1225.5,135.3 1221.5,144.6 1231.2,147.3 1223.6,154.0 1231.2,160.7 1221.5,163.4 1225.5,172.7 1215.5,170.9 1215.0,181.0 1206.8,175.1 1202.0,184.0 1197.2,175.1 1189.0,181.0 1188.5,170.9 1178.5,172.7 1182.5,163.4 1172.8,160.7 1180.4,154.0 1172.8,147.3 1182.5,144.6 1178.5,135.3 1188.5,137.1 1189.0,127.0 1197.2,132.9" fill="#D55E00" stroke="white" stroke-width="2.5"/>
 <text x="1202.0" y="161.0" font-family="Linux Biolinum O" font-size="19" font-weight="bold" font-style="normal" text-anchor="middle" fill="white">NEW</text>
 <path d="M792,154 C900,116 1020,136 1106,172" fill="none" stroke="#0072B2" stroke-width="5.5" stroke-linecap="round" stroke-dasharray="13 9" marker-end="url(#ahL-blue)"/>
-<text x="916.0" y="174.0" font-family="Linux Biolinum O" font-size="25" font-weight="bold" font-style="normal" text-anchor="start" fill="#0072B2">replan</text>
+<text x="818.0" y="168.0" font-family="Linux Biolinum O" font-size="23" font-weight="bold" font-style="normal" text-anchor="start" fill="#0072B2">replan: t4 → t1 → t3</text>
 <g transform="translate(752.0,156.0) scale(0.72)">
 <path d="M-30,-22 L30,22 M-30,22 L30,-22" stroke="#2F3A45" stroke-width="6" stroke-linecap="round"/>
 <ellipse cx="-30" cy="-26" rx="21" ry="6.5" fill="#A9D2EE" stroke="#2F3A45" stroke-width="2.5"/>
@@ -397,6 +421,10 @@
 <circle cx="0" cy="16" r="12" fill="#2F3A45"/><circle cx="0" cy="16" r="4.5" fill="#B8BEC4"/>
 <circle cx="27" cy="16" r="12" fill="#2F3A45"/><circle cx="27" cy="16" r="4.5" fill="#B8BEC4"/>
 </g>
+<rect x="794.4" y="182.0" width="39.3" height="28" rx="14.0" fill="#0072B2" stroke="#0072B2" stroke-width="2"/>
+<text x="814.0" y="203.9" font-family="Linux Biolinum O" font-size="22" font-weight="bold" font-style="normal" text-anchor="middle" fill="white">r1</text>
+<rect x="794.4" y="510.0" width="39.3" height="28" rx="14.0" fill="#8C949C" stroke="#8C949C" stroke-width="2"/>
+<text x="814.0" y="531.9" font-family="Linux Biolinum O" font-size="22" font-weight="bold" font-style="normal" text-anchor="middle" fill="white">r2</text>
 <g transform="translate(810.0,448.0) scale(0.85)">
 <path d="M0,-24 L24,18 L-24,18 z" fill="#D55E00" stroke="white" stroke-width="3" stroke-linejoin="round"/>
 <text x="0.0" y="13.0" font-family="Linux Biolinum O" font-size="30" font-weight="bold" font-style="normal" text-anchor="middle" fill="white">!</text>
@@ -422,24 +450,27 @@
 <path d="M941,584 L1016,584" fill="none" stroke="#7D8791" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="10 8" marker-end="url(#ahL-cancel)"/>
 <circle cx="976" cy="584" r="13" fill="white" opacity="0.9"/>
 <path d="M968.0,576.0 L984.0,592.0 M968.0,592.0 L984.0,576.0" stroke="#D55E00" stroke-width="5.5" stroke-linecap="round"/>
-<text x="1028.0" y="593.0" font-family="Linux Biolinum O" font-size="25" font-weight="normal" font-style="normal" text-anchor="start" fill="#2F3A45">dropped assignment</text>
+<text x="1028.0" y="593.0" font-family="Linux Biolinum O" font-size="25" font-weight="normal" font-style="normal" text-anchor="start" fill="#2F3A45">cancelled move</text>
 <g transform="translate(46.0,634.0) scale(0.7)">
 <path d="M-15,-24 L15,-24 L2,0 L15,24 L-15,24 L-2,0 z" fill="white" stroke="#2F3A45" stroke-width="3" stroke-linejoin="round"/>
 <path d="M-9,21 L9,21 L2,10 L-2,10 z M-7,-18 L7,-18 L1,-8 L-1,-8 z" fill="#E69F00"/>
 <path d="M-19,-26 L19,-26 M-19,26 L19,26" stroke="#2F3A45" stroke-width="5" stroke-linecap="round"/>
 </g>
-<text x="80.0" y="643.0" font-family="Linux Biolinum O" font-size="25" font-weight="normal" font-style="normal" text-anchor="start" fill="#2F3A45">coalition task: starts when all members are there</text>
-<polygon points="641.0,612.0 644.5,618.6 650.5,614.2 650.9,621.6 658.2,620.3 655.3,627.1 662.4,629.1 656.8,634.0 662.4,638.9 655.3,640.9 658.2,647.7 650.9,646.4 650.5,653.8 644.5,649.4 641.0,656.0 637.5,649.4 631.5,653.8 631.1,646.4 623.8,647.7 626.7,640.9 619.6,638.9 625.2,634.0 619.6,629.1 626.7,627.1 623.8,620.3 631.1,621.6 631.5,614.2 637.5,618.6" fill="#D55E00" stroke="white" stroke-width="2.5"/>
-<text x="641.0" y="641.0" font-family="Linux Biolinum O" font-size="19" font-weight="bold" font-style="normal" text-anchor="middle" fill="white"></text>
-<text x="671.0" y="643.0" font-family="Linux Biolinum O" font-size="25" font-weight="normal" font-style="normal" text-anchor="start" fill="#2F3A45">new task</text>
-<g transform="translate(806.0,634.0) scale(0.7)">
+<text x="80.0" y="643.0" font-family="Linux Biolinum O" font-size="25" font-weight="normal" font-style="normal" text-anchor="start" fill="#2F3A45">coalition task: waits for all members</text>
+<polygon points="496.0,612.0 499.5,618.6 505.5,614.2 505.9,621.6 513.2,620.3 510.3,627.1 517.4,629.1 511.8,634.0 517.4,638.9 510.3,640.9 513.2,647.7 505.9,646.4 505.5,653.8 499.5,649.4 496.0,656.0 492.5,649.4 486.5,653.8 486.1,646.4 478.8,647.7 481.7,640.9 474.6,638.9 480.2,634.0 474.6,629.1 481.7,627.1 478.8,620.3 486.1,621.6 486.5,614.2 492.5,618.6" fill="#D55E00" stroke="white" stroke-width="2.5"/>
+<text x="496.0" y="641.0" font-family="Linux Biolinum O" font-size="19" font-weight="bold" font-style="normal" text-anchor="middle" fill="white"></text>
+<text x="526.0" y="643.0" font-family="Linux Biolinum O" font-size="25" font-weight="normal" font-style="normal" text-anchor="start" fill="#2F3A45">new task</text>
+<g transform="translate(661.0,634.0) scale(0.7)">
 <path d="M0,-24 L24,18 L-24,18 z" fill="#D55E00" stroke="white" stroke-width="3" stroke-linejoin="round"/>
 <text x="0.0" y="13.0" font-family="Linux Biolinum O" font-size="30" font-weight="bold" font-style="normal" text-anchor="middle" fill="white">!</text>
 </g>
-<text x="832.0" y="643.0" font-family="Linux Biolinum O" font-size="25" font-weight="normal" font-style="normal" text-anchor="start" fill="#2F3A45">failure</text>
-<path d="M946.0,634.0 L1006.0,634.0" stroke="#8FAFCB" stroke-width="3.5" stroke-dasharray="1 8" stroke-linecap="round" opacity="0.55"/>
-<path d="M967.0,625.0 L985.0,643.0 M967.0,643.0 L985.0,625.0" stroke="#D55E00" stroke-width="5.5" stroke-linecap="round"/>
-<text x="1018.0" y="643.0" font-family="Linux Biolinum O" font-size="25" font-weight="normal" font-style="normal" text-anchor="start" fill="#2F3A45">link lost</text>
+<text x="687.0" y="643.0" font-family="Linux Biolinum O" font-size="25" font-weight="normal" font-style="normal" text-anchor="start" fill="#2F3A45">failure</text>
+<path d="M796.0,634.0 L856.0,634.0" stroke="#8FAFCB" stroke-width="3.5" stroke-dasharray="1 8" stroke-linecap="round" opacity="0.55"/>
+<path d="M817.0,625.0 L835.0,643.0 M817.0,643.0 L835.0,625.0" stroke="#D55E00" stroke-width="5.5" stroke-linecap="round"/>
+<text x="868.0" y="643.0" font-family="Linux Biolinum O" font-size="25" font-weight="normal" font-style="normal" text-anchor="start" fill="#2F3A45">link lost</text>
+<circle cx="998.0" cy="634.0" r="15" fill="white" stroke="#D55E00" stroke-width="4.2"/>
+<path d="M987.8,623.8 L1008.2,644.2" stroke="#D55E00" stroke-width="4.2"/>
+<text x="1024.0" y="643.0" font-family="Linux Biolinum O" font-size="25" font-weight="normal" font-style="normal" text-anchor="start" fill="#2F3A45">infeasible task</text>
 <path d="M1298,16 L1298,664" stroke="#C9CED3" stroke-width="3" stroke-dasharray="6 10"/>
 <text x="1322.0" y="36.0" font-family="Linux Biolinum O" font-size="36" font-weight="bold" font-style="normal" text-anchor="start" fill="#2F3A45">(b) Our search: ALNS</text>
 <text x="1322.0" y="78.0" font-family="Linux Biolinum O" font-size="24" font-weight="normal" font-style="italic" text-anchor="start" fill="#55606B">plan = one global task order + a minimal coalition per task</text>
@@ -458,6 +489,8 @@
 </g>
 <circle cx="1373.5" cy="160.0" r="6" fill="#0072B2" stroke="white" stroke-width="2"/>
 <circle cx="1390.5" cy="160.0" r="6" fill="#CC79A7" stroke="white" stroke-width="2"/>
+<rect x="1328.2" y="83.5" width="35.6" height="25" rx="12.5" fill="white" stroke="#2F3A45" stroke-width="2"/>
+<text x="1346.0" y="102.8" font-family="Linux Biolinum O" font-size="19" font-weight="bold" font-style="normal" text-anchor="middle" fill="#2F3A45">t1</text>
 <rect x="1471" y="94" width="88" height="84" rx="12" fill="#000" opacity="0.07"/>
 <rect x="1468" y="90" width="88" height="84" rx="12" fill="white" stroke="#AEB6BE" stroke-width="2.5"/>
 <g transform="translate(1512.0,124.0) scale(0.52)">
@@ -468,6 +501,8 @@
 </g>
 <circle cx="1503.5" cy="160.0" r="6" fill="#E69F00" stroke="white" stroke-width="2"/>
 <circle cx="1520.5" cy="160.0" r="6" fill="#009E73" stroke="white" stroke-width="2"/>
+<rect x="1458.2" y="83.5" width="35.6" height="25" rx="12.5" fill="white" stroke="#2F3A45" stroke-width="2"/>
+<text x="1476.0" y="102.8" font-family="Linux Biolinum O" font-size="19" font-weight="bold" font-style="normal" text-anchor="middle" fill="#2F3A45">t2</text>
 <path d="M1430,132 L1460,132" stroke="#6B7580" stroke-width="4" marker-end="url(#ah-grey)"/>
 <rect x="1601" y="94" width="88" height="84" rx="12" fill="#000" opacity="0.07"/>
 <rect x="1598" y="90" width="88" height="84" rx="12" fill="white" stroke="#AEB6BE" stroke-width="2.5"/>
@@ -487,6 +522,8 @@
 </g>
 <circle cx="1633.5" cy="160.0" r="6" fill="#0072B2" stroke="white" stroke-width="2"/>
 <circle cx="1650.5" cy="160.0" r="6" fill="#CC79A7" stroke="white" stroke-width="2"/>
+<rect x="1588.2" y="83.5" width="35.6" height="25" rx="12.5" fill="white" stroke="#2F3A45" stroke-width="2"/>
+<text x="1606.0" y="102.8" font-family="Linux Biolinum O" font-size="19" font-weight="bold" font-style="normal" text-anchor="middle" fill="#2F3A45">t3</text>
 <path d="M1560,132 L1590,132" stroke="#6B7580" stroke-width="4" marker-end="url(#ah-grey)"/>
 <rect x="1728" y="90" width="88" height="84" rx="12" fill="white" stroke="#AEB6BE" stroke-width="2.5" stroke-dasharray="8 7"/>
 <text x="1772.0" y="142.0" font-family="Linux Biolinum O" font-size="36" font-weight="normal" font-style="normal" text-anchor="middle" fill="#8C949C">…</text>
@@ -504,6 +541,8 @@
 <rect x="-16" y="-12" width="32" height="24" rx="7" fill="#0072B2" stroke="#2F3A45" stroke-width="2.5"/>
 <circle cx="0" cy="15" r="5.5" fill="#2F3A45"/>
 </g>
+<rect x="1376.8" y="220.0" width="34.3" height="24" rx="12.0" fill="#0072B2" stroke="#0072B2" stroke-width="2"/>
+<text x="1394.0" y="238.5" font-family="Linux Biolinum O" font-size="18" font-weight="bold" font-style="normal" text-anchor="middle" fill="white">r1</text>
 <g transform="translate(1350.0,276.0) scale(0.36)">
 <path d="M14,-26 L22,-46" stroke="#2F3A45" stroke-width="4" stroke-linecap="round"/>
 <circle cx="23" cy="-48" r="6" fill="#2F3A45"/>
@@ -513,6 +552,8 @@
 <circle cx="0" cy="16" r="12" fill="#2F3A45"/><circle cx="0" cy="16" r="4.5" fill="#B8BEC4"/>
 <circle cx="27" cy="16" r="12" fill="#2F3A45"/><circle cx="27" cy="16" r="4.5" fill="#B8BEC4"/>
 </g>
+<rect x="1376.8" y="262.0" width="34.3" height="24" rx="12.0" fill="#E69F00" stroke="#E69F00" stroke-width="2"/>
+<text x="1394.0" y="280.5" font-family="Linux Biolinum O" font-size="18" font-weight="bold" font-style="normal" text-anchor="middle" fill="white">r2</text>
 <g transform="translate(1350.0,322.0) scale(0.38)">
 <path d="M-26,0 L-34,18 L-28,36" fill="none" stroke="#2F3A45" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
 <circle cx="-28" cy="37" r="3.5" fill="#2F3A45"/>
@@ -526,28 +567,30 @@
 <path d="M28,-12 L50,-22 L54,-6 L32,0 z" fill="#6CC5A7" stroke="#2F3A45" stroke-width="2.5" stroke-linejoin="round"/>
 <circle cx="47" cy="-12" r="3" fill="#2F3A45"/>
 </g>
-<path d="M1392.0,232 L1459.5,232" stroke="#8C949C" stroke-width="2.5"/>
-<rect x="1459.5" y="219" width="85.5" height="26" rx="5" fill="#F3B08A" stroke="#2F3A45" stroke-width="1.8"/>
-<text x="1502.2" y="239.0" font-family="Linux Biolinum O" font-size="19" font-weight="normal" font-style="normal" text-anchor="middle" fill="#2F3A45">fire</text>
-<path d="M1545.0,232 L1617.0,232" stroke="#8C949C" stroke-width="2.5"/>
-<rect x="1617.0" y="219" width="81.0" height="26" rx="5" fill="#A9B5C2" stroke="#2F3A45" stroke-width="1.8"/>
-<text x="1657.5" y="239.0" font-family="Linux Biolinum O" font-size="19" font-weight="normal" font-style="normal" text-anchor="middle" fill="#2F3A45">ruin</text>
-<path d="M1698.0,232 L1761.0,232" stroke="#8C949C" stroke-width="2.5"/>
-<path d="M1392.0,274 L1536.0,274" stroke="#8C949C" stroke-width="2.5"/>
-<rect x="1536.0" y="261" width="126.0" height="26" rx="5" fill="#C3C9CF" stroke="#2F3A45" stroke-width="1.8"/>
-<text x="1599.0" y="281.0" font-family="Linux Biolinum O" font-size="19" font-weight="normal" font-style="normal" text-anchor="middle" fill="#2F3A45">rubble</text>
-<path d="M1662.0,274 L1725.0,274" stroke="#8C949C" stroke-width="2.5"/>
-<path d="M1392.0,316 L1473.0,316" stroke="#8C949C" stroke-width="2.5"/>
-<rect x="1473.0" y="305" width="63.0" height="22" rx="4" fill="url(#hatch)" stroke="#9AA3AD" stroke-width="1.5"/>
-<text x="1504.5" y="358.0" font-family="Linux Biolinum O" font-size="19" font-weight="normal" font-style="normal" text-anchor="middle" fill="#55606B">waits</text>
-<rect x="1536.0" y="303" width="126.0" height="26" rx="5" fill="#C3C9CF" stroke="#2F3A45" stroke-width="1.8"/>
-<text x="1599.0" y="323.0" font-family="Linux Biolinum O" font-size="19" font-weight="normal" font-style="normal" text-anchor="middle" fill="#2F3A45">rubble</text>
-<path d="M1662.0,316 L1707.0,316" stroke="#8C949C" stroke-width="2.5"/>
-<path d="M1536.0,252 L1536.0,342" stroke="#D55E00" stroke-width="3" stroke-dasharray="6 5"/>
-<text x="1542.8" y="358.0" font-family="Linux Biolinum O" font-size="19" font-weight="normal" font-style="normal" text-anchor="start" fill="#D55E00">start together</text>
-<path d="M1761.0,216 L1761.0,332" stroke="#2F3A45" stroke-width="3"/>
-<text x="1761.0" y="358.0" font-family="Linux Biolinum O" font-size="19" font-weight="bold" font-style="normal" text-anchor="middle" fill="#2F3A45">makespan</text>
-<path d="M1392,338 L1815.0,338" stroke="#AEB6BE" stroke-width="2" marker-end="url(#ah-grey)"/>
+<rect x="1376.8" y="304.0" width="34.3" height="24" rx="12.0" fill="#009E73" stroke="#009E73" stroke-width="2"/>
+<text x="1394.0" y="322.5" font-family="Linux Biolinum O" font-size="18" font-weight="bold" font-style="normal" text-anchor="middle" fill="white">r3</text>
+<path d="M1418.0,232 L1485.5,232" stroke="#8C949C" stroke-width="2.5"/>
+<rect x="1485.5" y="219" width="85.5" height="26" rx="5" fill="#F3B08A" stroke="#2F3A45" stroke-width="1.8"/>
+<text x="1528.2" y="239.0" font-family="Linux Biolinum O" font-size="19" font-weight="normal" font-style="normal" text-anchor="middle" fill="#2F3A45">t1 fire</text>
+<path d="M1571.0,232 L1643.0,232" stroke="#8C949C" stroke-width="2.5"/>
+<rect x="1643.0" y="219" width="81.0" height="26" rx="5" fill="#A9B5C2" stroke="#2F3A45" stroke-width="1.8"/>
+<text x="1683.5" y="239.0" font-family="Linux Biolinum O" font-size="19" font-weight="normal" font-style="normal" text-anchor="middle" fill="#2F3A45">t3 ruin</text>
+<path d="M1724.0,232 L1787.0,232" stroke="#8C949C" stroke-width="2.5"/>
+<path d="M1418.0,274 L1562.0,274" stroke="#8C949C" stroke-width="2.5"/>
+<rect x="1562.0" y="261" width="126.0" height="26" rx="5" fill="#C3C9CF" stroke="#2F3A45" stroke-width="1.8"/>
+<text x="1625.0" y="281.0" font-family="Linux Biolinum O" font-size="19" font-weight="normal" font-style="normal" text-anchor="middle" fill="#2F3A45">t2 rubble</text>
+<path d="M1688.0,274 L1751.0,274" stroke="#8C949C" stroke-width="2.5"/>
+<path d="M1418.0,316 L1499.0,316" stroke="#8C949C" stroke-width="2.5"/>
+<rect x="1499.0" y="305" width="63.0" height="22" rx="4" fill="url(#hatch)" stroke="#9AA3AD" stroke-width="1.5"/>
+<text x="1530.5" y="358.0" font-family="Linux Biolinum O" font-size="19" font-weight="normal" font-style="normal" text-anchor="middle" fill="#55606B">waits</text>
+<rect x="1562.0" y="303" width="126.0" height="26" rx="5" fill="#C3C9CF" stroke="#2F3A45" stroke-width="1.8"/>
+<text x="1625.0" y="323.0" font-family="Linux Biolinum O" font-size="19" font-weight="normal" font-style="normal" text-anchor="middle" fill="#2F3A45">t2 rubble</text>
+<path d="M1688.0,316 L1733.0,316" stroke="#8C949C" stroke-width="2.5"/>
+<path d="M1562.0,252 L1562.0,342" stroke="#D55E00" stroke-width="3" stroke-dasharray="6 5"/>
+<text x="1568.8" y="358.0" font-family="Linux Biolinum O" font-size="19" font-weight="normal" font-style="normal" text-anchor="start" fill="#D55E00">start together</text>
+<path d="M1787.0,216 L1787.0,332" stroke="#2F3A45" stroke-width="3"/>
+<text x="1787.0" y="358.0" font-family="Linux Biolinum O" font-size="19" font-weight="bold" font-style="normal" text-anchor="middle" fill="#2F3A45">makespan</text>
+<path d="M1418,338 L1841.0,338" stroke="#AEB6BE" stroke-width="2" marker-end="url(#ah-grey)"/>
 <text x="1322.0" y="398.0" font-family="Linux Biolinum O" font-size="24" font-weight="normal" font-style="italic" text-anchor="start" fill="#55606B">robots follow the order: no deadlock, exact schedule</text>
 <path d="M1380,434 L1380,650" stroke="#6B7580" stroke-width="4"/>
 <path d="M1371,467.0 L1389,467.0 L1380,481.0 z" fill="#6B7580"/>
