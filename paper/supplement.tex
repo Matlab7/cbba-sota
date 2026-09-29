@@ -75,7 +75,7 @@ report a wrong makespan.
 \begin{table}[h]
 \centering
 \small
-\caption{ALNS parameters (defaults of \texttt{ALNSConfig} at the frozen commit; set on dev).}
+\caption{ALNS parameters (defaults of \texttt{ALNSConfig} at the frozen commit; set on the development instances).}
 \label{tab:s-alns}
 \begin{tabular}{lll}
 \toprule
@@ -104,20 +104,21 @@ Other & re-sort by start time after acceptance & probability 0.1 \\
 \label{sec:s-competitors}
 
 All competitors run in the same pinned lanes as ALNS; their budgets start once the instance is loaded and include
-construction and model building. Table~\ref{tab:supp-params} lists the per-setting choices made on dev.
+construction and model building. Table~\ref{tab:supp-params} lists the per-setting choices made on the development instances.
 
-\paragraph{CP-SAT model.} One \texttt{AddCircuit} constraint per agent over its depot and its candidate tasks (tasks it
+\paragraph{CP-SAT full model.} One \texttt{AddCircuit} constraint per agent over its depot and its candidate tasks (tasks it
 can contribute to); a skipped task is a self-loop. Arc $j \to k$ enforces $s_k \ge s_j + d_j + \tau_{jk}$, depot arcs
 bound the first start and the makespan; coverage is $\sum_i a_{ik} x_{ij} \ge r_{jk}$. Valid cuts bound the number of
 members per species and task, and agents of one species are ordered by the smallest task they visit (symmetry
 breaking). Times are integers on a $10^{-3}$ grid, rounded up, so every CP schedule is feasible in real time; every
 plan is converted to a minimal cover and scored by the simulator.
 
-\paragraph{CP-SAT LNS.} Each step frees a window of tasks (critical chain, spatial, temporal or random), keeps every
-other coalition fixed and re-solves a small model: agents that can take a freed task get a circuit over their fixed
-tasks and the freed candidates, all other agents become fixed precedence chains; the incumbent is always a complete
-hint. The threaded version solves each sub-model with 8 CP-SAT workers; the parallel version runs 8 single-threaded
-workers on one shared incumbent (makespan, then summed depot returns).
+\paragraph{CP-LNS and parallel CP-LNS.} Large neighbourhood search whose repair step is a CP-SAT solve. Each step
+frees a window of tasks (along the chain that sets the makespan, close in space or time, or at random), keeps every
+other coalition fixed and re-solves a small model: robots that can take a freed task get a circuit over their fixed
+tasks and the freed candidates, all other robots become fixed precedence chains; the current plan is always passed as
+a complete hint. CP-LNS runs one such search and gives each solver call 8 threads; parallel CP-LNS runs 8
+single-threaded searches that share the best plan (makespan, then summed return times).
 
 \paragraph{CTAS-D.} Our port rebuilds the model of the benchmark's C++/Gurobi code (planner mode
 \texttt{TEAMPLANNER\_CONDET}): per species a continuous flow on the task graph with binary arc indicators, shared task
@@ -130,16 +131,16 @@ to a task get no variables (same optimum); the energy rows, which constrain noth
 off; CP-SAT solves the model on a $10^{-3}$ time grid; the budget includes model building. Backend choice (on the
 benchmark's released 20-task test set, not blind; 10 instances, 60\,s, 8 threads): CP-SAT solved 10 of 10 with plans
 4.1\% shorter than the shipped 600-s Gurobi runs, HiGHS 10 of 10 at 2.2 times their makespan, SCIP 3 of 10. On the
-500-task settings the port found no solution within $B_1$ on dev and its solver held 55 and 87\,GB of memory, so it is
+500-task settings the port found no solution within $B_1$ on development instances and its solver held 55 and 87\,GB of memory, so it is
 counted as failing there.
 
-\paragraph{RL(s.$N$).} The released checkpoint and the benchmark's own environment, on CPU: each of 8 single-threaded
+\paragraph{RL policy.} The released checkpoint and the benchmark's own environment, on CPU: each of 8 single-threaded
 processes samples rollouts in lockstep batches (the first batch has one sample at budgets up to 10\,s, else four;
 later batches fill 95\% of the remaining time at the slowest per-sample time seen so far) and the best rollout counts.
 On our regenerated test instances the policy reproduces the published RL(g.) and RL(s.10) means within half a
 standard deviation on all 16 settings.
 
-\paragraph{Restarts.} Eight independent streams (seeds 0--7) of our constructions: plain list scheduling, then
+\paragraph{Greedy restarts.} Eight independent streams (seeds 0--7) of our constructions: plain list scheduling, then
 alternately a noisy dispatch and a random-order best insertion; the best plan any stream finished by the budget.
 
 \input{tables/supp_params}
@@ -161,62 +162,100 @@ alternately a noisy dispatch and a random-order best insertion; the best plan an
   scored by the best plan its trace reached by the budget, or as a failure if it keeps no trace; a failure (no plan,
   unfinished tasks or makespan $\ge 200$) counts as 200. Late runs of the test campaign at $B_1$ on 8 cores: RL
   \LateRL, ALNS \LateALNS, others \LateOther. Scoring them by their final plans instead (descriptive), ALNS's plans are
-  \Sensrlgainlo--\Sensrlgainhi\% shorter than RL(s.$N$)'s, \Senscpsatgainlo--\Senscpsatgainhi\% than CP-SAT LNS's,
-  \Senspcpsatgainlo--\Senspcpsatgainhi\% than parallel CP-SAT LNS's, \Senscpfullgainlo--\Senscpfullgainhi\% than the
-  CP-SAT model's and \Sensconstructgainlo--\Sensconstructgainhi\% than the restarts'.
+  \Sensrlgainlo--\Sensrlgainhi\% shorter than those of the RL policy, \Senscpsatgainlo--\Senscpsatgainhi\% than
+  CP-LNS's, \Senspcpsatgainlo--\Senspcpsatgainhi\% than parallel CP-LNS's, \Senscpfullgainlo--\Senscpfullgainhi\% than
+  those of CP-SAT full model and \Sensconstructgainlo--\Sensconstructgainhi\% than those of greedy restarts.
 \item \textbf{Statistics.} Per instance the ratio of makespans at the same budget and cores; the mean ratio with a
   paired bootstrap 95\% CI (10,000 resamples, seed 0); one-sided paired $t$-tests of the mean log ratio below 0; Holm
   within each family (C1 at $B_1$: 46 tests; C1 at $2B_1$: 17; C2 at 2\,s: 46).
 \item \textbf{Deviations from the pre-registration.} None in the confirmatory analysis. The late-run sensitivity above
-  and every val and dev result are additional and descriptive.
+  and every result on validation and development instances are additional and descriptive.
 \end{itemize}
 
-\section{Full results on the test split}
+\section{Full results on the test instances}
 \label{sec:s-full}
 
 {\small\input{tables/supp_gaps}}
 
-\section{Reference solutions on val}
+\section{Reference solutions on the validation instances}
 \label{sec:s-refs}
 
 \input{tables/supp_refs}
 
 The best known plans on 50 or more tasks come mostly from ALNS runs. To check that ALNS is not only close to itself,
-we ran, on the first five val instances of the five 50-task settings, parallel CP-SAT LNS and the full CP-SAT model for
-300\,s on 8 cores from constructions only (10 to 20 times the compute of $B_1$), and compared the best plan of any run
-without an ALNS component with the best ALNS-derived plan on every val instance (Table~\ref{tab:supp-refs}). No run
+we ran, on the first five validation instances of the five 50-task settings, parallel CP-LNS and CP-SAT full model
+for 300\,s on 8 cores from greedy plans only (10 to 20 times the compute of $B_1$), and compared the best plan of any
+run without an ALNS component with the best ALNS-derived plan on every validation instance (Table~\ref{tab:supp-refs}). No run
 without ALNS matched it on any of the \RefValInstances{} instances. On the 20-task settings the two families meet
 (Table~\ref{tab:supp-small}).
 
-\section{Ablation of the ALNS components (dev)}
+\section{Ablation of the ALNS components (development instances)}
 \label{sec:s-ablation}
 
 \input{tables/supp_ablation}
 
-The ablation ran on dev, the tuning split, with one worker. The earlier configuration (v1) is up to 12\% worse on the
+The ablation ran on the development instances, on which ALNS was tuned, with one worker. The earlier configuration (v1) is up to 12\% worse on the
 200- and 500-task settings at $B_1$; the construction portfolio matters most at short budgets on large instances; the
-start-time re-sort helps by 0.4--2.9\% on the settings where it was measured at $B_1$. Eight workers instead of one improve ALNS at $B_1$ on the test
-split by \Workersgainlo--\Workersgainhi\%.
+start-time re-sort helps by 0.4--2.9\% on the settings where it was measured at $B_1$. Eight workers instead of one
+improve ALNS at $B_1$ on the test instances by \Workersgainlo--\Workersgainhi\%.
 
 \section{The 20-task settings}
 \label{sec:s-small}
 
 \input{tables/supp_small}
 
-As pre-registered, the 20-task settings are descriptive: CP-SAT proves all val instances of SA-BT 25/5/20 optimal, and
-there every method except RL reaches the optimum or comes close; on the two AT settings ALNS stays closest to the best
-known plans.
+As pre-registered, the 20-task settings are descriptive: CP-SAT proves all validation instances of the single-skill
+binary setting 25/5/20 optimal, and there every method except the RL policy reaches the optimum or comes close; on the
+two settings with additive requirements ALNS stays closest to the best known plans.
 
-\section{Dynamic extension (negative result)}
+\section{Dynamic scenarios (exploratory, negative result)}
 \label{sec:s-dynamic}
 
-We also explored, on dev only, a dynamic variant of the benchmark in which tasks are revealed over time and plans are
-repaired online, with go/no-go gates fixed before the runs. The gate on the planner failed: our rolling planner was only
-1.5\% better than construction-only replanning at equal CPU (ratio 0.985, CI [0.981, 0.989]; the gate required a ratio
-of at most 0.97), so we make no dynamic claim. A comparison of communication architectures showed large headroom (the
-best fixed architecture ended about 1.8 times above full information at the communication level of the gate) but did
-not separate our architecture from a simple fixed rule. These results are exploratory and not part of the confirmatory
-study.
+All results in this section are exploratory: they come from the development instances only (instances 0--19 of the
+single-skill binary and additive 50/5/50 settings and of the multi-skill 25/5/50 and 50/5/50 settings, with multi-skill
+50/5/200 as a secondary setting), and none of them is part of the confirmatory study.
+
+\paragraph{Simulator.} We extended the benchmark's simulator with a small set of declared changes, each covered by a
+regression test: tasks stay hidden until their release time; a coalition starts as soon as the robots present cover the
+task, and late or redundant arrivals leave; a failed robot halts, and its task in progress restarts once it is covered
+again; the episode ends when every released task is finished and every working robot is home after the release window.
+With all tasks released at time 0, no noise and no failures, the extended simulator reproduces the static one exactly.
+
+\paragraph{Scenario families.}
+\begin{itemize}
+\item \emph{Noise only} (control): all tasks known at the start; moving robots stall at random (per tick, probability
+  0.01 or 0.05, for 1--4 or 1--10 ticks) and task durations vary (log-normal, mean preserving, $\sigma = 0.3$).
+\item \emph{Online release}: 20 tasks known at the start and 20 more every 10 time units; or half or 80\% of the tasks
+  released at uniformly random times within half of the published makespan of the setting; with the noise above.
+\item \emph{Release with stronger noise}: the second release process with more frequent and longer stalls.
+\item \emph{Failures}: each robot fails with probability 0.1 or 0.2 at a random time within the first 70\% of the
+  published makespan, stops for good, and is detected after 5 ticks without a heartbeat; realizations that make a task
+  impossible are removed for all methods.
+\item \emph{Limited communication} (only for the comparison of communication architectures): radio links within a range
+  around the connectivity threshold of a random geometric graph, with message loss and one tick per relay hop.
+\end{itemize}
+
+\paragraph{Planner in the loop.} ALNS runs as a warm-started repair loop. It re-plans only on events that change the
+problem: a new task becomes known, a failure is detected, or a robot abandons a task. It does not re-plan periodically
+or when a duration or travel time merely deviates, because such noise only shifts the fixed schedule. Tasks that a
+member has already started towards are committed and kept; each repair covers the released, uncommitted tasks. The
+compute per event is 300 ALNS iterations on one core (light budget) or 1\,s on 8 cores (heavy budget); computation is
+charged outside simulated time. The competitors get the same compute per event: the published policy run online (each
+robot chooses its next task when it becomes free), the policy as a rollout planner, rolling CP-LNS, rolling greedy
+restarts, targeted repair in the style of D-ITAGS \cite{neville2023ditags}, and a CBBA-style auction
+\cite{choi2009consensus}.
+
+\paragraph{Results.} Makespan ratios ALNS repair (light budget) / competitor, pooled over the release, noise and failure
+families and the four settings: 0.860 against insertion-only repair (0.828 with failures) and 0.883 against executing
+the initial plan without re-planning, so search in the loop pays; 0.914 against the published policy run online and
+0.885 (light) and 0.919 (heavy budget) against rolling CP-LNS. But rolling greedy restarts at the same compute per event
+reached 0.985 (95\% CI [0.981, 0.989]), targeted repair 0.991 and the auction 0.986, while our go/no-go gate, fixed
+before these runs, required a ratio of at most 0.97 against greedy restarts. Re-planning at every event, noise
+included, was 1\% better than re-planning only on structural events, and the heavy budget was 2.3\% better than the
+light one. In the communication study, the best fixed architecture ended about 1.8 times above full information at the
+shortest range, so better protocols have room to help, but our protocol did not beat a simple fixed rule, and lease
+and beacon parameters changed the results as much as the architecture did. We therefore make no claim for the dynamic
+case.
 
 \section{Pre-registration}
 \label{sec:s-prereg}

@@ -12,8 +12,8 @@ tasks appear and robots fail during execution, so the plan must be repaired (exp
 one global task order with a minimal coalition per task; robots follow the order, so the plan cannot deadlock and its
 schedule, with waiting, joint starts and the makespan, is computed exactly. ALNS repeatedly removes a few tasks,
 re-inserts each at its best position with its coalition, scored exactly in time linear in the coalition size, accepts
-by simulated annealing and adapts its operator weights. (c) Every method was tuned on dev and dry-run on val before the
-protocol was frozen and the test split run once; all get the same 8 cores and budget, the benchmark's simulator scores
+by simulated annealing and adapts its operator weights. (c) Every method was tuned on development instances and
+dry-run on validation instances before the protocol was frozen and the test instances were run once; all get the same 8 cores and budget, the benchmark's simulator scores
 every plan, and paired ratios are tested with Holm's correction.}
 \label{fig:overview}
 \end{figure*}
@@ -55,8 +55,9 @@ question on HeteroMRTA with a pre-registered, compute-matched study (Figure~\ref
   pinned physical cores at the benchmark's own budgets, with their CPU use recorded and host throttling monitored.
   Competitors are tuned on a separate split. The hypotheses, competitors, budgets and analysis were frozen, and the
   frozen code identified by its git trees, before the single run on the test split.
-\item \textbf{Strong competitors.} Besides the published RL policy and constructor restarts, we compare with
-  CP-SAT LNS in a threaded and a properly parallel form, with CP-SAT's own portfolio on the full model, and with
+\item \textbf{Strong competitors.} Besides the published RL policy and greedy restarts, we compare with large
+  neighbourhood search that repairs with the constraint solver CP-SAT, as one search and as 8 parallel searches, with
+  CP-SAT's own search on the full model, and with
   CTAS-D, which we port to an open solver and check against the benchmark authors' own Gurobi solutions.
 \item \textbf{Findings} (Section~\ref{sec:results}). ALNS is significantly better than every competitor on
   \ConeBheld{} of the 8 settings with 50 to 500 tasks, with plans \ConeBclasslo--\ConeBclasshi\% shorter than

@@ -20,8 +20,8 @@ from make_tables import SETTINGS, label, read
 from cbba_sota.bench import configs
 
 DOCS = ROOT / "docs" / "results"
-NAMES = {"ALNS2": "ALNS", "ALNS1": "ALNS v1", "CPSAT": "CP-SAT LNS", "PCPSAT": "Par.\\ CP-SAT LNS",
-         "CPFULL": "CP-SAT model", "CTAS": "CTAS-D", "CONSTRUCT": "Restarts", "RL": "RL(s.$N$)"}
+NAMES = {"ALNS2": "ALNS", "ALNS1": "ALNS v1", "CPSAT": "CP-LNS", "PCPSAT": "Parallel CP-LNS",
+         "CPFULL": "CP-SAT full", "CTAS": "CTAS-D", "CONSTRUCT": "Greedy restarts", "RL": "RL policy"}
 ORDER = ("ALNS2", "CPSAT", "PCPSAT", "CPFULL", "CTAS", "CONSTRUCT", "RL", "ALNS1")
 BUDGETS = ("0.5", "1", "2", "5", "10", "B1", "2B1")
 SMALL = ("SA-BT-25-5-20", "SA-AT-25-5-20", "MA-AT-25-5-20")
@@ -38,15 +38,15 @@ CAPTION_ABLATION = (r"\caption{Ablation on dev (1 worker): mean paired makespan 
                     r"second cover per slot (not kept: it halves the iteration rate). Blank: not run.}")
 CAPTION_REFS = (r"\caption{Val split: how far the best plan of any run without an ALNS component (competitor runs of "
                 r"the timed campaigns and the long CP-SAT references) is above the best known plan, mean over the "
-                r"instances; the 300-s references on 8 cores (parallel CP-SAT LNS and the full CP-SAT model, both "
-                r"started from constructions only), their mean gap to the best known plan; and the distance of "
+                r"instances; the 300-s references on 8 cores (parallel CP-LNS and CP-SAT full model, both "
+                r"started from greedy plans only), their mean gap to the best known plan; and the distance of "
                 r"CP-SAT's certified lower bound below the best known plan.}")
 CAPTION_SMALL = (r"\caption{Val split, three 20-task settings (descriptive; earlier campaign on another host): mean gap "
                  r"to the best known plan (\%) at $B_1$ on 8 cores, and the instances that CP-SAT proved optimal in "
                  r"60\,s on 8 cores.}")
-CAPTION_PARAMS = (r"\caption{Per-setting parameters of the competitors, chosen on dev: sub-solve length of CP-SAT LNS "
-                  r"and of its parallel version (s), and the number of nearest candidate tasks per arc of the full "
-                  r"CP-SAT model (all: every arc).}")
+CAPTION_PARAMS = (r"\caption{Per-setting parameters of the competitors, chosen on the development instances: time limit "
+                  r"of one CP-SAT call in CP-LNS and in parallel CP-LNS (s), and the number of nearest candidate tasks "
+                  r"per arc of CP-SAT full model (all: every arc).}")
 
 
 def budget_label(b: str) -> str:
@@ -123,7 +123,7 @@ def references_table() -> str:
     runs = read(DOCS / "val-c1" / "bks_val_runs.csv")
     lines = [r"\begin{table}[h]", r"\centering", r"\small", CAPTION_REFS, r"\label{tab:supp-refs}",
              r"\begin{tabular}{lrrrrr}", r"\toprule",
-             r"Setting & $n$ & best w/o ALNS & Par.\ CP-SAT LNS 300\,s & CP-SAT model 300\,s & bound below \\",
+             r"Setting & $n$ & best w/o ALNS & Parallel CP-LNS 300\,s & CP-SAT full 300\,s & bound below \\",
              r"\midrule"]
     for name in SETTINGS:
         sel = [r for r in per if r["setting"] == name and r["alns_free_best"]]
@@ -167,7 +167,7 @@ def competitor_table() -> str:
     """Per-setting competitor choices made on dev (scripts/bks.py)."""
     lines = [r"\begin{table}[h]", r"\centering", r"\small", CAPTION_PARAMS, r"\label{tab:supp-params}",
              r"\begin{tabular}{lrrrr}", r"\toprule",
-             r"Setting & $B_1$ (s) & CP-SAT LNS & Par.\ CP-SAT LNS & CP-SAT model arcs \\", r"\midrule"]
+             r"Setting & $B_1$ (s) & CP-LNS call (s) & Parallel CP-LNS call (s) & CP-SAT full arcs \\", r"\midrule"]
     for name in SETTINGS:
         knn = bks.CPFULL_KNN[name]
         b1 = configs.get(name).paper["RL(s.10)"].time_s

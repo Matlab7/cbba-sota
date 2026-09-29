@@ -1,20 +1,22 @@
 \begin{table}[t]
 \centering
 \small
-\caption{The eight benchmark settings with 50 or more tasks (agents / species / tasks) and the budget $B_1$, the published computation time of RL(s.10) \cite{dai2025heterogeneous}. $N$: range of the number of rollouts that the released policy draws within $B_1$ on our 8 cores.}
+\caption{The eight benchmark settings with 50 or more tasks. $B_1$ is the time budget of every method: the computation time that the benchmark paper reports for its policy with ten sampled rollouts \cite{dai2025heterogeneous}. RL rollouts: how many rollouts the released policy completes within $B_1$ on our 8 cores (range over the instances). The exact MILP (CTAS-D) is not run on the two 500-task settings (Section~\ref{sec:setup}).}
 \label{tab:settings}
-\begin{tabular}{lrrc}
+\begin{tabular}{lcrr}
 \toprule
-Setting & $B_1$ (s) & RL(s.$N$): $N$ & CTAS-D run \\
+Robots & Robots / species / tasks & $B_1$ (s) & RL rollouts \\
 \midrule
-SA-BT 25/5/50 & 13.45 & 154--192 & yes \\
-SA-BT 50/5/50 & 19.14 & 144--162 & yes \\
-SA-AT 50/5/50 & 29.80 & 140--166 & yes \\
-MA-AT 25/5/50 & 16.34 & 157--241 & yes \\
-MA-AT 50/5/50 & 23.43 & 135--194 & yes \\
-MA-AT 50/5/200 & 75.20 & 40--67 & yes \\
-MA-AT 150/10/500 & 560.20 & 32--36 & no \\
-MA-AT 150/5/500 & 560.50 & 32--40 & no \\
+\multirow{2}{*}{\parbox{2.1cm}{\raggedright\scriptsize Single-skill robots, binary needs}} & 25/5/50 & 13.4 & 154--192 \\
+ & 50/5/50 & 19.1 & 144--162 \\
+\midrule
+\parbox{2.1cm}{\raggedright\scriptsize Single-skill robots, additive needs} & 50/5/50 & 29.8 & 140--166 \\
+\midrule
+\multirow{5}{*}{\parbox{2.1cm}{\raggedright\scriptsize Multi-skill robots, additive needs}} & 25/5/50 & 16.3 & 157--241 \\
+ & 50/5/50 & 23.4 & 135--194 \\
+ & 50/5/200 & 75.2 & 40--67 \\
+ & 150/10/500 & 560.2 & 32--36 \\
+ & 150/5/500 & 560.5 & 32--40 \\
 \bottomrule
 \end{tabular}
 \end{table}

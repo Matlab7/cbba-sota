@@ -412,73 +412,73 @@ def panel_b(x0, y0) -> None:
                 f'marker-end="url(#ah-grey)"/>')
     gantt(x0, y0 + 208)
     text(x0, y0 + 396, "robots follow the order: no deadlock, exact schedule", size=24, fill=MUTED, style="italic")
-    # the search loop, one line per step
+    # the search loop, one line per step, on a continuous connector
     steps = [("scissors", BLUE, "remove", "take a few tasks out of the plan"),
              ("puzzle", ORANGE, "re-insert", "best position + coalition, scored exactly in O(|C|)"),
              ("temperature", PINK, "accept", "simulated annealing (sometimes accept worse)"),
              ("adjustments-horizontal", GREEN, "adapt", "favour operators that found better plans")]
-    ly = [y0 + 440 + k * 66 for k in range(4)]
-    for (icon, col, name, desc), y in zip(steps, ly):
-        add(f'<circle cx="{x0 + 50}" cy="{y}" r="27" fill="{col}"/>')
-        tabler(icon, x0 + 50, y, 32, "white", width=2.3)
-        text(x0 + 92, y - 3, name, size=27, weight="bold")
-        text(x0 + 92, y + 23, desc, size=22, fill=MUTED)
-    add(f'<path d="M{x0 + 16},{ly[3] - 4} C{x0 - 4},{ly[3] - 40} {x0 - 4},{ly[0] + 40} {x0 + 18},{ly[0] + 6}" '
-        f'fill="none" stroke="#6B7580" stroke-width="3.5" marker-end="url(#ah-grey)"/>')
+    ly = [y0 + 432 + k * 72 for k in range(4)]
+    cx = x0 + 58
+    add(f'<path d="M{cx},{ly[0]} L{cx},{ly[3]}" stroke="#6B7580" stroke-width="4"/>')
     for a, b in pairwise(ly):
-        add(f'<path d="M{x0 + 50},{a + 30} L{x0 + 50},{b - 32}" stroke="#6B7580" stroke-width="3.5" '
-            f'marker-end="url(#ah-grey)"/>')
+        m = (a + b) / 2 + 6
+        add(f'<path d="M{cx - 9},{m - 9} L{cx + 9},{m - 9} L{cx},{m + 5} z" fill="#6B7580"/>')
+    add(f'<path d="M{cx - 26},{ly[3]} C{x0 - 6},{ly[3]} {x0 - 6},{ly[0]} {cx - 30},{ly[0]}" fill="none" '
+        f'stroke="#6B7580" stroke-width="4" marker-end="url(#ah-grey)"/>')
+    for (icon, col, name, desc), y in zip(steps, ly):
+        add(f'<circle cx="{cx}" cy="{y}" r="25" fill="{col}" stroke="white" stroke-width="3"/>')
+        tabler(icon, cx, y, 30, "white", width=2.3)
+        text(cx + 42, y - 3, name, size=27, weight="bold")
+        text(cx + 42, y + 23, desc, size=22, fill=MUTED)
 
 
 def panel_c(x0, y0) -> None:
     text(x0, y0 + 34, "(c) Fair test", size=36, weight="bold")
-    # protocol timeline
-    stages = [("dev", "tune all", BLUE), ("val", "dry run", ORANGE), ("freeze", "prereg", GREEN),
-              ("test", "one run", PINK)]
-    sx = [x0 + 54 + k * 122 for k in range(4)]
-    for k, ((a, b, col), x) in enumerate(zip(stages, sx)):
-        add(f'<rect x="{x - 52}" y="{y0 + 58}" width="104" height="62" rx="10" fill="{col}" opacity="0.15"/>')
-        add(f'<rect x="{x - 52}" y="{y0 + 58}" width="104" height="62" rx="10" fill="none" stroke="{col}" '
-            f'stroke-width="2.5"/>')
-        if a == "freeze":
-            tabler("lock", x - 34, y0 + 78, 21, col, width=2.4)
-            text(x + 10, y0 + 85, a, size=23, weight="bold", anchor="middle")
+    # the protocol, in order
+    text(x0, y0 + 80, "protocol", size=23, weight="bold", fill=MUTED)
+    stages = [("Tune", "on development set", BLUE), ("Dry run", "on validation set", ORANGE),
+              ("Pre-register", "freeze the protocol", GREEN), ("Test", "once, on test set", PINK)]
+    sy = [y0 + 122 + k * 76 for k in range(4)]
+    add(f'<path d="M{x0 + 20},{sy[0]} L{x0 + 20},{sy[3]}" stroke="#AEB6BE" stroke-width="3"/>')
+    for k, ((a, b, col), y) in enumerate(zip(stages, sy)):
+        add(f'<circle cx="{x0 + 20}" cy="{y}" r="17" fill="{col}"/>')
+        if a == "Pre-register":
+            tabler("lock", x0 + 20, y, 20, "white", width=2.4)
         else:
-            text(x, y0 + 85, a, size=23, weight="bold", anchor="middle")
-        text(x, y0 + 110, b, size=21, anchor="middle", fill=MUTED)
-        if k:
-            add(f'<path d="M{sx[k - 1] + 54},{y0 + 89} L{x - 57},{y0 + 89}" stroke="#6B7580" stroke-width="3.5" '
-                f'marker-end="url(#ah-grey)"/>')
-    # methods, all run the same way
-    rows = [("search", BLUE, "ALNS (ours)", ""), ("affiliate", PINK, "RL policy", "published, samples rollouts"),
-            ("settings", GREEN, "CP-SAT", "LNS, parallel LNS, full model"), ("sum", ORANGE, "MILP", "CTAS-D"),
-            ("dice-5", "#6B7580", "restarts", "8 randomized constructions")]
-    ry = [y0 + 172 + k * 56 for k in range(5)]
+            text(x0 + 20, y + 7, str(k + 1), size=20, weight="bold", anchor="middle", fill="white")
+        text(x0 + 46, y - 2, a, size=23, weight="bold")
+        text(x0 + 46, y + 21, b, size=19, fill=MUTED)
+    # the methods compared
+    mx = x0 + 262
+    text(mx, y0 + 80, "methods", size=23, weight="bold", fill=MUTED)
+    rows = [("search", BLUE, "ALNS (ours)", "search on coalitions"), ("affiliate", PINK, "RL policy",
+                                                                     "published, sampled"),
+            ("settings", GREEN, "CP-SAT", "full model, 2 LNS"), ("sum", ORANGE, "MILP", "CTAS-D, exact"),
+            ("dice-5", "#6B7580", "Greedy restarts", "8 random streams")]
+    ry = [y0 + 120 + k * 61 for k in range(5)]
     for (icon, col, name, desc), y in zip(rows, ry):
-        add(f'<rect x="{x0 + 6}" y="{y - 22}" width="44" height="44" rx="10" fill="{col}" opacity="0.16"/>')
-        tabler(icon, x0 + 28, y, 32, col, width=2.3)
-        text(x0 + 62, y + (8 if not desc else 1), name, size=25, weight="bold")
-        if desc:
-            text(x0 + 62, y + 23, desc, size=20, fill=MUTED)
-    # every method goes through the same protocol
-    ya = ry[4] + 36
-    add(f'<path d="M{x0 + 8},{ya} L{x0 + 8},{ya + 12} L{x0 + 462},{ya + 12} L{x0 + 462},{ya}" fill="none" '
+        add(f'<rect x="{mx}" y="{y - 21}" width="42" height="42" rx="10" fill="{col}" opacity="0.16"/>')
+        tabler(icon, mx + 21, y, 30, col, width=2.3)
+        text(mx + 54, y - 1, name, size=23, weight="bold")
+        text(mx + 54, y + 21, desc, size=18, fill=MUTED)
+    # every method goes through the same chain
+    ya = max(sy[3], ry[4]) + 42
+    add(f'<path d="M{x0 + 4},{ya} L{x0 + 4},{ya + 12} L{x0 + 476},{ya + 12} L{x0 + 476},{ya}" fill="none" '
         f'stroke="#8C949C" stroke-width="3"/>')
     boxes = [("stopwatch", INK, "same 8 cores", "same budget"), ("device-desktop-check", GREEN, "simulator",
                                                                   "scores all plans"),
              ("chart-dots", BLUE, "paired ratios", "Holm tests")]
-    bxs, by = [x0 + 78 + k * 157 for k in range(3)], ya + 118
-    add(f'<path d="M{x0 + 235},{ya + 12} L{x0 + 235},{ya + 26}" stroke="#8C949C" stroke-width="3"/>')
-    add(f'<path d="M{x0 + 235},{ya + 26} L{bxs[0]},{ya + 26} L{bxs[0]},{by - 62}" fill="none" stroke="#6B7580" '
-        f'stroke-width="3.5" marker-end="url(#ah-grey)"/>')
+    bxs, by = [x0 + 78 + k * 162 for k in range(3)], ya + 90
+    add(f'<path d="M{x0 + 240},{ya + 12} L{x0 + 240},{ya + 22} L{bxs[0]},{ya + 22} L{bxs[0]},{by - 50}" fill="none" '
+        f'stroke="#6B7580" stroke-width="3.5" marker-end="url(#ah-grey)"/>')
     for (icon, col, a, b), x in zip(boxes, bxs):
-        add(f'<rect x="{x - 72}" y="{by - 56}" width="144" height="112" rx="12" fill="{LIGHT}" stroke="#AEB6BE" '
+        add(f'<rect x="{x - 74}" y="{by - 44}" width="148" height="98" rx="12" fill="{LIGHT}" stroke="#AEB6BE" '
             f'stroke-width="2.5"/>')
-        tabler(icon, x, by - 24, 34, col, width=2.2)
-        text(x, by + 18, a, size=20, weight="bold", anchor="middle")
-        text(x, by + 42, b, size=19, anchor="middle", fill=MUTED)
+        tabler(icon, x, by - 16, 32, col, width=2.2)
+        text(x, by + 22, a, size=20, weight="bold", anchor="middle")
+        text(x, by + 44, b, size=18, anchor="middle", fill=MUTED)
     for a, b in pairwise(bxs):
-        add(f'<path d="M{a + 74},{by} L{b - 78},{by}" stroke="#6B7580" stroke-width="3.5" '
+        add(f'<path d="M{a + 76},{by + 5} L{b - 80},{by + 5}" stroke="#6B7580" stroke-width="3.5" '
             f'marker-end="url(#ah-grey)"/>')
 
 

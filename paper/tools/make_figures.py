@@ -23,9 +23,9 @@ from cbba_sota.bench import configs
 SETTINGS = ("SA-BT-25-5-50", "SA-BT-50-5-50", "SA-AT-50-5-50", "MA-AT-25-5-50", "MA-AT-50-5-50", "MA-AT-50-5-200",
             "MA-AT-150-10-500", "MA-AT-150-5-500")
 # competitor on 8 cores at B1: (method, label, colour, line style); Okabe-Ito colours
-LEVELS = (("CPSAT", "CP-SAT LNS", "#D55E00", "-"), ("PCPSAT", "Par. CP-SAT LNS", "#E69F00", "--"),
-          ("CPFULL", "CP-SAT model", "#009E73", "-."), ("CONSTRUCT", "Restarts", "#999999", ":"),
-          ("RL", "RL(s.N)", "#CC79A7", (0, (5, 1, 1, 1, 1, 1))))
+LEVELS = (("CPSAT", "CP-LNS", "#D55E00", "-"), ("PCPSAT", "Parallel CP-LNS", "#E69F00", "--"),
+          ("CPFULL", "CP-SAT full model", "#009E73", "-."), ("CONSTRUCT", "Greedy restarts", "#999999", ":"),
+          ("RL", "RL policy", "#CC79A7", (0, (5, 1, 1, 1, 1, 1))))
 ALNS = "#0072B2"
 
 

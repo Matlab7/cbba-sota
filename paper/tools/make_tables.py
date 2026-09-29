@@ -21,12 +21,14 @@ from cbba_sota.bench import configs
 
 SETTINGS = ("SA-BT-25-5-50", "SA-BT-50-5-50", "SA-AT-50-5-50", "MA-AT-25-5-50", "MA-AT-50-5-50", "MA-AT-50-5-200",
             "MA-AT-150-10-500", "MA-AT-150-5-500")
-COMPETITORS = (("CPSAT", "CP-SAT LNS"), ("PCPSAT", "Par.\\ CP-SAT LNS"), ("CPFULL", "CP-SAT model"),
-               ("CTAS", "CTAS-D"), ("CONSTRUCT", "Restarts"), ("RL", "RL(s.$N$)"))
+COMPETITORS = (("CPSAT", "CP-LNS"), ("PCPSAT", "Parallel CP-LNS"), ("CPFULL", "CP-SAT full"),
+               ("CTAS", "CTAS-D"), ("CONSTRUCT", "Greedy restarts"), ("RL", "RL policy"))
 CLASSICAL = ("CPSAT", "PCPSAT", "CPFULL", "CONSTRUCT")  # the competitors quoted as one range (CTAS-D fails, RL apart)
-METHODS = (("ALNS2", "ALNS (ours)"), ("CPSAT", "CP-SAT LNS"), ("PCPSAT", "Parallel CP-SAT LNS"),
-           ("CPFULL", "CP-SAT model"), ("CTAS", "CTAS-D (MILP)"), ("CONSTRUCT", "Restarts"),
-           ("RL", "RL(s.$N$) [published]"))
+METHODS = (("ALNS2", "ALNS (ours)"), ("CPSAT", "CP-LNS"), ("PCPSAT", "Parallel CP-LNS"),
+           ("CPFULL", "CP-SAT full model"), ("CTAS", "CTAS-D (exact MILP)"), ("CONSTRUCT", "Greedy restarts"),
+           ("RL", "RL policy (published)"))
+FAMILY_TEXT = {"SA-BT": ("Single-skill robots,", "binary needs"), "SA-AT": ("Single-skill robots,", "additive needs"),
+               "MA-AT": ("Multi-skill robots,", "additive needs")}
 FAMILIES = (("C1 8 cores B1", "ConeB"), ("C1 8 cores 2B1", "ConeBB"), ("C2 1 core 2 s vs 8 cores B1", "Ctwo"),
             ("C2 1 core 1 s vs 8 cores B1", "CtwoOne"), ("C2 1 core 0.5 s vs 8 cores B1", "CtwoHalf"))
 ALPHA = 0.05
@@ -37,9 +39,11 @@ CAPTION_RATIOS = (r"\caption{Paired makespan ratio ALNS / competitor (mean over 
 CAPTION_METHODS = (r"\caption{Mean gap to the best plan found by any run (\%) and CPU used (CPU seconds of all processes and "
                    r"threads / ($B_1 \times 8$)) at budget $B_1$ on 8 cores; range over the eight settings. CTAS-D: share "
                    r"of the instances solved within $B_1$, up to 200 tasks.}")
-CAPTION_SETTINGS = (r"\caption{The eight benchmark settings with 50 or more tasks (agents / species / tasks) and the budget "
-                    r"$B_1$, the published computation time of RL(s.10) \cite{dai2025heterogeneous}. $N$: range of the "
-                    r"number of rollouts that the released policy draws within $B_1$ on our 8 cores.}")
+CAPTION_SETTINGS = (r"\caption{The eight benchmark settings with 50 or more tasks. $B_1$ is the time budget of every method: "
+                    r"the computation time that the benchmark paper reports for its policy with ten sampled rollouts "
+                    r"\cite{dai2025heterogeneous}. RL rollouts: how many rollouts the released policy completes within "
+                    r"$B_1$ on our 8 cores (range over the instances). The exact MILP (CTAS-D) is not run on the two "
+                    r"500-task settings (Section~\ref{sec:setup}).}")
 PANELS = (("C1 8 cores B1", (r"\multicolumn{7}{l}{\emph{(a) C1: ALNS on 8 cores vs.\ each competitor on 8 cores, "
                                r"both at budget $B_1$}} \\")),
           ("C2 1 core 2 s vs 8 cores B1", (r"\multicolumn{7}{l}{\emph{(b) C2: ALNS on 1 core for 2\,s vs.\ each "
@@ -51,9 +55,37 @@ def read(path: Path) -> list[dict]:
         return list(csv.DictReader(f))
 
 
+def size(name: str) -> str:
+    """Robots / species / tasks of a setting, e.g. ``25/5/50``."""
+    _, a, s, t = name.rsplit("-", 3)
+    return f"{a}/{s}/{t}"
+
+
+def family(name: str) -> str:
+    return name.rsplit("-", 3)[0]
+
+
 def label(name: str) -> str:
-    family, a, s, t = name.rsplit("-", 3)
-    return f"{family} {a}/{s}/{t}"
+    """Readable name of a setting for running text, e.g. ``multi-skill additive 25/5/50``."""
+    a, b = FAMILY_TEXT[family(name)]
+    return f"{a.rstrip(',').lower().replace(' robots', '')} {b.replace(' needs', '')} {size(name)}"
+
+
+def family_rows(names) -> list[tuple[str, list[str]]]:
+    """Consecutive settings grouped by family, in the order given."""
+    out: list[tuple[str, list[str]]] = []
+    for n in names:
+        if out and out[-1][0] == family(n):
+            out[-1][1].append(n)
+        else:
+            out.append((family(n), [n]))
+    return out
+
+
+def family_cell(fam: str, rows: int) -> str:
+    a, b = FAMILY_TEXT[fam]
+    box = rf"\parbox{{2.1cm}}{{\raggedright\scriptsize {a} {b}}}"
+    return box if rows == 1 else rf"\multirow{{{rows}}}{{*}}{{{box}}}"
 
 
 def key(other: str) -> str:
@@ -72,21 +104,26 @@ def fmt_ratio(r: dict | None) -> str:
 def c1c2(ratios: list[dict], gaps: list[dict]) -> str:
     by = {(r["setting"], r["comparison"], key(r["other"])): r for r in ratios}
     solved = {g["setting"]: g for g in gaps if g["method"] == "CTAS" and g["cores"] == "8" and g["budget"] == "B1"}
-    lines = [r"\begin{table*}[t]", r"\centering", r"\small", r"\setlength{\tabcolsep}{4pt}",
+    ncol = len(COMPETITORS) + 2
+    lines = [r"\begin{table*}[t]", r"\centering", r"\small", r"\setlength{\tabcolsep}{3.5pt}",
              CAPTION_RATIOS,
-             r"\label{tab:ratios}", r"\begin{tabular}{l" + "c" * len(COMPETITORS) + "}", r"\toprule",
-             "Setting & " + " & ".join(name for _, name in COMPETITORS) + r" \\", r"\midrule"]
+             r"\label{tab:ratios}", r"\begin{tabular}{ll" + "c" * len(COMPETITORS) + "}", r"\toprule",
+             r"Robots & Robots / species / tasks & " + " & ".join(name for _, name in COMPETITORS) + r" \\",
+             r"\midrule"]
     for tag, title in PANELS:
-        lines.append(title)
-        for name in SETTINGS:
-            cells = []
-            for k, _ in COMPETITORS:
-                cell = fmt_ratio(by.get((name, tag, k)))
-                if k == "CTAS" and cell != "--" and name in solved:
-                    cell += f" ({float(solved[name]['success']) * 100:.0f}\\%)"
-                cells.append(cell)
-            lines.append(f"{label(name)} & " + " & ".join(cells) + r" \\")
-        lines.append(r"\midrule" if tag.startswith("C1") else r"\bottomrule")
+        lines.append(title.replace("{7}", f"{{{ncol}}}"))
+        for fam, names in family_rows(SETTINGS):
+            for i, name in enumerate(names):
+                cells = []
+                for k, _ in COMPETITORS:
+                    cell = fmt_ratio(by.get((name, tag, k)))
+                    if k == "CTAS" and cell != "--" and name in solved:
+                        cell += f" ({float(solved[name]['success']) * 100:.0f}\\%)"
+                    cells.append(cell)
+                first = family_cell(fam, len(names)) if i == 0 else ""
+                lines.append(f"{first} & {size(name)} & " + " & ".join(cells) + r" \\")
+            lines.append(r"\cmidrule(l){2-" + str(ncol) + "}")
+        lines[-1] = r"\midrule" if tag.startswith("C1") else r"\bottomrule"
     lines += [r"\end{tabular}", r"\end{table*}"]
     return "\n".join(lines) + "\n"
 
@@ -145,14 +182,88 @@ def rl_samples(rows: list[dict]) -> dict[str, tuple[int, int]]:
 def settings_table(samples: dict[str, tuple[int, int]]) -> str:
     lines = [r"\begin{table}[t]", r"\centering", r"\small",
              CAPTION_SETTINGS,
-             r"\label{tab:settings}", r"\begin{tabular}{lrrc}", r"\toprule",
-             r"Setting & $B_1$ (s) & RL(s.$N$): $N$ & CTAS-D run \\", r"\midrule"]
-    for name in SETTINGS:
-        s = configs.get(name)
-        b1 = s.paper["RL(s.10)"].time_s
-        lo, hi = samples.get(name, (None, None))
-        n = f"{lo}--{hi}" if lo is not None else "--"
-        lines.append(f"{label(name)} & {b1:.2f} & {n} & {'yes' if s.n_tasks <= 200 else 'no'}" + r" \\")
+             r"\label{tab:settings}", r"\begin{tabular}{lcrr}", r"\toprule",
+             r"Robots & Robots / species / tasks & $B_1$ (s) & RL rollouts \\", r"\midrule"]
+    for fam, names in family_rows(SETTINGS):
+        for i, name in enumerate(names):
+            b1 = configs.get(name).paper["RL(s.10)"].time_s
+            lo, hi = samples.get(name, (None, None))
+            n = f"{lo}--{hi}" if lo is not None else "--"
+            first = family_cell(fam, len(names)) if i == 0 else ""
+            lines.append(f"{first} & {size(name)} & {b1:.1f} & {n}" + r" \\")
+        lines.append(r"\midrule")
+    lines[-1] = r"\bottomrule"
+    lines += [r"\end{tabular}", r"\end{table}"]
+    return "\n".join(lines) + "\n"
+
+
+STEP_TEXT = {"ALNS2": "one remove and re-insert iteration", "CPSAT": "one CP-SAT solve of a freed window",
+             "PCPSAT": "one CP-SAT solve of a freed window", "CPFULL": "one solve of the whole model",
+             "CTAS": "one solve of the whole MILP", "CONSTRUCT": "one greedy construction",
+             "RL": "one rollout of the policy"}
+CAPTION_STEPS = (r"\caption{How the methods spend the budget $B_1$ on 8 cores. Each runs until the budget ends and returns "
+                 r"its best plan; the table gives its basic step and, as the median over the instances with 50, 200 and "
+                 r"500 tasks, the number of steps in one run with the time of one step on one worker in parentheses.}")
+
+
+def fmt_count(n: float) -> str:
+    if n >= 1e6:
+        return f"{n / 1e6:.1f}\\,M"
+    if n >= 1e4:
+        return f"{n / 1e3:.0f}\\,k"
+    if n >= 1e3:
+        return f"{n / 1e3:.1f}\\,k"
+    return f"{n:.0f}"
+
+
+def fmt_time(t: float) -> str:
+    if t < 1e-3:
+        return f"{t * 1e3:.2f}\\,ms"
+    if t < 1:
+        return f"{t * 1e3:.0f}\\,ms"
+    return f"{t:.1f}\\,s" if t < 10 else f"{t:.0f}\\,s"
+
+
+def cell2(count: str, t: str) -> str:
+    """A count over its time per step, in one table cell."""
+    return rf"\begin{{tabular}}[t]{{@{{}}c@{{}}}}{count}\\{{\scriptsize ({t})}}\end{{tabular}}"
+
+
+def steps_table(rows: list[dict], timing: dict) -> str:
+    """Steps per run and time per step (per worker) at B1 on 8 cores, median over instances per task count."""
+    import statistics as st
+    sizes = (50, 200, 500)
+    lines = [r"\begin{table}[t]", r"\centering", r"\footnotesize", r"\setlength{\tabcolsep}{2.5pt}", CAPTION_STEPS,
+             r"\label{tab:steps}", (r"\begin{tabular}{@{}>{\raggedright\arraybackslash}p{2.1cm}"
+                                    r">{\raggedright\arraybackslash}p{2.3cm}ccc@{}}"), r"\toprule",
+             r"Method & One step & 50 tasks & 200 tasks & 500 tasks \\", r"\midrule"]
+    for k, name in METHODS:
+        cells = []
+        for m in sizes:
+            names = [n for n in SETTINGS if configs.get(n).n_tasks == m]
+            sel = [r for r in rows if r["setting"] in names and r["method"] == k and r["cores"] == 8
+                   and r["budget"] == "B1"]
+            if k in ("CPFULL", "CTAS"):
+                cells.append("1 solve" if sel else "--")
+                continue
+            if k == "CONSTRUCT":
+                t = [st.mean(v for v in timing[n].values()) for n in names if n in timing]
+                b1 = [configs.get(n).paper["RL(s.10)"].time_s for n in names]
+                if not t:
+                    cells.append("--")
+                    continue
+                tt = st.median(t)
+                cells.append(cell2(fmt_count(8 * st.median(b1) / tt), fmt_time(tt)))
+                continue
+            field = {"ALNS2": "iterations", "CPSAT": "iterations", "PCPSAT": "iterations", "RL": "n_samples"}[k]
+            n = [r[field] for r in sel if r.get(field)]
+            if not n:
+                cells.append("--")
+                continue
+            workers = 1 if k == "CPSAT" else 8
+            per = [workers * r["budget_s"] / r[field] for r in sel if r.get(field)]
+            cells.append(cell2(fmt_count(st.median(n)), fmt_time(st.median(per))))
+        lines.append(f"{name} & {{\\scriptsize {STEP_TEXT[k]}}} & " + " & ".join(cells) + r" \\ \addlinespace[2pt]")
     lines += [r"\bottomrule", r"\end{tabular}", r"\end{table}"]
     return "\n".join(lines) + "\n"
 
@@ -200,7 +311,7 @@ def numbers(ratios: list[dict], gaps: list[dict], rows: list[dict]) -> str:
         macro(f"{pre}held", str(len(held)))
         macro(f"{pre}verdict", "is met" if len(held) >= 6 else "is not met")
         macro(f"{pre}settings", str(len(present)))
-        macro(f"{pre}heldlist", ", ".join(label(s) for s in held) or "none")
+        macro(f"{pre}heldlist", "; ".join(label(s) for s in held) or "none")
         macro(f"{pre}faillist", "; ".join(f"{label(s)} (against " + ", ".join(names[key(r['other'])] for r in f) + ")"
                                           for s, f in fails.items() if f) or "none")
         macro(f"{pre}tests", str(len(rs)))
@@ -320,6 +431,8 @@ def main() -> None:
     ap.add_argument("--bks-val", type=Path, help="bks.py collect CSV of val (independent references)")
     ap.add_argument("--bks-test", type=Path, help="bks.py collect CSV of the test split")
     ap.add_argument("--rl-s10", type=Path, help="RL reproduction rows (runs/rl) for RL(s.10) vs RL(s.N) on test")
+    ap.add_argument("--timing", type=Path, default=Path(__file__).resolve().parents[1] / "tables" /
+                    "constructor_timing.json", help="time_constructor.py output")
     ap.add_argument("--out", type=Path, default=Path(__file__).resolve().parents[1] / "tables")
     args = ap.parse_args()
     ratios = read(next(args.results.glob("anytime_ratios_*.csv")))
@@ -329,6 +442,8 @@ def main() -> None:
     (args.out / "c1c2.tex").write_text(c1c2(ratios, gaps))
     (args.out / "methods.tex").write_text(methods(gaps))
     (args.out / "settings.tex").write_text(settings_table(rl_samples(rows)))
+    timing = json.loads(args.timing.read_text()) if args.timing.exists() else {}
+    (args.out / "steps.tex").write_text(steps_table(rows, timing))
     (args.out / "numbers.tex").write_text(f"% generated from {args.results} and {args.runs} by paper/tools/make_tables.py\n"
                                           + numbers(ratios, gaps, rows) + bks_numbers(args.bks_val, "RefVal")
                                           + bks_numbers(args.bks_test, "RefTest") + rl_sampling(args.rl_s10, rows))

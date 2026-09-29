@@ -5,12 +5,13 @@ comparison at equal compute. We present an adaptive large neighbourhood search (
 representation, a global task order with a minimal covering coalition per task, whose evaluator reproduces the
 benchmark's simulator exactly and scores an insertion move in time linear in the coalition size. On the HeteroMRTA
 benchmark, with up to 150 robots and 500 tasks, we compare it with the published reinforcement-learning policy,
-three CP-SAT baselines (including a fully parallel large neighbourhood search), the exact MILP the benchmark used
-(CTAS-D, ported to an open solver and checked against the original authors' solutions), and constructor restarts.
+three methods built on the constraint solver CP-SAT (including a fully parallel large neighbourhood search), the exact
+MILP the benchmark used (CTAS-D, ported to an open solver and checked against the original authors' solutions), and
+greedy restarts.
 All methods run on the same pinned cores at the benchmark's own time budgets, and the confirmatory test run follows a
 pre-registration frozen before it. ALNS is significantly better than every competitor on \ConeBheld{} of the 8
-settings: its plans are \mbox{\ConeBclasslo--\ConeBclasshi\%} shorter than those of the CP-SAT baselines and
-restarts, and \mbox{\ConeBrlgainlo--\ConeBrlgainhi\%} shorter than those of the learned policy, which runs at its
+settings: its plans are \mbox{\ConeBclasslo--\ConeBclasshi\%} shorter than those of the CP-SAT-based methods and
+greedy restarts, and \mbox{\ConeBrlgainlo--\ConeBrlgainhi\%} shorter than those of the learned policy, which runs at its
 published time budget on the same CPUs. Making CP-SAT fully parallel does not close the gap, and the exact MILP rarely finds a plan within
 the budget. On one core and in 2\,s, ALNS is already significantly better than every eight-core competitor on
 \Ctwoheld{} of the 8 settings.

@@ -1,20 +1,20 @@
 \begin{table}[h]
 \centering
 \small
-\caption{Per-setting parameters of the competitors, chosen on dev: sub-solve length of CP-SAT LNS and of its parallel version (s), and the number of nearest candidate tasks per arc of the full CP-SAT model (all: every arc).}
+\caption{Per-setting parameters of the competitors, chosen on the development instances: time limit of one CP-SAT call in CP-LNS and in parallel CP-LNS (s), and the number of nearest candidate tasks per arc of CP-SAT full model (all: every arc).}
 \label{tab:supp-params}
 \begin{tabular}{lrrrr}
 \toprule
-Setting & $B_1$ (s) & CP-SAT LNS & Par.\ CP-SAT LNS & CP-SAT model arcs \\
+Setting & $B_1$ (s) & CP-LNS call (s) & Parallel CP-LNS call (s) & CP-SAT full arcs \\
 \midrule
-SA-BT 25/5/50 & 13.45 & 2 & 0.5 & all \\
-SA-BT 50/5/50 & 19.14 & 2 & 5 & 10 \\
-SA-AT 50/5/50 & 29.80 & 2 & 0.5 & all \\
-MA-AT 25/5/50 & 16.34 & 2 & 0.5 & all \\
-MA-AT 50/5/50 & 23.43 & 2 & 0.5 & 10 \\
-MA-AT 50/5/200 & 75.20 & 2 & 2 & 20 \\
-MA-AT 150/10/500 & 560.20 & 10 & 5 & 10 \\
-MA-AT 150/5/500 & 560.50 & 2 & 2 & 5 \\
+single-skill binary 25/5/50 & 13.45 & 2 & 0.5 & all \\
+single-skill binary 50/5/50 & 19.14 & 2 & 5 & 10 \\
+single-skill additive 50/5/50 & 29.80 & 2 & 0.5 & all \\
+multi-skill additive 25/5/50 & 16.34 & 2 & 0.5 & all \\
+multi-skill additive 50/5/50 & 23.43 & 2 & 0.5 & 10 \\
+multi-skill additive 50/5/200 & 75.20 & 2 & 2 & 20 \\
+multi-skill additive 150/10/500 & 560.20 & 10 & 5 & 10 \\
+multi-skill additive 150/5/500 & 560.50 & 2 & 2 & 5 \\
 \bottomrule
 \end{tabular}
 \end{table}

@@ -1,32 +1,36 @@
 \begin{table*}[t]
 \centering
 \small
-\setlength{\tabcolsep}{4pt}
+\setlength{\tabcolsep}{3.5pt}
 \caption{Paired makespan ratio ALNS / competitor (mean over the instances with bootstrap 95\% CI; below 1: ALNS better). $^\dagger$: not significant after Holm's correction (one-sided paired $t$-test on log ratios, $\alpha = 0.05$). CTAS-D failures count as makespan 200; the share of instances it solved within the budget follows its ratio in parentheses; it is not run on the 500-task settings.}
 \label{tab:ratios}
-\begin{tabular}{lcccccc}
+\begin{tabular}{llcccccc}
 \toprule
-Setting & CP-SAT LNS & Par.\ CP-SAT LNS & CP-SAT model & CTAS-D & Restarts & RL(s.$N$) \\
+Robots & Robots / species / tasks & CP-LNS & Parallel CP-LNS & CP-SAT full & CTAS-D & Greedy restarts & RL policy \\
 \midrule
-\multicolumn{7}{l}{\emph{(a) C1: ALNS on 8 cores vs.\ each competitor on 8 cores, both at budget $B_1$}} \\
-SA-BT 25/5/50 & 0.911 {\scriptsize [0.90, 0.92]} & 0.925 {\scriptsize [0.91, 0.93]} & 0.910 {\scriptsize [0.90, 0.92]} & 0.150 {\scriptsize [0.13, 0.19]} (10\%) & 0.919 {\scriptsize [0.91, 0.93]} & 0.799 {\scriptsize [0.78, 0.82]} \\
-SA-BT 50/5/50 & 0.968 {\scriptsize [0.96, 0.98]} & 0.951 {\scriptsize [0.94, 0.96]} & 0.930 {\scriptsize [0.92, 0.94]} & 0.538 {\scriptsize [0.51, 0.56]} (100\%) & 0.918 {\scriptsize [0.91, 0.93]} & 0.758 {\scriptsize [0.74, 0.77]} \\
-SA-AT 50/5/50 & 0.923 {\scriptsize [0.92, 0.93]} & 0.926 {\scriptsize [0.92, 0.93]} & 0.922 {\scriptsize [0.92, 0.92]} & 0.135 {\scriptsize [0.13, 0.14]} (0\%) & 0.934 {\scriptsize [0.93, 0.94]} & 0.770 {\scriptsize [0.76, 0.78]} \\
-MA-AT 25/5/50 & 0.900 {\scriptsize [0.89, 0.91]} & 0.889 {\scriptsize [0.87, 0.90]} & 0.888 {\scriptsize [0.87, 0.90]} & 0.152 {\scriptsize [0.13, 0.18]} (0\%) & 0.903 {\scriptsize [0.89, 0.92]} & 0.733 {\scriptsize [0.71, 0.76]} \\
-MA-AT 50/5/50 & 0.890 {\scriptsize [0.87, 0.91]} & 0.907 {\scriptsize [0.90, 0.92]} & 0.877 {\scriptsize [0.86, 0.89]} & 0.127 {\scriptsize [0.09, 0.19]} (10\%) & 0.890 {\scriptsize [0.87, 0.91]} & 0.727 {\scriptsize [0.69, 0.76]} \\
-MA-AT 50/5/200 & 0.900 {\scriptsize [0.88, 0.92]} & 0.904 {\scriptsize [0.89, 0.92]} & 0.886 {\scriptsize [0.87, 0.90]} & 0.305 {\scriptsize [0.27, 0.34]} (0\%) & 0.885 {\scriptsize [0.87, 0.90]} & 0.722 {\scriptsize [0.71, 0.74]} \\
-MA-AT 150/10/500 & 0.885 {\scriptsize [0.87, 0.90]} & 0.890 {\scriptsize [0.88, 0.91]} & 0.870 {\scriptsize [0.86, 0.89]} & -- & 0.888 {\scriptsize [0.88, 0.90]} & 0.680 {\scriptsize [0.67, 0.69]} \\
-MA-AT 150/5/500 & 0.890 {\scriptsize [0.85, 0.94]} & 0.890 {\scriptsize [0.85, 0.93]} & 0.867 {\scriptsize [0.82, 0.91]} & -- & 0.888 {\scriptsize [0.86, 0.92]} & 0.713 {\scriptsize [0.70, 0.73]} \\
+\multicolumn{8}{l}{\emph{(a) C1: ALNS on 8 cores vs.\ each competitor on 8 cores, both at budget $B_1$}} \\
+\multirow{2}{*}{\parbox{2.1cm}{\raggedright\scriptsize Single-skill robots, binary needs}} & 25/5/50 & 0.911 {\scriptsize [0.90, 0.92]} & 0.925 {\scriptsize [0.91, 0.93]} & 0.910 {\scriptsize [0.90, 0.92]} & 0.150 {\scriptsize [0.13, 0.19]} (10\%) & 0.919 {\scriptsize [0.91, 0.93]} & 0.799 {\scriptsize [0.78, 0.82]} \\
+ & 50/5/50 & 0.968 {\scriptsize [0.96, 0.98]} & 0.951 {\scriptsize [0.94, 0.96]} & 0.930 {\scriptsize [0.92, 0.94]} & 0.538 {\scriptsize [0.51, 0.56]} (100\%) & 0.918 {\scriptsize [0.91, 0.93]} & 0.758 {\scriptsize [0.74, 0.77]} \\
+\cmidrule(l){2-8}
+\parbox{2.1cm}{\raggedright\scriptsize Single-skill robots, additive needs} & 50/5/50 & 0.923 {\scriptsize [0.92, 0.93]} & 0.926 {\scriptsize [0.92, 0.93]} & 0.922 {\scriptsize [0.92, 0.92]} & 0.135 {\scriptsize [0.13, 0.14]} (0\%) & 0.934 {\scriptsize [0.93, 0.94]} & 0.770 {\scriptsize [0.76, 0.78]} \\
+\cmidrule(l){2-8}
+\multirow{5}{*}{\parbox{2.1cm}{\raggedright\scriptsize Multi-skill robots, additive needs}} & 25/5/50 & 0.900 {\scriptsize [0.89, 0.91]} & 0.889 {\scriptsize [0.87, 0.90]} & 0.888 {\scriptsize [0.87, 0.90]} & 0.152 {\scriptsize [0.13, 0.18]} (0\%) & 0.903 {\scriptsize [0.89, 0.92]} & 0.733 {\scriptsize [0.71, 0.76]} \\
+ & 50/5/50 & 0.890 {\scriptsize [0.87, 0.91]} & 0.907 {\scriptsize [0.90, 0.92]} & 0.877 {\scriptsize [0.86, 0.89]} & 0.127 {\scriptsize [0.09, 0.19]} (10\%) & 0.890 {\scriptsize [0.87, 0.91]} & 0.727 {\scriptsize [0.69, 0.76]} \\
+ & 50/5/200 & 0.900 {\scriptsize [0.88, 0.92]} & 0.904 {\scriptsize [0.89, 0.92]} & 0.886 {\scriptsize [0.87, 0.90]} & 0.305 {\scriptsize [0.27, 0.34]} (0\%) & 0.885 {\scriptsize [0.87, 0.90]} & 0.722 {\scriptsize [0.71, 0.74]} \\
+ & 150/10/500 & 0.885 {\scriptsize [0.87, 0.90]} & 0.890 {\scriptsize [0.88, 0.91]} & 0.870 {\scriptsize [0.86, 0.89]} & -- & 0.888 {\scriptsize [0.88, 0.90]} & 0.680 {\scriptsize [0.67, 0.69]} \\
+ & 150/5/500 & 0.890 {\scriptsize [0.85, 0.94]} & 0.890 {\scriptsize [0.85, 0.93]} & 0.867 {\scriptsize [0.82, 0.91]} & -- & 0.888 {\scriptsize [0.86, 0.92]} & 0.713 {\scriptsize [0.70, 0.73]} \\
 \midrule
-\multicolumn{7}{l}{\emph{(b) C2: ALNS on 1 core for 2\,s vs.\ each competitor on 8 cores at $B_1$}} \\
-SA-BT 25/5/50 & 0.949 {\scriptsize [0.93, 0.96]} & 0.965 {\scriptsize [0.95, 0.98]} & 0.949 {\scriptsize [0.94, 0.96]} & 0.157 {\scriptsize [0.14, 0.19]} (10\%) & 0.958 {\scriptsize [0.94, 0.97]} & 0.833 {\scriptsize [0.82, 0.84]} \\
-SA-BT 50/5/50 & 0.995$^\dagger$ {\scriptsize [0.98, 1.01]} & 0.977$^\dagger$ {\scriptsize [0.96, 0.99]} & 0.956 {\scriptsize [0.94, 0.97]} & 0.553 {\scriptsize [0.53, 0.58]} (100\%) & 0.944 {\scriptsize [0.93, 0.96]} & 0.779 {\scriptsize [0.76, 0.80]} \\
-SA-AT 50/5/50 & 0.984$^\dagger$ {\scriptsize [0.97, 1.00]} & 0.987$^\dagger$ {\scriptsize [0.97, 1.00]} & 0.982$^\dagger$ {\scriptsize [0.97, 0.99]} & 0.144 {\scriptsize [0.14, 0.15]} (0\%) & 0.995$^\dagger$ {\scriptsize [0.99, 1.00]} & 0.820 {\scriptsize [0.81, 0.83]} \\
-MA-AT 25/5/50 & 0.938 {\scriptsize [0.93, 0.95]} & 0.927 {\scriptsize [0.91, 0.94]} & 0.925 {\scriptsize [0.91, 0.94]} & 0.158 {\scriptsize [0.14, 0.18]} (0\%) & 0.941 {\scriptsize [0.93, 0.95]} & 0.764 {\scriptsize [0.75, 0.78]} \\
-MA-AT 50/5/50 & 0.934 {\scriptsize [0.91, 0.95]} & 0.952 {\scriptsize [0.93, 0.97]} & 0.920 {\scriptsize [0.90, 0.94]} & 0.133 {\scriptsize [0.09, 0.20]} (10\%) & 0.934 {\scriptsize [0.91, 0.95]} & 0.762 {\scriptsize [0.73, 0.79]} \\
-MA-AT 50/5/200 & 0.949 {\scriptsize [0.93, 0.96]} & 0.954 {\scriptsize [0.94, 0.97]} & 0.935 {\scriptsize [0.92, 0.95]} & 0.321 {\scriptsize [0.28, 0.36]} (0\%) & 0.933 {\scriptsize [0.92, 0.95]} & 0.762 {\scriptsize [0.75, 0.78]} \\
-MA-AT 150/10/500 & 0.980 {\scriptsize [0.97, 0.99]} & 0.986 {\scriptsize [0.98, 0.99]} & 0.964 {\scriptsize [0.96, 0.97]} & -- & 0.983$^\dagger$ {\scriptsize [0.97, 0.99]} & 0.753 {\scriptsize [0.74, 0.76]} \\
-MA-AT 150/5/500 & 0.960$^\dagger$ {\scriptsize [0.93, 0.99]} & 0.960$^\dagger$ {\scriptsize [0.94, 0.98]} & 0.935 {\scriptsize [0.91, 0.96]} & -- & 0.958 {\scriptsize [0.94, 0.97]} & 0.771 {\scriptsize [0.74, 0.79]} \\
+\multicolumn{8}{l}{\emph{(b) C2: ALNS on 1 core for 2\,s vs.\ each competitor on 8 cores at $B_1$}} \\
+\multirow{2}{*}{\parbox{2.1cm}{\raggedright\scriptsize Single-skill robots, binary needs}} & 25/5/50 & 0.949 {\scriptsize [0.93, 0.96]} & 0.965 {\scriptsize [0.95, 0.98]} & 0.949 {\scriptsize [0.94, 0.96]} & 0.157 {\scriptsize [0.14, 0.19]} (10\%) & 0.958 {\scriptsize [0.94, 0.97]} & 0.833 {\scriptsize [0.82, 0.84]} \\
+ & 50/5/50 & 0.995$^\dagger$ {\scriptsize [0.98, 1.01]} & 0.977$^\dagger$ {\scriptsize [0.96, 0.99]} & 0.956 {\scriptsize [0.94, 0.97]} & 0.553 {\scriptsize [0.53, 0.58]} (100\%) & 0.944 {\scriptsize [0.93, 0.96]} & 0.779 {\scriptsize [0.76, 0.80]} \\
+\cmidrule(l){2-8}
+\parbox{2.1cm}{\raggedright\scriptsize Single-skill robots, additive needs} & 50/5/50 & 0.984$^\dagger$ {\scriptsize [0.97, 1.00]} & 0.987$^\dagger$ {\scriptsize [0.97, 1.00]} & 0.982$^\dagger$ {\scriptsize [0.97, 0.99]} & 0.144 {\scriptsize [0.14, 0.15]} (0\%) & 0.995$^\dagger$ {\scriptsize [0.99, 1.00]} & 0.820 {\scriptsize [0.81, 0.83]} \\
+\cmidrule(l){2-8}
+\multirow{5}{*}{\parbox{2.1cm}{\raggedright\scriptsize Multi-skill robots, additive needs}} & 25/5/50 & 0.938 {\scriptsize [0.93, 0.95]} & 0.927 {\scriptsize [0.91, 0.94]} & 0.925 {\scriptsize [0.91, 0.94]} & 0.158 {\scriptsize [0.14, 0.18]} (0\%) & 0.941 {\scriptsize [0.93, 0.95]} & 0.764 {\scriptsize [0.75, 0.78]} \\
+ & 50/5/50 & 0.934 {\scriptsize [0.91, 0.95]} & 0.952 {\scriptsize [0.93, 0.97]} & 0.920 {\scriptsize [0.90, 0.94]} & 0.133 {\scriptsize [0.09, 0.20]} (10\%) & 0.934 {\scriptsize [0.91, 0.95]} & 0.762 {\scriptsize [0.73, 0.79]} \\
+ & 50/5/200 & 0.949 {\scriptsize [0.93, 0.96]} & 0.954 {\scriptsize [0.94, 0.97]} & 0.935 {\scriptsize [0.92, 0.95]} & 0.321 {\scriptsize [0.28, 0.36]} (0\%) & 0.933 {\scriptsize [0.92, 0.95]} & 0.762 {\scriptsize [0.75, 0.78]} \\
+ & 150/10/500 & 0.980 {\scriptsize [0.97, 0.99]} & 0.986 {\scriptsize [0.98, 0.99]} & 0.964 {\scriptsize [0.96, 0.97]} & -- & 0.983$^\dagger$ {\scriptsize [0.97, 0.99]} & 0.753 {\scriptsize [0.74, 0.76]} \\
+ & 150/5/500 & 0.960$^\dagger$ {\scriptsize [0.93, 0.99]} & 0.960$^\dagger$ {\scriptsize [0.94, 0.98]} & 0.935 {\scriptsize [0.91, 0.96]} & -- & 0.958 {\scriptsize [0.94, 0.97]} & 0.771 {\scriptsize [0.74, 0.79]} \\
 \bottomrule
 \end{tabular}
 \end{table*}
