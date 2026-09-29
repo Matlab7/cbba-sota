@@ -373,10 +373,9 @@
 <path d="M1091.8,448.1 L1111.8,468.1 M1091.8,468.1 L1111.8,448.1" stroke="#D55E00" stroke-width="5.5" stroke-linecap="round"/>
 <circle cx="1058.0" cy="400.0" r="21" fill="white" stroke="#D55E00" stroke-width="5.9"/>
 <path d="M1043.7,385.7 L1072.3,414.3" stroke="#D55E00" stroke-width="5.9"/>
-<rect x="1008.0" y="340.0" width="100" height="30" rx="8" fill="white" opacity="0.88"/>
-<text x="1015.0" y="362.0" font-family="Linux Biolinum O" font-size="23" font-weight="bold" font-style="normal" text-anchor="start" fill="#D55E00">no</text>
-<circle cx="1056.0" cy="354.0" r="8" fill="#E69F00" stroke="white" stroke-width="2"/>
-<text x="1070.0" y="362.0" font-family="Linux Biolinum O" font-size="23" font-weight="bold" font-style="normal" text-anchor="start" fill="#D55E00">left</text>
+<rect x="1082.0" y="385.0" width="160" height="30" rx="8" fill="white" opacity="0.88"/>
+<circle cx="1096.0" cy="399.0" r="8" fill="#E69F00" stroke="white" stroke-width="2"/>
+<text x="1110.0" y="407.0" font-family="Linux Biolinum O" font-size="23" font-weight="bold" font-style="normal" text-anchor="start" fill="#D55E00">lost with r2</text>
 <circle cx="1150.0" cy="184.0" r="42" fill="white" opacity="0.92" stroke="#D5DBD2" stroke-width="2"/>
 <g transform="translate(1150.0,180.0) scale(0.62)">
 <ellipse cx="0" cy="34" rx="50" ry="9" fill="#000" opacity="0.10"/>

@@ -361,11 +361,10 @@ def scene(ox, oy, dynamic: bool) -> None:
         # the rover had the only gripper, so no coalition can serve the rubble task any more
         cancelled(*legged_to_rubble(p))
         blocked(*p(378, 304), 21)
-        mx, my = p(378, 266)  # the reason, above the sign
-        add(f'<rect x="{mx - 50:.1f}" y="{my - 22:.1f}" width="100" height="30" rx="8" fill="white" opacity="0.88"/>')
-        text(mx - 43, my, "no", size=23, weight="bold", fill=VERM)
-        dots(mx - 2, my - 8, ("grip",), r=8)
-        text(mx + 12, my, "left", size=23, weight="bold", fill=VERM)
+        mx, my = p(406, 311)  # the reason, right of the sign
+        add(f'<rect x="{mx - 4:.1f}" y="{my - 22:.1f}" width="160" height="30" rx="8" fill="white" opacity="0.88"/>')
+        dots(mx + 10, my - 8, ("grip",), r=8)
+        text(mx + 24, my, "lost with r2", size=23, weight="bold", fill=VERM)
         halo(*p(470, 88), 42)
         ruin(*p(470, 84), 0.62)
         dots(*p(470, 118), ("cam", "sense"))
