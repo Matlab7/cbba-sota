@@ -1,0 +1,498 @@
+<title>Coalition Mission Replay</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Source+Sans+3:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a mission-control console. Case switch and one-line result on top, two synchronized replay screens as the
+   centerpiece, then the completion curve and the makespan bars, then how to read it and what each method is. */
+:root {
+  --bg: #F3F5F6; --surface: #FFFFFF; --ink: #1D2630; --muted: #5B6773; --line: #D9DFE4;
+  --accent: #0072B2; --accent-ink: #FFFFFF; --warn: #D55E00;
+  --map: #EEF2EE; --map-grid: #E1E7E1; --task-open: #9AA6B2; --task-fill: #FFFFFF;
+  --gather: #F6D9A8; --work: #E69F00; --done: #B9DEC8; --done-edge: #3E9E6E; --route: rgba(29,38,48,.12);
+  --font-display: "Barlow Semi Condensed", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "Source Sans 3", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0F1419; --surface: #161D24; --ink: #E4E9ED; --muted: #9AA7B3; --line: #2A333D;
+    --accent: #4FA6DC; --accent-ink: #0B1116; --warn: #F08A4B;
+    --map: #1B232B; --map-grid: #222C35; --task-open: #7E8B97; --task-fill: #1B232B;
+    --gather: #6B5427; --work: #E6A23A; --done: #24503A; --done-edge: #58B886; --route: rgba(228,233,237,.10);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0F1419; --surface: #161D24; --ink: #E4E9ED; --muted: #9AA7B3; --line: #2A333D;
+  --accent: #4FA6DC; --accent-ink: #0B1116; --warn: #F08A4B;
+  --map: #1B232B; --map-grid: #222C35; --task-open: #7E8B97; --task-fill: #1B232B;
+  --gather: #6B5427; --work: #E6A23A; --done: #24503A; --done-edge: #58B886; --route: rgba(228,233,237,.10);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 400 1rem/1.55 var(--font-body); }
+.wrap { max-width: 76rem; margin: 0 auto; padding-inline: max(16px, 3vw); padding-block: 1.75rem 3rem;
+        display: grid; gap: 1.75rem; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; letter-spacing: .005em; }
+h1 { font-size: clamp(2rem, 4.4vw, 3rem); font-weight: 700; line-height: 1.05; }
+h2 { font-size: 1.45rem; font-weight: 600; }
+h3 { font-size: 1.1rem; font-weight: 600; }
+p { margin: 0; max-width: 68ch; }
+.eyebrow { font: 500 .78rem/1.2 var(--font-data); text-transform: uppercase; letter-spacing: .12em; color: var(--muted); }
+header.top { display: grid; gap: .6rem; }
+.lede { color: var(--muted); font-size: 1.08rem; }
+.cases { display: flex; flex-wrap: wrap; gap: .5rem; }
+.cases button { font: 600 .98rem/1.2 var(--font-body); color: var(--ink); background: var(--surface);
+  border: 1px solid var(--line); border-radius: 999px; padding: .5rem 1rem; cursor: pointer; }
+.cases button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.cases button:focus-visible, .controls button:focus-visible, select:focus-visible, input:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px; }
+.result { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; align-items: baseline; font-size: 1rem; }
+.result b { font-family: var(--font-data); font-weight: 500; }
+.result .ours { color: var(--accent); }
+.console { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 1rem;
+  display: grid; gap: .9rem; }
+.controls { display: flex; flex-wrap: wrap; gap: .6rem 1rem; align-items: center; }
+.controls button { font: 600 .95rem/1 var(--font-body); border-radius: 8px; padding: .55rem .9rem; cursor: pointer;
+  border: 1px solid var(--line); background: var(--bg); color: var(--ink); }
+.controls button.play { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); min-width: 5.5rem; }
+.speed { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.speed button { border: 0; border-radius: 0; background: var(--bg); padding: .5rem .65rem; font-family: var(--font-data);
+  font-weight: 500; }
+.speed button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.timeline { flex: 1 1 16rem; display: flex; align-items: center; gap: .7rem; min-width: 0; }
+.timeline input { flex: 1; min-width: 0; accent-color: var(--accent); }
+.clock { font: 500 .95rem/1 var(--font-data); font-variant-numeric: tabular-nums; min-width: 7.5rem; text-align: right; }
+.toggle { display: inline-flex; gap: .4rem; align-items: center; color: var(--muted); font-size: .95rem; }
+.screens { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: 1rem; }
+.screen { display: grid; gap: .5rem; min-width: 0; }
+.screen-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .4rem;
+  min-height: 2.6rem; }
+.screen-head h3 { display: flex; align-items: center; gap: .5rem; }
+.swatch { width: .8rem; height: .8rem; border-radius: 3px; display: inline-block; flex: none; }
+.chip { font: 500 .85rem/1 var(--font-data); padding: .35rem .55rem; border-radius: 6px; background: var(--bg);
+  border: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+select { font: 600 .95rem/1.2 var(--font-body); color: var(--ink); background: var(--bg); border: 1px solid var(--line);
+  border-radius: 8px; padding: .35rem .5rem; }
+.canvas-box { position: relative; width: 100%; aspect-ratio: 1 / 1; max-width: 100%; border-radius: 10px; overflow: hidden;
+  border: 1px solid var(--line); background: var(--map); }
+.canvas-box canvas { width: 100%; height: 100%; display: block; }
+.banner { position: absolute; left: .6rem; right: .6rem; bottom: .6rem; background: var(--surface); color: var(--ink);
+  border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 8px; padding: .45rem .7rem;
+  font-size: .92rem; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.status { display: flex; flex-wrap: wrap; gap: .35rem 1rem; font: 400 .85rem/1.3 var(--font-data); color: var(--muted);
+  font-variant-numeric: tabular-nums; }
+.status b { color: var(--ink); font-weight: 500; }
+.charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr)); gap: 1rem; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 1rem; display: grid;
+  gap: .6rem; min-width: 0; }
+.panel .note { color: var(--muted); font-size: .92rem; }
+.chart { width: 100%; height: auto; display: block; }
+.chart text { font-family: var(--font-data); font-size: 11px; fill: var(--muted); }
+.chart .label { fill: var(--ink); font-family: var(--font-body); font-size: 12.5px; }
+.chart .value { fill: var(--ink); }
+.legend-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); gap: .9rem 1.5rem; }
+.legend-item { display: flex; gap: .6rem; align-items: flex-start; font-size: .95rem; }
+.legend-item svg { flex: none; margin-top: .15rem; }
+.species { display: flex; flex-wrap: wrap; gap: .4rem .9rem; font-size: .92rem; }
+.species span { display: inline-flex; gap: .35rem; align-items: center; }
+dl.methods { display: grid; grid-template-columns: minmax(9rem, max-content) 1fr; gap: .45rem 1.1rem; margin: 0; }
+dl.methods dt { font-weight: 600; display: flex; gap: .45rem; align-items: center; }
+dl.methods dd { margin: 0; color: var(--muted); }
+footer { color: var(--muted); font-size: .88rem; display: grid; gap: .4rem; }
+@media (max-width: 40rem) { dl.methods { grid-template-columns: 1fr; } dl.methods dd { margin-bottom: .4rem; } }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="eyebrow">HeteroMRTA benchmark · one test instance · every plan replayed in the benchmark simulator</div>
+    <h1>Coalition Mission Replay</h1>
+    <p class="lede">A task can start only when robots with all the skills it needs have arrived. Below, the plan our search
+      (ALNS) finds plays next to the plan of each competitor. All methods ran on the same 8 CPU cores for the same time
+      budget, and the benchmark's own simulator executes every plan.</p>
+  </header>
+
+  <nav class="cases" id="cases" aria-label="Instance"></nav>
+  <div class="result" id="result"></div>
+
+  <section class="console" aria-label="Replay">
+    <div class="controls">
+      <button class="play" id="play" type="button">Play</button>
+      <button id="restart" type="button">Restart</button>
+      <div class="speed" id="speed" role="group" aria-label="Playback speed"></div>
+      <div class="timeline">
+        <input id="time" type="range" min="0" max="1000" value="0" step="1" aria-label="Mission time">
+        <span class="clock" id="clock">t = 0.0</span>
+      </div>
+      <label class="toggle"><input id="routes" type="checkbox"> Show planned routes</label>
+    </div>
+    <div class="screens">
+      <div class="screen">
+        <div class="screen-head">
+          <h3><span class="swatch" id="left-swatch"></span><span id="left-name">ALNS (ours)</span></h3>
+          <span class="chip" id="left-ms"></span>
+        </div>
+        <div class="canvas-box"><canvas id="left"></canvas><div class="banner" id="left-banner" hidden></div></div>
+        <div class="status" id="left-status"></div>
+      </div>
+      <div class="screen">
+        <div class="screen-head">
+          <h3><span class="swatch" id="right-swatch"></span><label for="rival" class="sr">Compare with</label>
+            <select id="rival"></select></h3>
+          <span class="chip" id="right-ms"></span>
+        </div>
+        <div class="canvas-box"><canvas id="right"></canvas><div class="banner" id="right-banner" hidden></div></div>
+        <div class="status" id="right-status"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="charts">
+    <div class="panel">
+      <h2>Tasks finished over time</h2>
+      <p class="note">Each line counts finished tasks; it ends when the last robot is back at its station. The vertical
+        line follows the replay.</p>
+      <svg class="chart" id="curve" viewBox="0 0 560 300" role="img" aria-label="Tasks finished over time per method"></svg>
+    </div>
+    <div class="panel">
+      <h2>Mission time (makespan)</h2>
+      <p class="note">Time until every task is done and every robot is home, in the simulator's time units. Shorter is
+        better; the percentage is how much longer than ALNS.</p>
+      <svg class="chart" id="bars" viewBox="0 0 560 300" role="img" aria-label="Makespan per method"></svg>
+    </div>
+  </section>
+
+  <section class="panel" aria-label="How to read the replay">
+    <h2>How to read the replay</h2>
+    <div class="legend-grid">
+      <div class="legend-item"><svg width="22" height="22" viewBox="0 0 22 22"><rect x="4" y="4" width="14" height="14" rx="2" fill="var(--muted)"/></svg>
+        <span>Station of a robot type. Robots leave from it at time 0 and must return to it.</span></div>
+      <div class="legend-item"><svg width="22" height="22" viewBox="0 0 22 22"><circle cx="11" cy="11" r="6" fill="var(--task-fill)" stroke="var(--task-open)" stroke-width="2"/></svg>
+        <span>Task not started yet.</span></div>
+      <div class="legend-item"><svg width="22" height="22" viewBox="0 0 22 22"><circle cx="11" cy="11" r="6" fill="var(--gather)" stroke="var(--work)" stroke-width="2"/></svg>
+        <span>Coalition gathering: some robots have arrived and wait for the rest.</span></div>
+      <div class="legend-item"><svg width="22" height="22" viewBox="0 0 22 22"><circle cx="11" cy="11" r="6" fill="var(--work)"/></svg>
+        <span>Task in progress: all needed skills are on site.</span></div>
+      <div class="legend-item"><svg width="22" height="22" viewBox="0 0 22 22"><circle cx="11" cy="11" r="5" fill="var(--done)" stroke="var(--done-edge)" stroke-width="1.5"/></svg>
+        <span>Task done.</span></div>
+      <div class="legend-item"><svg width="22" height="22" viewBox="0 0 22 22"><circle cx="11" cy="11" r="4" fill="var(--muted)"/><circle cx="11" cy="11" r="7.5" fill="none" stroke="var(--warn)" stroke-width="1.8"/></svg>
+        <span>Robot waiting at a task for its partners (ring).</span></div>
+    </div>
+    <div class="species" id="species"></div>
+  </section>
+
+  <section class="panel" aria-label="Methods">
+    <h2>The methods</h2>
+    <p class="note" id="budget-note"></p>
+    <dl class="methods" id="methods"></dl>
+  </section>
+
+  <footer>
+    <p>Research demo accompanying a paper under anonymous review. Instances come from the public HeteroMRTA benchmark
+      generator; the plans are the ones produced in our pre-registered test campaign, and each makespan is the
+      simulator's own score.</p>
+  </footer>
+</div>
+
+<script>
+(() => {
+  "use strict";
+  const SPECIES = ["#4477AA", "#EE6677", "#228833", "#CCBB44", "#66CCEE", "#AA3377", "#BBBBBB", "#882255", "#44AA99", "#999933"];
+  const CASES = [
+    { id: "large", label: "150 robots · 500 tasks", tag: "largest win" },
+    { id: "small", label: "25 robots · 50 tasks", tag: "easy to follow" },
+  ];
+  const $ = (id) => document.getElementById(id);
+  const cache = {};
+  let data = null, rival = null, t = 0, playing = false, speed = 1, last = null, showRoutes = false;
+  const css = {};
+
+  function readTokens() {
+    const s = getComputedStyle(document.documentElement);
+    for (const k of ["map", "map-grid", "task-open", "task-fill", "gather", "work", "done", "done-edge", "route", "warn", "ink", "muted", "line", "accent", "surface"])
+      css[k] = s.getPropertyValue("--" + k).trim();
+  }
+
+  function prepare(d) {
+    // per method: robot segments and per-task first arrival, for position and state lookups
+    for (const m of d.methods) {
+      if (m.status !== "ok") continue;
+      m.segs = m.robots.map((r, i) => {
+        const dep = d.robots[i].depot, segs = [];
+        let t0 = 0, p0 = dep;
+        for (const [task, arr, st, fin] of r.events) {
+          const p = [d.tasks[task].x, d.tasks[task].y];
+          segs.push([t0, arr, p0, p, "move"]);
+          if (st > arr) segs.push([arr, st, p, p, "wait"]);
+          segs.push([st, fin, p, p, "work"]);
+          t0 = fin; p0 = p;
+        }
+        if (r.events.length) segs.push([t0, r.ret, p0, dep, "move"]);
+        return segs;
+      });
+      m.first = new Array(d.tasks.length).fill(Infinity);
+      m.robots.forEach((r) => r.events.forEach(([task, arr]) => { if (arr < m.first[task]) m.first[task] = arr; }));
+    }
+    d.maxMs = Math.max(...d.methods.filter((m) => m.status === "ok").map((m) => m.makespan));
+  }
+
+  function robotAt(segs, time) {
+    if (!segs.length) return null;
+    for (const [a, b, p, q, kind] of segs) {
+      if (time <= b) {
+        if (time < a) return { x: p[0], y: p[1], kind: "idle" };
+        const f = b > a ? (time - a) / (b - a) : 1;
+        return { x: p[0] + (q[0] - p[0]) * f, y: p[1] + (q[1] - p[1]) * f, kind };
+      }
+    }
+    const lastSeg = segs[segs.length - 1];
+    return { x: lastSeg[3][0], y: lastSeg[3][1], kind: "home" };
+  }
+
+  function draw(canvas, m, time) {
+    const box = canvas.parentElement.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1, W = Math.max(1, Math.round(box.width * dpr));
+    if (canvas.width !== W) { canvas.width = W; canvas.height = W; }
+    const g = canvas.getContext("2d"), pad = W * 0.04, S = W - 2 * pad;
+    const X = (x) => pad + x * S, Y = (y) => pad + (1 - y) * S;
+    const big = data.tasks.length > 100, tr = (big ? 0.0062 : 0.016) * W, rr = (big ? 0.0078 : 0.014) * W;
+    g.fillStyle = css.map; g.fillRect(0, 0, W, W);
+    g.strokeStyle = css["map-grid"]; g.lineWidth = 1;
+    for (let k = 0; k <= 10; k++) {
+      g.beginPath(); g.moveTo(X(k / 10), Y(0)); g.lineTo(X(k / 10), Y(1)); g.stroke();
+      g.beginPath(); g.moveTo(X(0), Y(k / 10)); g.lineTo(X(1), Y(k / 10)); g.stroke();
+    }
+    if (!m || m.status !== "ok") {
+      g.fillStyle = css.muted; g.font = `${Math.round(W * 0.035)}px ${getComputedStyle(document.body).fontFamily}`;
+      g.textAlign = "center"; g.fillText(m ? m.status : "", W / 2, W / 2); return null;
+    }
+    if (showRoutes) {
+      g.strokeStyle = css.route; g.lineWidth = Math.max(1, W * 0.0016);
+      m.robots.forEach((r, i) => {
+        if (!r.events.length) return;
+        const dep = data.robots[i].depot; g.beginPath(); g.moveTo(X(dep[0]), Y(dep[1]));
+        for (const [task] of r.events) g.lineTo(X(data.tasks[task].x), Y(data.tasks[task].y));
+        g.lineTo(X(dep[0]), Y(dep[1])); g.stroke();
+      });
+    }
+    const seen = new Set();
+    data.robots.forEach((r) => {
+      const key = r.species; if (seen.has(key)) return; seen.add(key);
+      const s = Math.max(tr * 2.6, W * 0.022); g.fillStyle = SPECIES[r.species % SPECIES.length];
+      g.fillRect(X(r.depot[0]) - s / 2, Y(r.depot[1]) - s / 2, s, s);
+    });
+    let done = 0, active = 0, gathering = 0;
+    data.tasks.forEach((task, j) => {
+      const st = m.start[j], fin = m.finish[j], x = X(task.x), y = Y(task.y);
+      g.beginPath();
+      if (fin !== null && time >= fin) {
+        done++; g.arc(x, y, tr * 0.8, 0, 2 * Math.PI); g.fillStyle = css.done; g.fill();
+        g.lineWidth = Math.max(1, tr * 0.25); g.strokeStyle = css["done-edge"]; g.stroke();
+      } else if (st !== null && time >= st) {
+        active++; g.arc(x, y, tr * 1.15, 0, 2 * Math.PI); g.fillStyle = css.work; g.fill();
+      } else if (time >= m.first[j]) {
+        gathering++; g.arc(x, y, tr, 0, 2 * Math.PI); g.fillStyle = css.gather; g.fill();
+        g.lineWidth = Math.max(1, tr * 0.35); g.strokeStyle = css.work; g.stroke();
+      } else {
+        g.arc(x, y, tr, 0, 2 * Math.PI); g.fillStyle = css["task-fill"]; g.fill();
+        g.lineWidth = Math.max(1, tr * 0.3); g.strokeStyle = css["task-open"]; g.stroke();
+      }
+    });
+    let waiting = 0, out = 0;
+    m.segs.forEach((segs, i) => {
+      const p = robotAt(segs, time); if (!p) return;
+      if (p.kind !== "home" && p.kind !== "idle") out++;
+      const x = X(p.x), y = Y(p.y);
+      g.beginPath(); g.arc(x, y, rr, 0, 2 * Math.PI);
+      g.fillStyle = SPECIES[data.robots[i].species % SPECIES.length]; g.fill();
+      g.lineWidth = Math.max(1, rr * 0.28); g.strokeStyle = css.ink; g.stroke();
+      if (p.kind === "wait") {
+        waiting++; g.beginPath(); g.arc(x, y, rr * 2, 0, 2 * Math.PI);
+        g.lineWidth = Math.max(1.2, rr * 0.35); g.strokeStyle = css.warn; g.stroke();
+      }
+    });
+    return { done, active, gathering, waiting, out };
+  }
+
+  function fmt(x, d = 1) { return x === null || x === undefined ? "–" : x.toFixed(d); }
+
+  function statusHtml(st, m) {
+    if (!st) return `<span>${m ? m.status : ""}</span>`;
+    const n = data.tasks.length;
+    return `<span>done <b>${st.done}</b>/${n}</span><span>in progress <b>${st.active}</b></span>` +
+      `<span>gathering <b>${st.gathering}</b></span><span>robots waiting <b>${st.waiting}</b></span>` +
+      `<span>robots out <b>${st.out}</b></span>`;
+  }
+
+  function banner(el, me, other, st) {
+    if (!other || other.status !== "ok" || !me || me.status !== "ok" || !st) { el.hidden = true; return; }
+    if (t >= other.makespan && t < me.makespan) {
+      const left = data.tasks.length - st.done;
+      el.innerHTML = `${other.name} finished at <b>${fmt(other.makespan)}</b>. Here ${left > 0 ? `${left} task${left > 1 ? "s are" : " is"} still open` : "robots are still returning"}.`;
+      el.style.borderLeftColor = other.colour; el.hidden = false;
+    } else el.hidden = true;
+  }
+
+  function frame() {
+    const ours = data.methods[0], other = data.methods.find((m) => m.key === rival);
+    const a = draw($("left"), ours, t), b = draw($("right"), other, t);
+    $("left-status").innerHTML = statusHtml(a, ours); $("right-status").innerHTML = statusHtml(b, other);
+    banner($("left-banner"), ours, other, a); banner($("right-banner"), other, ours, b);
+    $("clock").textContent = `t = ${fmt(t)} / ${fmt(data.maxMs)}`;
+    $("time").value = Math.round(1000 * t / data.maxMs);
+    drawCurve();
+  }
+
+  function tick(now) {
+    if (!playing) return;
+    if (last !== null) {
+      const rate = data.maxMs / 24;  // the longest plan plays in about 24 s at 1x
+      t = Math.min(data.maxMs, t + (now - last) / 1000 * rate * speed);
+    }
+    last = now; frame();
+    if (t >= data.maxMs) { setPlaying(false); return; }
+    requestAnimationFrame(tick);
+  }
+
+  function setPlaying(on) {
+    playing = on; last = null; $("play").textContent = on ? "Pause" : "Play";
+    if (on) { if (t >= data.maxMs) t = 0; requestAnimationFrame(tick); }
+  }
+
+  const NS = "http://www.w3.org/2000/svg";
+  function el(tag, attrs, parent, text) {
+    const e = document.createElementNS(NS, tag);
+    for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+    if (text !== undefined) e.textContent = text;
+    parent.appendChild(e); return e;
+  }
+
+  function drawCurve() {
+    const svg = $("curve"); svg.innerHTML = "";
+    const W = 560, H = 300, L = 44, R = 14, T = 14, B = 34, n = data.tasks.length;
+    const xs = (v) => L + v / data.maxMs * (W - L - R), ys = (v) => H - B - v / n * (H - T - B);
+    for (let k = 0; k <= 4; k++) {
+      const v = Math.round(n * k / 4), y = ys(v);
+      el("line", { x1: L, x2: W - R, y1: y, y2: y, stroke: css.line, "stroke-width": 1 }, svg);
+      el("text", { x: L - 6, y: y + 4, "text-anchor": "end" }, svg, String(v));
+    }
+    const step = data.maxMs > 60 ? 20 : data.maxMs > 25 ? 10 : 5;
+    for (let v = 0; v <= data.maxMs + 1e-9; v += step) {
+      const x = xs(v); el("line", { x1: x, x2: x, y1: H - B, y2: H - B + 4, stroke: css.muted }, svg);
+      el("text", { x, y: H - B + 17, "text-anchor": "middle" }, svg, String(v));
+    }
+    el("text", { x: (L + W - R) / 2, y: H - 3, "text-anchor": "middle" }, svg, "mission time");
+    const ok = data.methods.filter((m) => m.status === "ok").slice().reverse();
+    for (const m of ok) {
+      let d = `M${xs(0)},${ys(0)}`, c = 0;
+      for (const f of m.completion) { d += ` H${xs(f)}`; c++; d += ` V${ys(c)}`; }
+      d += ` H${xs(m.makespan)}`;
+      const ours = m === data.methods[0], picked = m.key === rival;
+      el("path", { d, fill: "none", stroke: m.colour, "stroke-width": ours || picked ? 2.6 : 1.4,
+        opacity: ours || picked ? 1 : 0.55 }, svg);
+      el("circle", { cx: xs(m.makespan), cy: ys(c), r: ours || picked ? 3.6 : 2.4, fill: m.colour }, svg);
+    }
+    const x = xs(t); el("line", { x1: x, x2: x, y1: T, y2: H - B, stroke: css.ink, "stroke-width": 1, "stroke-dasharray": "3 3" }, svg);
+  }
+
+  function drawBars() {
+    const svg = $("bars"); svg.innerHTML = "";
+    const ms = data.methods, ours = ms[0].makespan, W = 560, L = 150, R = 86, rowH = 36, T = 8;
+    const H = T + ms.length * rowH + 8; svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    const max = Math.max(...ms.filter((m) => m.status === "ok").map((m) => m.makespan));
+    const xs = (v) => L + v / max * (W - L - R);
+    const sorted = ms.slice().sort((a, b) => (a.makespan ?? Infinity) - (b.makespan ?? Infinity));
+    sorted.forEach((m, k) => {
+      const y = T + k * rowH;
+      el("text", { x: L - 10, y: y + rowH / 2 + 4, "text-anchor": "end", class: "label" }, svg, m.name);
+      if (m.status !== "ok") {
+        el("text", { x: L, y: y + rowH / 2 + 4 }, svg, m.status); return;
+      }
+      el("rect", { x: L, y: y + 7, width: Math.max(1, xs(m.makespan) - L), height: rowH - 14, rx: 3, fill: m.colour,
+        opacity: m === ms[0] ? 1 : 0.8 }, svg);
+      const extra = m === ms[0] ? "" : `  +${Math.round(100 * (m.makespan / ours - 1))}%`;
+      el("text", { x: xs(m.makespan) + 6, y: y + rowH / 2 + 4, class: "value" }, svg, fmt(m.makespan) + extra);
+    });
+  }
+
+  function renderStatic() {
+    const ms = data.methods, ours = ms[0], ok = ms.filter((m) => m.status === "ok" && m !== ours);
+    const best = ok.reduce((a, b) => (b.makespan < a.makespan ? b : a));
+    const rl = ms.find((m) => m.key === "RL");
+    $("result").innerHTML = `<span>Makespan: <b class="ours">ALNS ${fmt(ours.makespan)}</b></span>` +
+      `<span>best other method, ${best.name}: <b>${fmt(best.makespan)}</b> (+${Math.round(100 * (best.makespan / ours.makespan - 1))}%)</span>` +
+      (rl && rl.status === "ok" ? `<span>RL policy: <b>${fmt(rl.makespan)}</b> (+${Math.round(100 * (rl.makespan / ours.makespan - 1))}%)</span>` : "");
+    $("left-swatch").style.background = ours.colour; $("left-ms").textContent = `makespan ${fmt(ours.makespan)}`;
+    const sel = $("rival"); sel.innerHTML = "";
+    ms.slice(1).forEach((m) => { const o = document.createElement("option"); o.value = m.key;
+      o.textContent = m.name + (m.status === "ok" ? "" : ` (${m.status})`); sel.appendChild(o); });
+    if (!rival || !ms.some((m) => m.key === rival)) rival = best.key;
+    sel.value = rival; updateRival();
+    const species = [...new Set(data.robots.map((r) => r.species))].sort((a, b) => a - b);
+    $("species").innerHTML = `<b>Robot types:</b> ` + species.map((s) => {
+      const r = data.robots.find((q) => q.species === s);
+      const skills = r.traits.map((v, k) => (v ? k + 1 : null)).filter(Boolean).join(", ");
+      const count = data.robots.filter((q) => q.species === s).length;
+      return `<span><i class="swatch" style="background:${SPECIES[s % SPECIES.length]}"></i>${count} robots with skills ${skills}</span>`;
+    }).join("");
+    $("budget-note").textContent = `Budget for every method: ${fmt(data.budget_s, 1)} s of computation on 8 CPU cores ` +
+      `(the time the benchmark paper reports for its learned policy with ten samples). Instance: ${data.robots_n} robots of ` +
+      `${data.species_n} types, ${data.tasks_n} tasks; test instance ${data.instance} of setting ${data.setting}.`;
+    $("methods").innerHTML = ms.map((m) => `<dt><i class="swatch" style="background:${m.colour}"></i>${m.name}</dt>` +
+      `<dd>${m.desc}${m.status === "ok" ? "" : ` (${m.status} on this instance)`}</dd>`).join("");
+    drawBars();
+  }
+
+  function updateRival() {
+    const m = data.methods.find((q) => q.key === rival);
+    $("right-swatch").style.background = m.colour;
+    $("right-ms").textContent = m.status === "ok" ? `makespan ${fmt(m.makespan)}` : m.status;
+    frame();
+  }
+
+  async function loadCase(id) {
+    if (!cache[id]) {
+      const res = await fetch(`data/${id}.json`);
+      if (!res.ok) throw new Error(`could not load data/${id}.json (${res.status})`);
+      cache[id] = await res.json(); prepare(cache[id]);
+    }
+    data = cache[id];
+    [...$("cases").children].forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.id === id)));
+    setPlaying(false); t = data.methods[0].makespan + 0.01; renderStatic(); frame();
+  }
+
+  function init() {
+    readTokens();
+    CASES.forEach((c) => {
+      const b = document.createElement("button"); b.type = "button"; b.dataset.id = c.id;
+      b.textContent = `${c.label} (${c.tag})`; b.setAttribute("aria-pressed", "false");
+      b.addEventListener("click", () => loadCase(c.id).catch(showError)); $("cases").appendChild(b);
+    });
+    [0.5, 1, 2, 4].forEach((v) => {
+      const b = document.createElement("button"); b.type = "button"; b.textContent = `${v}×`;
+      b.setAttribute("aria-pressed", String(v === speed));
+      b.addEventListener("click", () => { speed = v; [...$("speed").children].forEach((q) => q.setAttribute("aria-pressed", String(q === b))); });
+      $("speed").appendChild(b);
+    });
+    $("play").addEventListener("click", () => setPlaying(!playing));
+    $("restart").addEventListener("click", () => { t = 0; frame(); setPlaying(true); });
+    $("time").addEventListener("input", (e) => { setPlaying(false); t = data.maxMs * e.target.value / 1000; frame(); });
+    $("rival").addEventListener("change", (e) => { rival = e.target.value; updateRival(); });
+    $("routes").addEventListener("change", (e) => { showRoutes = e.target.checked; frame(); });
+    window.addEventListener("resize", () => data && frame());
+    const refresh = () => { readTokens(); if (data) { drawBars(); frame(); } };
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", refresh);
+    new MutationObserver(refresh).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    loadCase("large").catch(showError);
+  }
+
+  function showError(err) {
+    $("result").innerHTML = `<span>The replay data could not be loaded: ${err.message}. Reload the page to try again.</span>`;
+  }
+
+  init();
+})();
+</script>
