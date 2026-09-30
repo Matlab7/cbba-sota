@@ -19,7 +19,10 @@ of the \Ctwosettings{} settings (Table~\ref{tab:ratios}a; \Ctwosig{} of \Ctwotes
 Descriptively, it does so already in 0.5\,s (on \CtwoHalfRLheld{} settings), and at 1\,s and 0.5\,s it beats every
 competitor on \CtwoOneheld{} and \CtwoHalfheld{} settings. In Figure~\ref{fig:budget}, the one-core line falls below every competitor's level within a few CPU-seconds,
 while the competitors spend \CpuBonelo{} to \CpuBonehi. Eight workers instead of one improve ALNS at $B_1$ by only
-\Workersgainlo--\Workersgainhi\%: its advantage is per-core efficiency, not parallelism.
+\Workersgainlo--\Workersgainhi\%: its advantage is per-core efficiency, not parallelism. Table~\ref{tab:progress} sums this up: as ALNS gets
+more compute, it beats each competitor on more settings, and against the learned policy it needs only 0.5\,s.
+
+\input{tables/progress}
 
 \paragraph{C1: equal compute.} ALNS on 8 cores is better than every competitor at the same budget $B_1$ on
 \ConeBheld{} of the \ConeBsettings{} settings (Table~\ref{tab:ratios}b): \ConeBsig{} of the \ConeBtests{} tests are
@@ -54,15 +57,13 @@ completes \RLNlo{} to \RLNhi{} times the published number of rollouts. Greedy re
 \RestartsRLlo--\RestartsRLhi\% shorter (ratio of means): a careful construction with restarts already closes much of
 the gap to the learned policy, and search closes the rest.
 
-\paragraph{How good are the plans?} The best known plans come from ALNS runs; is ALNS merely close to itself? On the
-\RefValInstances{} validation instances with 50 or more tasks, parallel CP-LNS and CP-SAT full model run for 300\,s on
-8 cores from greedy plans (10 to 20 times the compute of $B_1$) never matched the best ALNS-derived plan and ended
-\RefValFreelo--\RefValFreehi\% longer on average per setting. CP-SAT's certified lower bounds remain
+\paragraph{How good are the plans?} The best known plans come from ALNS runs. On the \RefValInstances{} validation
+instances with 50 or more tasks, parallel CP-LNS and CP-SAT full model run for 300\,s on 8 cores (10 to 20 times the
+compute of $B_1$) never matched the best ALNS-derived plan and ended \RefValFreelo--\RefValFreehi\% longer per setting. CP-SAT's certified lower bounds remain
 \RefValBoundlo--\RefValBoundhi\% below the best known plans, so the distance to the optimum is unknown; the paired
 ratios do not depend on it.
 
-\paragraph{Execution.} Of the \RunsBone{} runs on 8 cores at $B_1$, \LateBone{} overran their budget by more than
-10\% + 0.25\,s and were scored at the budget as pre-registered: \LateRL{} of the RL policy (a run whose last batch of
-rollouts ends late keeps no plan and counts as a failure), \LateALNS{} of ALNS and \LateOther{} of the others. Scoring
-each late run by its final plan instead (descriptive), ALNS's plans are \Sensrlgainlo--\Sensrlgainhi\% shorter than
-the RL policy's. Jobs with more than 40\% throttled CPU periods were re-run and left out.
+\paragraph{Execution.} \LateBone{} of the \RunsBone{} runs on 8 cores at $B_1$ overran their budget and were scored
+at the budget as pre-registered (\LateRL{} of the RL policy, which then counts as a failure); scoring them by their final
+plan instead, ALNS's plans are \Sensrlgainlo--\Sensrlgainhi\% shorter than the RL policy's. Jobs with more than 40\%
+throttled CPU periods were re-run and left out.

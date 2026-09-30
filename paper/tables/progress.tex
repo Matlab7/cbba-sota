@@ -1,0 +1,17 @@
+\begin{table}[t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{2.6pt}
+\caption{Settings (of 8; CTAS-D of 6) where ALNS with growing compute is significantly better than each competitor on 8 cores at $B_1$ (Holm per row); CPU: share of a competitor's CPU time. $^*$: descriptive.}
+\label{tab:progress}
+\begin{tabular}{@{}lrccccccc@{}}
+\toprule
+ALNS & CPU (\%) & CP-LNS & P.\ CP-LNS & CP-SAT & CTAS-D & Greedy & RL & all \\
+\midrule
+1 core, 0.5\,s$^*$ & $\le$\,0.5 & 6 & 6 & 7 & 6 & 7 & 8 & \textbf{6} \\
+1 core, 1\,s$^*$ & $\le$\,0.9 & 6 & 7 & 7 & 6 & 7 & 8 & \textbf{6} \\
+1 core, 2\,s & $\le$\,1.9 & 8 & 7 & 8 & 6 & 7 & 8 & \textbf{7} \\
+8 cores, $B_1$ & 100 & 8 & 8 & 8 & 6 & 8 & 8 & \textbf{8} \\
+\bottomrule
+\end{tabular}
+\end{table}

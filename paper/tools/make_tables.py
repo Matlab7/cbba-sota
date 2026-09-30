@@ -174,6 +174,33 @@ def methods(gaps: list[dict]) -> str:
     return "\n".join(lines) + "\n"
 
 
+PROGRESS = (("C2 1 core 0.5 s vs 8 cores B1", r"1 core, 0.5\,s$^*$", 0.5),
+            ("C2 1 core 1 s vs 8 cores B1", r"1 core, 1\,s$^*$", 1.0),
+            ("C2 1 core 2 s vs 8 cores B1", r"1 core, 2\,s", 2.0),
+            ("C1 8 cores B1", r"8 cores, $B_1$", None))
+CAPTION_PROGRESS = (r"\caption{Settings (of 8; CTAS-D of 6) where ALNS with growing compute is significantly better than "
+                    r"each competitor on 8 cores at $B_1$ (Holm per row); CPU: share of a competitor's CPU time. "
+                    r"$^*$: descriptive.}")
+
+
+def progress_table(ratios: list[dict]) -> str:
+    """Settings won against each competitor as ALNS's compute grows (C2 at 0.5, 1, 2 s on 1 core; C1 on 8 cores)."""
+    short = {"CPSAT": "CP-LNS", "PCPSAT": "P.\\ CP-LNS", "CPFULL": "CP-SAT", "CTAS": "CTAS-D", "CONSTRUCT": "Greedy",
+             "RL": "RL"}
+    lines = [r"\begin{table}[t]", r"\centering", r"\footnotesize", r"\setlength{\tabcolsep}{2.6pt}", CAPTION_PROGRESS,
+             r"\label{tab:progress}", r"\begin{tabular}{@{}lr" + "c" * (len(COMPETITORS) + 1) + "@{}}", r"\toprule",
+             r"ALNS & CPU (\%) & " + " & ".join(short[k] for k, _ in COMPETITORS) + r" & all \\", r"\midrule"]
+    for tag, name, seconds in PROGRESS:
+        rs = [r for r in ratios if r["comparison"] == tag and r["setting"] in SETTINGS]
+        won = lambda r: float(r["p_holm"]) < ALPHA and float(r["ratio"]) < 1  # noqa: E731
+        cells = [str(sum(won(r) for r in rs if key(r["other"]) == k)) for k, _ in COMPETITORS]
+        every = sum(all(won(r) for r in rs if r["setting"] == n) for n in SETTINGS if any(r["setting"] == n for r in rs))
+        cpu = "100" if seconds is None else rf"$\le$\,{share_pct(seconds)[1]:.1f}"
+        lines.append(f"{name} & {cpu} & " + " & ".join(cells) + rf" & \textbf{{{every}}} \\")
+    lines += [r"\bottomrule", r"\end{tabular}", r"\end{table}"]
+    return "\n".join(lines) + "\n"
+
+
 def load_rows(runs: Path | None) -> list[dict]:
     out = []
     if runs is None:
@@ -495,6 +522,7 @@ def main() -> None:
     args.out.mkdir(parents=True, exist_ok=True)
     (args.out / "c1c2.tex").write_text(c1c2(ratios, gaps))
     (args.out / "methods.tex").write_text(methods(gaps))
+    (args.out / "progress.tex").write_text(progress_table(ratios))
     (args.out / "settings.tex").write_text(settings_table(rl_samples(rows)))
     timing = json.loads(args.timing.read_text()) if args.timing.exists() else {}
     (args.out / "steps.tex").write_text(steps_table(rows, timing))
