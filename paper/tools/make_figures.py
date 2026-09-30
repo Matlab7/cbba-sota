@@ -79,8 +79,8 @@ def ratios_figure(plt, csv_path: Path, out: Path) -> None:
             for gain, face, sig, r in pts:
                 ax.plot(gain, y + dy, "o", ms=4.2, color=colour, mfc=face or colour, mew=1.1, zorder=3)
                 if not sig:
-                    ax.text(gain - 0.6, y + dy + 0.33, "n.s.", fontsize=6, ha="center", va="center", color=colour,
-                            zorder=4, bbox=dict(facecolor="white", edgecolor="none", pad=0.6))
+                    ax.text(gain, y + dy - 0.36, "tie", fontsize=6.3, ha="center", va="center", color=colour,
+                            fontweight="bold", zorder=4, bbox=dict(facecolor="white", edgecolor="none", pad=0.6))
             if not rl:
                 ax.text(pts[1][0] + 1.0, y + dy, short[pts[1][3]["other"].split("-")[0]], fontsize=6.2, va="center",
                         color="#555555", fontstyle="italic")
@@ -89,19 +89,22 @@ def ratios_figure(plt, csv_path: Path, out: Path) -> None:
                 transform=ax.get_yaxis_transform(), zorder=4,
                 bbox=dict(facecolor="white", edgecolor="none", pad=1.2))
         ax.axhline(hy + 0.42, color="#CCCCCC", lw=0.5)
+    # what each cluster of dumbbells compares, written above it
+    ax.text(6.0, 1.05, "vs. strongest\ncompetitor", fontsize=7, fontweight="bold", color="#333333", ha="center",
+            va="center", linespacing=1.0, zorder=4, bbox=dict(facecolor="white", edgecolor="none", pad=0.8))
+    ax.text(25.5, 1.05, "vs. RL\npolicy", fontsize=7, fontweight="bold", color="#CC79A7", ha="center", va="center",
+            linespacing=1.0)
     ax.set_xlim(-3, 36)
-    ax.set_ylim(ys[-1] - 0.6, 0.45)
+    ax.set_ylim(ys[-1] - 0.6, 1.6)
     ax.set_yticks(ys)
     ax.set_yticklabels([size(n) for n in SETTINGS], fontsize=6.5)
-    ax.set_xlabel("ALNS's plans shorter by (%)", fontsize=7)
+    ax.set_xlabel("how much shorter ALNS's plans are (%)", fontsize=7)
     ax.grid(axis="x", alpha=0.25, lw=0.4)
     ax.tick_params(axis="y", length=0)
-    handles = [plt.Line2D([], [], marker="o", ls="", color="k", mfc="white", ms=4, label="ALNS on 1 core, 2 s"),
-               plt.Line2D([], [], marker="o", ls="", color="k", ms=4, label="ALNS on 8 cores, $B_1$"),
-               plt.Line2D([], [], color="#333333", lw=1.3, label="vs. strongest competitor"),
-               plt.Line2D([], [], color="#CC79A7", lw=1.3, label="vs. RL policy")]
+    handles = [plt.Line2D([], [], marker="o", ls="", color="k", mfc="white", ms=4, label="ALNS on 1 core for 2 s"),
+               plt.Line2D([], [], marker="o", ls="", color="k", ms=4, label="ALNS on 8 cores for $B_1$")]
     fig.legend(handles=handles, loc="lower center", ncol=2, frameon=False, fontsize=6.5, bbox_to_anchor=(0.5, -0.01))
-    fig.tight_layout(rect=(0, 0.1, 1, 1))
+    fig.tight_layout(rect=(0, 0.05, 1, 1))
     fig.savefig(out / "ratios.pdf")
     print(f"wrote {out / 'ratios.pdf'}")
 
