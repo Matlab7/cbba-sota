@@ -39,8 +39,6 @@ def size(name: str) -> str:
     _, a, sp, t = name.rsplit("-", 3)
     return f"{a} robots, {t} tasks" + (f"\n({sp} species)" if t == "500" else "")
 CTAS_COLOUR = "#56B4E9"
-RATIO_PANELS = (("C2 1 core 2 s vs 8 cores B1", "(a) C2: ALNS on 1 core for 2 s"),
-                ("C1 8 cores B1", "(b) C1: ALNS on 8 cores at $B_1$"))
 
 
 def ratios_figure(plt, csv_path: Path, out: Path) -> None:
@@ -81,12 +79,15 @@ def ratios_figure(plt, csv_path: Path, out: Path) -> None:
             for gain, face, sig, r in pts:
                 ax.plot(gain, y + dy, "o", ms=4.2, color=colour, mfc=face or colour, mew=1.1, zorder=3)
                 if not sig:
-                    ax.text(gain, y + dy + 0.3, "n.s.", fontsize=6, ha="center", va="center", color=colour)
+                    ax.text(gain - 0.6, y + dy + 0.33, "n.s.", fontsize=6, ha="center", va="center", color=colour,
+                            zorder=4, bbox=dict(facecolor="white", edgecolor="none", pad=0.6))
             if not rl:
                 ax.text(pts[1][0] + 1.0, y + dy, short[pts[1][3]["other"].split("-")[0]], fontsize=6.2, va="center",
                         color="#555555", fontstyle="italic")
-    for hy, text in heads:
-        ax.text(-2.6, hy - 0.05, text, fontsize=6.5, fontstyle="italic", color="#444444", va="center")
+    for hy, text in heads:  # a centred heading per family, on white so the zero line does not cross it
+        ax.text(0.5, hy - 0.05, text, fontsize=6.5, fontweight="bold", color="#444444", ha="center", va="center",
+                transform=ax.get_yaxis_transform(), zorder=4,
+                bbox=dict(facecolor="white", edgecolor="none", pad=1.2))
         ax.axhline(hy + 0.42, color="#CCCCCC", lw=0.5)
     ax.set_xlim(-3, 36)
     ax.set_ylim(ys[-1] - 0.6, 0.45)

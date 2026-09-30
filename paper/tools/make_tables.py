@@ -51,10 +51,10 @@ CAPTION_SETTINGS = (r"\caption{The eight benchmark settings with 50 or more task
                     r"\cite{dai2025heterogeneous}. RL rollouts: how many rollouts the released policy completes within "
                     r"$B_1$ on our 8 cores (range over the instances). The exact MILP (CTAS-D) is not run on the two "
                     r"500-task settings (Section~\ref{sec:setup}).}")
-PANELS = (("C2 1 core 2 s vs 8 cores B1", (r"\multicolumn{7}{l}{\emph{(a) C2, a fraction of the compute: ALNS on 1 "
+PANELS = (("C2 1 core 2 s vs 8 cores B1", (r"\multicolumn{7}{l}{\emph{(a) One core, a fraction of the compute: ALNS on 1 "
                                              r"core for 2\,s ({share}\% or less of a competitor's CPU time) vs.\ each "
                                              r"competitor on 8 cores at $B_1$}} \\")),
-          ("C1 8 cores B1", (r"\multicolumn{7}{l}{\emph{(b) C1, equal compute: ALNS on 8 cores vs.\ each competitor on "
+          ("C1 8 cores B1", (r"\multicolumn{7}{l}{\emph{(b) Equal compute: ALNS on 8 cores vs.\ each competitor on "
                              r"8 cores, both at budget $B_1$}} \\")))
 
 
@@ -261,7 +261,7 @@ STEP_TEXT = {"ALNS2": "one remove and re-insert iteration", "CPSAT": "one CP-SAT
              "CTAS": "one solve of the whole MILP", "CONSTRUCT": "one greedy construction",
              "RL": "one rollout of the policy"}
 CAPTION_STEPS = (r"\caption{How the methods spend their budget: 8 cores for $B_1$ (first row), or 1 core for 2\,s (ALNS "
-                 r"in C2, last row). Median steps per run, with the time of one step on one worker. CP-SAT full model and "
+                 r"in the one-core comparison, last row). Median steps per run, with the time of one step on one worker. CP-SAT full model and "
                  r"CTAS-D spend it all in one solve (runs proven optimal / runs with a plan).}")
 
 
@@ -334,7 +334,7 @@ def steps_table(rows: list[dict], timing: dict) -> str:
             per = [workers * r["budget_s"] / r[field] for r in sel if r.get(field)]
             cells.append(cell2(fmt_count(st.median(n)), fmt_time(st.median(per))))
         lines.append(f"{name} & {{\\scriptsize {STEP_TEXT[k]}}} & " + " & ".join(cells) + r" \\ \addlinespace[2pt]")
-    cells = []  # ALNS in C2: one core for 2 s
+    cells = []  # ALNS in the one-core comparison: one core for 2 s
     for m in sizes:
         names = [n for n in SETTINGS if configs.get(n).n_tasks == m]
         sel = [r for r in rows if r["setting"] in names and r["method"] == "ALNS2" and r["cores"] == 1

@@ -24,7 +24,7 @@ the scale (arrow, value shown) and CTAS-D is not shown. 50 test instances per se
 \label{fig:budget}
 \end{figure*}
 
-\paragraph{C2: a fraction of the compute.} ALNS on one core for 2\,s, \ShareTwolo--\ShareTwohi\% of the CPU time
+\paragraph{One core, a fraction of the compute.} ALNS on one core for 2\,s, \ShareTwolo--\ShareTwohi\% of the CPU time
 of a competitor on 8 cores at $B_1$, is significantly better than every competitor at that full budget on \Ctwoheld{}
 of the \Ctwosettings{} settings (Figure~\ref{fig:ratios}, hollow; \Ctwosig{} of \Ctwotests{} tests); the exception is the
 setting of \Ctwofaillist. It beats the learned policy on all \CtwoRLheld{} settings, by \Ctworlgainlo--\Ctworlgainhi\%.
@@ -35,14 +35,13 @@ few CPU-seconds, while the competitors spend \CpuBonelo{} to \CpuBonehi. Eight w
 to 8 cores: its gap shrinks as its compute grows, and from 2\,s on both ends of its range lie below those of
 every competitor.
 
-\paragraph{C1: equal compute.} ALNS on 8 cores is better than every competitor at the same budget $B_1$ on
+\paragraph{Equal compute.} ALNS on 8 cores is better than every competitor at the same budget $B_1$ on
 \ConeBheld{} of the \ConeBsettings{} settings (Figure~\ref{fig:ratios}, filled): \ConeBsig{} of the \ConeBtests{} tests are
 significant after Holm's correction (largest adjusted $p = \ConeBmaxp$), and ALNS gives the shorter plan in
 \ConeBwon{} of the \ConeBpairs{} paired runs. Its plans are \ConeBclasslo--\ConeBclasshi\% shorter than those of the
 three CP-SAT-based methods and greedy restarts, and \ConeBrlgainlo--\ConeBrlgainhi\% shorter than those of the RL
 policy.
-Settings where C1 does not hold: \ConeBfaillist. The pre-registered decision rule (C1 on at least six of the eight
-settings) therefore \ConeBverdict. With twice the budget, $2B_1$, ALNS stays ahead of parallel CP-LNS, CP-SAT full
+The pre-registered decision rule (at least six of the eight settings) therefore \ConeBverdict. With twice the budget, $2B_1$, ALNS stays ahead of parallel CP-LNS, CP-SAT full
 model and greedy restarts in \ConeBBheld{} of \ConeBBsettings{} settings (\ConeBBsig{} of \ConeBBtests{} tests
 significant, plans \ConeBBclasslo--\ConeBBclasshi\% shorter).
 

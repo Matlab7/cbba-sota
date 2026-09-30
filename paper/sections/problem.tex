@@ -25,9 +25,10 @@ hard for construction heuristics and for policies that choose one task at a time
 latest member, and that delay propagates along the routes of all members.
 
 \paragraph{Benchmark.} HeteroMRTA \cite{dai2025heterogeneous} draws tasks and depots uniformly in the unit square,
-durations uniformly in $[0, 5)$ and uses $v = 0.2$. It has three families. In SA-BT the agents are single-skilled (one
-trait per species) and requirements are binary; SA-AT has additive requirements of up to two units per trait, so a
-task can need two agents of one species; in MA-AT each species has a distinct random binary trait vector, so agents can have several skills.
+durations uniformly in $[0, 5)$ and uses $v = 0.2$. It has three families. With single-skill robots
+and binary needs, each species has one trait and a task needs each of its traits once; with single-skill robots and
+additive needs, a task can need up to two units of a trait, that is, two robots of one species; with multi-skill robots,
+each species has a distinct random binary trait vector, so robots can have several skills.
 We name a setting by its family and its numbers of robots and tasks, e.g.\ multi-skill robots with additive needs,
 150 robots and 500 tasks; all settings have 5 species except one with 10. We generate
 instances with the benchmark's own generator from fixed seeds, for three disjoint splits (Section~\ref{sec:setup}),

@@ -64,17 +64,17 @@ were throttled in the last second; a job that saw more throttling is re-run. A r
 than 10\% + 0.25\,s is scored by the best plan it had found by the budget, or as a failure if it records none. We
 report the CPU time that each method actually used.
 
-\paragraph{Hypotheses and analysis.} We pre-registered three hypotheses. \textbf{C1}: in each setting, ALNS on 8 cores
-at budget $B_1$ has a lower mean makespan than each competitor on 8 cores at $B_1$ (46 tests: 8 settings $\times$ 6
-competitors, without CTAS-D on the 500-task settings). \textbf{C1 at $2B_1$}: the same against parallel CP-LNS, CP-SAT
-full model and greedy restarts at twice the budget, on the six settings with up to 200 tasks (17 tests).
-\textbf{C2}: ALNS on a single core for 2\,s is better than each competitor on 8 cores at $B_1$ (46 tests). For each
+\paragraph{Hypotheses and analysis.} We pre-registered three hypotheses. The primary one, \emph{equal compute}: in each
+setting, ALNS on 8 cores at budget $B_1$ has a lower mean makespan than each competitor on 8 cores at $B_1$ (46 tests:
+8 settings $\times$ 6 competitors, without CTAS-D on the 500-task settings). Two secondary ones: \emph{twice the
+budget}, the same against parallel CP-LNS, CP-SAT full model and greedy restarts at $2B_1$, on the six settings with up
+to 200 tasks (17 tests); and \emph{one core}, ALNS on a single core for 2\,s is better than each competitor on 8 cores
+at $B_1$ (46 tests). For each
 instance we compute the ratio of makespans ALNS / competitor and report its mean with a paired bootstrap 95\%
 confidence interval (10,000 resamples) \cite{efron1993introduction}. Each test is a one-sided paired $t$-test of the
 mean log ratio below zero, with Holm's correction \cite{holm1979simple} within each of the three hypotheses at
-$\alpha = 0.05$. C1 is the primary hypothesis, the other two are secondary. A hypothesis holds in a setting if all its
-tests there are significant; we claim C1 if it holds in at least six of the eight settings, and C2 only for the
-settings where it holds. The one-core results at 0.5 and 1\,s are descriptive. There is no minimum effect size; we report effect sizes throughout.
+$\alpha = 0.05$. A hypothesis holds in a setting if all its tests there are significant; we claim equal compute if it
+holds in at least six of the eight settings, and one core only for the settings where it holds. The one-core results at 0.5 and 1\,s are descriptive. There is no minimum effect size; we report effect sizes throughout.
 
 \paragraph{Pre-registration.} Hypotheses, competitors and their parameters, budgets, instances, execution rules,
 analysis and decision rule were written down and frozen before any ALNS or CP-SAT run on the test instances. The frozen
