@@ -24,9 +24,10 @@ capabilities that no single robot has \cite{kashino2020aerial,korsah2013comprehe
 once a coalition whose combined capabilities cover its requirements has gathered at its location, and every member
 waits for the last one to arrive. Allocating coalitions, ordering each robot's tasks and timing the joint starts are
 therefore one coupled problem: a robot that arrives late delays every task downstream of its coalition partners, and
-an inconsistent ordering of shared tasks can deadlock the team. Such problems, where the schedules of different robots
-constrain each other, are the hardest classes of the multi-robot task allocation taxonomies
-\cite{gerkey2004formal,korsah2013comprehensive}.
+an inconsistent ordering of shared tasks can deadlock the team. Market-based methods such as CBBA
+\cite{choi2009consensus} allocate tasks that one robot can do alone; problems like ours, where a task needs a coalition
+and the schedules of different robots constrain each other, are the hardest classes of the multi-robot task
+allocation taxonomies \cite{gerkey2004formal,korsah2013comprehensive}.
 
 Recent work has approached this problem with learned policies. \citet{dai2025heterogeneous} train a decentralised
 policy by reinforcement learning (RL), with which each robot chooses its next task through an attention mechanism,

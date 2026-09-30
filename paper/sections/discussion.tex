@@ -13,17 +13,15 @@ decentralised policy can react to events that a central plan cannot. But the sta
 learned policies should be measured against strong search at matched compute, on the same cores and with the CPU
 use reported. The published comparison missed plans \ConeBrlgainlo--\ConeBrlgainhi\% shorter, which a standard
 operations-research technique adapted to coalitions finds at the same budget, and mostly already on one core in 2\,s,
-with at most \ShareTwohi\% of the compute. Such a planner needs no accelerator and no parallel hardware, which makes
-frequent replanning on a single core plausible, although our timings are on server cores and embedded processors are
-slower.
+with at most \ShareTwohi\% of the compute and without accelerators, which makes frequent replanning on a single
+core plausible (our timings are on server cores).
 
 \paragraph{Beyond static plans.} Real missions are dynamic: tasks are reported while the robots work, durations and
 travel times vary, robots fail and radio links drop (Figure~\ref{fig:overview}a, right). The benchmark and our
-confirmatory study consider the static case. In an exploratory study on development instances, we ran ALNS as a repair
-loop inside a dynamic version of the benchmark's simulator, in which tasks are released over time, durations and travel
-are noisy, robots fail without warning and communication has a limited range. The plan is repaired only when an event
-changes the problem, that is, when a new task becomes known or a failure is detected, and not periodically or when a
-duration merely deviates; each repair starts from the current plan and runs a few hundred ALNS iterations on one core.
+confirmatory study consider the static case. In an exploratory study on development instances, ALNS repaired
+the current plan inside a dynamic version of the benchmark's simulator (tasks released over time, noisy durations and
+travel, robot failures, limited communication) whenever a new task or a failure became known, with a few hundred
+iterations on one core.
 This repair loop gave plans about 9\% shorter than the published policy run online and 8--12\% shorter than rolling
 repair with CP-LNS, but a rolling greedy rule with restarts at the same compute per event came within 1.5\%, short of
 the 3\% margin we had required in advance. We therefore make no claim for the dynamic case; the supplement describes
@@ -62,5 +60,4 @@ with exact linear-time insertion needs one core for 2\,s, at most \ShareTwohi\% 
 every competitor on \Ctwoheld{} of 8 settings and the published reinforcement-learning policy on all 8. At equal
 compute it finds plans \ConeBrlgainlo--\ConeBrlgainhi\% shorter than that policy and
 \ConeBclasslo--\ConeBclasshi\% shorter than three CP-SAT-based methods and greedy restarts, while the exact MILP finds
-a plan for only \CtasSolved{} of \CtasRuns{} instances; all of it under a pre-registered protocol. We release the solver, the experiment scripts, the pre-registration and all raw results, so that future learned
-planners can be compared against this baseline at matched budgets.
+a plan for only \CtasSolved{} of \CtasRuns{} instances; all of it under a pre-registered protocol. We release all code and results as a baseline for future learned planners at matched budgets.
