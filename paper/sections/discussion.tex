@@ -12,7 +12,10 @@ solving a model at every step, which is why running them in parallel helps littl
 decentralised policy can react to events that a central plan cannot. But the static planning performance of
 learned policies should be measured against strong search at matched compute, on the same cores and with the CPU
 use reported. The published comparison missed plans \ConeBrlgainlo--\ConeBrlgainhi\% shorter, which a standard
-operations-research technique adapted to coalitions finds at the same budget, and largely already on one core in 2\,s.
+operations-research technique adapted to coalitions finds at the same budget, and mostly already on one core in 2\,s,
+with at most \ShareTwohi\% of the compute. Such a planner needs no accelerator and no parallel hardware, which makes
+frequent replanning on a single core plausible, although our timings are on server cores and embedded processors are
+slower.
 
 \paragraph{Beyond static plans.} Real missions are dynamic: tasks are reported while the robots work, durations and
 travel times vary, robots fail and radio links drop (Figure~\ref{fig:overview}a, right). The benchmark and our
@@ -55,7 +58,9 @@ the scenarios and the results.
 \label{sec:conclusion}
 
 On the HeteroMRTA benchmark, an adaptive large neighbourhood search over a deadlock-free coalition representation
-with exact linear-time insertion finds plans \ConeBrlgainlo--\ConeBrlgainhi\% shorter than the published
-reinforcement-learning policy and \ConeBclasslo--\ConeBclasshi\% shorter than three CP-SAT-based methods and greedy restarts, while
-the exact MILP finds a plan for only \CtasSolved{} of \CtasRuns{} instances, at equal compute and under a pre-registered protocol. We release the solver, the harness, the pre-registration and every result row, so that future learned
+with exact linear-time insertion needs one core for 2\,s, at most \ShareTwohi\% of the competitors' CPU time, to beat
+every competitor on \Ctwoheld{} of 8 settings and the published reinforcement-learning policy on all 8. At equal
+compute it finds plans \ConeBrlgainlo--\ConeBrlgainhi\% shorter than that policy and
+\ConeBclasslo--\ConeBclasshi\% shorter than three CP-SAT-based methods and greedy restarts, while the exact MILP finds
+a plan for only \CtasSolved{} of \CtasRuns{} instances; all of it under a pre-registered protocol. We release the solver, the harness, the pre-registration and every result row, so that future learned
 planners can be compared against this baseline at matched budgets.

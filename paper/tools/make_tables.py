@@ -17,6 +17,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "scripts"))
+import anytime as at  # noqa: E402  (the harness's budgets and its definition of a disturbed row)
 from cbba_sota.bench import configs
 
 SETTINGS = ("SA-BT-25-5-50", "SA-BT-50-5-50", "SA-AT-50-5-50", "MA-AT-25-5-50", "MA-AT-50-5-50", "MA-AT-50-5-200",
@@ -44,10 +46,22 @@ CAPTION_SETTINGS = (r"\caption{The eight benchmark settings with 50 or more task
                     r"\cite{dai2025heterogeneous}. RL rollouts: how many rollouts the released policy completes within "
                     r"$B_1$ on our 8 cores (range over the instances). The exact MILP (CTAS-D) is not run on the two "
                     r"500-task settings (Section~\ref{sec:setup}).}")
-PANELS = (("C1 8 cores B1", (r"\multicolumn{7}{l}{\emph{(a) C1: ALNS on 8 cores vs.\ each competitor on 8 cores, "
-                               r"both at budget $B_1$}} \\")),
-          ("C2 1 core 2 s vs 8 cores B1", (r"\multicolumn{7}{l}{\emph{(b) C2: ALNS on 1 core for 2\,s vs.\ each "
-                                             r"competitor on 8 cores at $B_1$}} \\")))
+PANELS = (("C2 1 core 2 s vs 8 cores B1", (r"\multicolumn{7}{l}{\emph{(a) C2, a fraction of the compute: ALNS on 1 "
+                                             r"core for 2\,s ({share}\% or less of a competitor's CPU time) vs.\ each "
+                                             r"competitor on 8 cores at $B_1$}} \\")),
+          ("C1 8 cores B1", (r"\multicolumn{7}{l}{\emph{(b) C1, equal compute: ALNS on 8 cores vs.\ each competitor on "
+                             r"8 cores, both at budget $B_1$}} \\")))
+
+
+def b1_of(name: str) -> float:
+    """The budget B1 of a setting, in seconds."""
+    return at.budgets(configs.get(name))["B1"]
+
+
+def share_pct(seconds: float, names=SETTINGS) -> tuple[float, float]:
+    """Smallest and largest CPU time of 1 core for ``seconds`` as a share (%) of 8 cores for B1."""
+    v = [100 * seconds / (8 * b1_of(n)) for n in names]
+    return min(v), max(v)
 
 
 def read(path: Path) -> list[dict]:
@@ -110,8 +124,8 @@ def c1c2(ratios: list[dict], gaps: list[dict]) -> str:
              r"\label{tab:ratios}", r"\begin{tabular}{ll" + "c" * len(COMPETITORS) + "}", r"\toprule",
              r"Robots & Robots / species / tasks & " + " & ".join(name for _, name in COMPETITORS) + r" \\",
              r"\midrule"]
-    for tag, title in PANELS:
-        lines.append(title.replace("{7}", f"{{{ncol}}}"))
+    for p, (tag, title) in enumerate(PANELS):
+        lines.append(title.replace("{7}", f"{{{ncol}}}").replace("{share}", f"{share_pct(2)[1]:.1f}"))
         for fam, names in family_rows(SETTINGS):
             for i, name in enumerate(names):
                 cells = []
@@ -123,7 +137,7 @@ def c1c2(ratios: list[dict], gaps: list[dict]) -> str:
                 first = family_cell(fam, len(names)) if i == 0 else ""
                 lines.append(f"{first} & {size(name)} & " + " & ".join(cells) + r" \\")
             lines.append(r"\cmidrule(l){2-" + str(ncol) + "}")
-        lines[-1] = r"\midrule" if tag.startswith("C1") else r"\bottomrule"
+        lines[-1] = r"\midrule" if p < len(PANELS) - 1 else r"\bottomrule"
     lines += [r"\end{tabular}", r"\end{table*}"]
     return "\n".join(lines) + "\n"
 
@@ -163,7 +177,7 @@ def load_rows(runs: Path | None) -> list[dict]:
                 r = json.loads(line)
             except json.JSONDecodeError:
                 continue
-            if not r.get("disturbed"):
+            if not at.disturbed(r):
                 out.append(r)
     return out
 
@@ -201,9 +215,9 @@ STEP_TEXT = {"ALNS2": "one remove and re-insert iteration", "CPSAT": "one CP-SAT
              "PCPSAT": "one CP-SAT solve of a freed window", "CPFULL": "one solve of the whole model",
              "CTAS": "one solve of the whole MILP", "CONSTRUCT": "one greedy construction",
              "RL": "one rollout of the policy"}
-CAPTION_STEPS = (r"\caption{How the methods spend the budget $B_1$ on 8 cores. Each runs until the budget ends and returns "
-                 r"its best plan; the table gives its basic step and, as the median over the instances with 50, 200 and "
-                 r"500 tasks, the number of steps in one run with the time of one step on one worker in parentheses.}")
+CAPTION_STEPS = (r"\caption{How the methods spend their budget: 8 cores for $B_1$ (first row), or 1 core for 2\,s (ALNS "
+                 r"in C2, last row). Median steps per run, with the time of one step on one worker. CP-SAT full model and "
+                 r"CTAS-D spend it all in one solve (runs proven optimal / runs with a plan).}")
 
 
 def fmt_count(n: float) -> str:
@@ -237,14 +251,25 @@ def steps_table(rows: list[dict], timing: dict) -> str:
              r"\label{tab:steps}", (r"\begin{tabular}{@{}>{\raggedright\arraybackslash}p{2.1cm}"
                                     r">{\raggedright\arraybackslash}p{2.3cm}ccc@{}}"), r"\toprule",
              r"Method & One step & 50 tasks & 200 tasks & 500 tasks \\", r"\midrule"]
+    budget = []
+    for m in sizes:
+        b = sorted(b1_of(n) for n in SETTINGS if configs.get(n).n_tasks == m)
+        budget.append(f"{b[0]:.0f}--{b[-1]:.0f}\\,s" if b[-1] - b[0] > 1 else f"{b[0]:.0f}\\,s")
+    lines.append(r"\emph{Budget $B_1$} & {\scriptsize wall-clock, 8 cores} & " + " & ".join(budget)
+                 + r" \\ \midrule")
     for k, name in METHODS:
         cells = []
         for m in sizes:
             names = [n for n in SETTINGS if configs.get(n).n_tasks == m]
             sel = [r for r in rows if r["setting"] in names and r["method"] == k and r["cores"] == 8
                    and r["budget"] == "B1"]
-            if k in ("CPFULL", "CTAS"):
-                cells.append("1 solve" if sel else "--")
+            if k == "CPFULL":
+                opt = sum(r.get("status") == "OPTIMAL" for r in sel)
+                cells.append(cell2(r"1 solve", f"{opt}/{len(sel)}") if sel else "--")
+                continue
+            if k == "CTAS":
+                found = sum(bool(r.get("success")) for r in sel)
+                cells.append(cell2(r"1 solve", f"{found}/{len(sel)}") if sel else "--")
                 continue
             if k == "CONSTRUCT":
                 t = [st.mean(v for v in timing[n].values()) for n in names if n in timing]
@@ -264,6 +289,14 @@ def steps_table(rows: list[dict], timing: dict) -> str:
             per = [workers * r["budget_s"] / r[field] for r in sel if r.get(field)]
             cells.append(cell2(fmt_count(st.median(n)), fmt_time(st.median(per))))
         lines.append(f"{name} & {{\\scriptsize {STEP_TEXT[k]}}} & " + " & ".join(cells) + r" \\ \addlinespace[2pt]")
+    cells = []  # ALNS in C2: one core for 2 s
+    for m in sizes:
+        names = [n for n in SETTINGS if configs.get(n).n_tasks == m]
+        sel = [r for r in rows if r["setting"] in names and r["method"] == "ALNS2" and r["cores"] == 1
+               and r["budget"] == "2" and r.get("iterations")]
+        cells.append(cell2(fmt_count(st.median(r["iterations"] for r in sel)),
+                           fmt_time(st.median(r["budget_s"] / r["iterations"] for r in sel))) if sel else "--")
+    lines.append(r"\midrule ALNS, 1 core & {\scriptsize the same iteration, for 2\,s} & " + " & ".join(cells) + r" \\")
     lines += [r"\bottomrule", r"\end{tabular}", r"\end{table}"]
     return "\n".join(lines) + "\n"
 
@@ -319,6 +352,17 @@ def numbers(ratios: list[dict], gaps: list[dict], rows: list[dict]) -> str:
         macro(f"{pre}maxp", f"{max(float(r['p_holm']) for r in rs):.2g}" if rs else "--")
         macro(f"{pre}won", str(sum(int(r["wins"]) for r in rs)))
         macro(f"{pre}pairs", str(sum(int(r["n"]) for r in rs)))
+    for seconds, pre in ((2, "ShareTwo"), (1, "ShareOne"), (0.5, "ShareHalf")):
+        lo, hi = share_pct(seconds)
+        macro(f"{pre}lo", f"{lo:.2g}")
+        macro(f"{pre}hi", f"{hi:.1f}")
+        macro(f"{pre}foldlo", f"{8 * min(map(b1_of, SETTINGS)) / seconds:,.0f}".replace(",", "{,}"))
+        macro(f"{pre}foldhi", f"{8 * max(map(b1_of, SETTINGS)) / seconds:,.0f}".replace(",", "{,}"))
+    macro("CpuBonelo", f"{8 * min(map(b1_of, SETTINGS)):,.0f}".replace(",", "{,}"))  # CPU-seconds of 8 cores at B1
+    macro("CpuBonehi", f"{8 * max(map(b1_of, SETTINGS)):,.0f}".replace(",", "{,}"))
+    for tag, pre in FAMILIES[2:]:  # C2 against the learned policy alone
+        rl = [r for r in sel(tag, ("RL",)) if float(r["p_holm"]) < ALPHA and float(r["ratio"]) < 1]
+        macro(f"{pre}RLheld", str(len(rl)))
     abl = sel("ablation 8 workers / 1 worker B1")
     macro("Workerslo", f"{min(float(r['ratio']) for r in abl):.3f}" if abl else "--")
     macro("Workershi", f"{max(float(r['ratio']) for r in abl):.3f}" if abl else "--")

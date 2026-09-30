@@ -43,8 +43,9 @@ Operations research has a long record of strong anytime heuristics for closely r
 large neighbourhood search (LNS) for vehicle routing with synchronisation constraints
 \cite{drexl2012synchronization,hojabri2018large,parragh2018solving}. It is therefore natural to ask how much of the
 reported advantage of learned policies survives a comparison with a well-engineered search method and strong
-constraint-programming baselines, when every method gets the same wall-clock time on the same cores. We answer this
-question on HeteroMRTA with a pre-registered, compute-matched study (Figure~\ref{fig:overview}).
+constraint-programming baselines, when every method gets the same wall-clock time on the same cores, and how much of
+that compute the search actually needs. We answer both questions on HeteroMRTA with a pre-registered, compute-matched
+study (Figure~\ref{fig:overview}).
 
 \paragraph{Contributions.}
 \begin{itemize}
@@ -60,15 +61,16 @@ question on HeteroMRTA with a pre-registered, compute-matched study (Figure~\ref
   neighbourhood search that repairs with the constraint solver CP-SAT, as one search and as 8 parallel searches, with
   CP-SAT's own search on the full model, and with
   CTAS-D, which we port to an open solver and check against the benchmark authors' own Gurobi solutions.
-\item \textbf{Findings} (Section~\ref{sec:results}). ALNS is significantly better than every competitor on
-  \ConeBheld{} of the 8 settings with 50 to 500 tasks, with plans \ConeBclasslo--\ConeBclasshi\% shorter than
-  those of the classical baselines and \ConeBrlgainlo--\ConeBrlgainhi\% shorter than those of the learned policy.
-  Parallelising CP-SAT does not close the gap, the exact MILP produces a plan within the budget for only
-  \CtasSolved{} of \CtasRuns{} instances, and ALNS on a
-  single core for 2\,s is already significantly better than every eight-core competitor at the full budget on
-  \Ctwoheld{} of the 8 settings.
+\item \textbf{Findings} (Section~\ref{sec:results}). With a fraction of the compute: ALNS on a single core for
+  2\,s, at most \ShareTwohi\% of the CPU time of a competitor on 8 cores at the full budget, is significantly
+  better than every competitor on \Ctwoheld{} of the 8 settings with 50 to 500 tasks, and than the learned policy
+  on all \CtwoRLheld{}. At equal compute, it is significantly better than every competitor on all
+  \ConeBheld{} settings, with plans \ConeBclasslo--\ConeBclasshi\% shorter than those of the classical baselines
+  and \ConeBrlgainlo--\ConeBrlgainhi\% shorter than those of the learned policy. Parallelising CP-SAT does not close
+  the gap, and the exact MILP produces a plan within the budget for only \CtasSolved{} of \CtasRuns{} instances.
 \end{itemize}
 
 We take no position against learning for multi-robot coordination. Our results say that on this benchmark, at equal
-compute, careful search is the stronger method, and that learned planners should be evaluated against such search
+compute, careful search is the stronger method, and needs only a small fraction of that compute to be so; learned
+planners should be evaluated against such search
 at matched budgets. The code and every result row are provided with the paper.

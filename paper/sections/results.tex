@@ -6,15 +6,23 @@
 \begin{figure*}[t]
 \centering
 \includegraphics[width=\textwidth]{figures/budget}
-\caption{Mean gap to the best known plan (\%, symmetric log scale) against the wall-clock budget. ALNS on one core
-(line) at 0.5, 1, 2\,s and $B_1$, and on 8 cores at $B_1$ (open square), against every competitor on 8 cores at $B_1$
-(horizontal lines; the dotted vertical line marks $B_1$). CTAS-D, which fails on most instances, is not shown. Test
-instances, 50 per setting.}
+\caption{Mean gap to the best known plan (\%) against the compute used (CPU-seconds, cores $\times$ wall-clock).
+Line: ALNS on one core at 0.5, 1, 2\,s and $B_1$; open square: ALNS on 8 cores at $B_1$; diamond and horizontal line:
+each competitor on 8 cores at $B_1$ (CTAS-D not shown). Test instances, 50 per setting.}
 \label{fig:budget}
 \end{figure*}
 
+\paragraph{C2: a fraction of the compute.} ALNS on one core for 2\,s, \ShareTwolo--\ShareTwohi\% of the CPU time
+of a competitor on 8 cores at $B_1$, is significantly better than every competitor at that full budget on \Ctwoheld{}
+of the \Ctwosettings{} settings (Table~\ref{tab:ratios}a; \Ctwosig{} of \Ctwotests{} tests); the exception is
+\Ctwofaillist. It beats the learned policy on all \CtwoRLheld{} settings, by \Ctworlgainlo--\Ctworlgainhi\%.
+Descriptively, it does so already in 0.5\,s (on \CtwoHalfRLheld{} settings), and at 1\,s and 0.5\,s it beats every
+competitor on \CtwoOneheld{} and \CtwoHalfheld{} settings. In Figure~\ref{fig:budget}, the one-core line falls below every competitor's level within a few CPU-seconds,
+while the competitors spend \CpuBonelo{} to \CpuBonehi. Eight workers instead of one improve ALNS at $B_1$ by only
+\Workersgainlo--\Workersgainhi\%: its advantage is per-core efficiency, not parallelism.
+
 \paragraph{C1: equal compute.} ALNS on 8 cores is better than every competitor at the same budget $B_1$ on
-\ConeBheld{} of the \ConeBsettings{} settings (Table~\ref{tab:ratios}a): \ConeBsig{} of the \ConeBtests{} tests are
+\ConeBheld{} of the \ConeBsettings{} settings (Table~\ref{tab:ratios}b): \ConeBsig{} of the \ConeBtests{} tests are
 significant after Holm's correction (largest adjusted $p = \ConeBmaxp$), and ALNS gives the shorter plan in
 \ConeBwon{} of the \ConeBpairs{} paired runs. Its plans are \ConeBclasslo--\ConeBclasshi\% shorter than those of the
 three CP-SAT-based methods and greedy restarts, and \ConeBrlgainlo--\ConeBrlgainhi\% shorter than those of the RL
@@ -37,7 +45,7 @@ calls do not help either: with 200 tasks, calls of 0.5\,s or less spent their ti
 subproblem and never improved the plan in our tuning runs.
 
 \paragraph{The exact MILP.} CTAS-D finds a plan within $B_1$ for \CtasSolved{} of the \CtasRuns{} test instances with
-up to 200 tasks (Table~\ref{tab:ratios}a). This matches the published picture, where Gurobi solved few instances of most
+up to 200 tasks (Table~\ref{tab:ratios}b). This matches the published picture, where Gurobi solved few instances of most
 50-task settings within an hour \cite{dai2025heterogeneous}: the MILP is a strong method on 20 tasks, where our port
 beats the shipped Gurobi solutions, but not a competitor at this scale.
 
@@ -46,31 +54,15 @@ completes \RLNlo{} to \RLNhi{} times the published number of rollouts. Greedy re
 \RestartsRLlo--\RestartsRLhi\% shorter (ratio of means): a careful construction with restarts already closes much of
 the gap to the learned policy, and search closes the rest.
 
-\paragraph{C2: one core.} ALNS on a single core for 2\,s is significantly better than every competitor on 8 cores at
-$B_1$ on \Ctwoheld{} of the \Ctwosettings{} settings: \Ctwoheldlist{} (Table~\ref{tab:ratios}b;
-\Ctwosig{} of \Ctwotests{} tests significant). It does not hold on \Ctwofaillist. Against the learned policy it holds
-everywhere, with plans \Ctworlgainlo--\Ctworlgainhi\% shorter than those the RL policy finds on 8 cores in 7 to 280
-times the wall-clock time. At 1\,s and 0.5\,s, C2 holds on \CtwoOneheld{} and \CtwoHalfheld{} settings, and at $B_1$
-ALNS on one core has a lower mean gap than every 8-core competitor on \OneCoreBoneAhead{} settings (descriptive;
-Figure~\ref{fig:budget}).
-
-\paragraph{Scaling with cores.} Eight workers instead of one improve ALNS at $B_1$ by only
-\Workersgainlo--\Workersgainhi\% (ratio \Workerslo--\Workershi). Most of its advantage is thus per-core efficiency,
-not parallelism.
-
-\paragraph{How good are the plans?} The best known plans on 50 or more tasks come from ALNS runs, which raises the
-question whether ALNS is merely close to itself. On the validation instances we ran parallel CP-LNS and CP-SAT full
-model for 300\,s on 8 cores, starting from greedy plans only, with 10 to 20 times the compute of $B_1$. On none of the
-\RefValInstances{} validation instances with 50 or more tasks did any run without an ALNS component match the best
-ALNS-derived plan; the best of them is on average \RefValFreelo--\RefValFreehi\% longer per setting, while ALNS on 8
-cores at $B_1$ ends \Gapalnslo--\Gapalnshi\% above the best known plans on the test instances. The certified lower bounds of CP-SAT remain
+\paragraph{How good are the plans?} The best known plans come from ALNS runs; is ALNS merely close to itself? On the
+\RefValInstances{} validation instances with 50 or more tasks, parallel CP-LNS and CP-SAT full model run for 300\,s on
+8 cores from greedy plans (10 to 20 times the compute of $B_1$) never matched the best ALNS-derived plan and ended
+\RefValFreelo--\RefValFreehi\% longer on average per setting. CP-SAT's certified lower bounds remain
 \RefValBoundlo--\RefValBoundhi\% below the best known plans, so the distance to the optimum is unknown; the paired
-ratios above do not depend on it.
+ratios do not depend on it.
 
-\paragraph{Execution.} All \RunsBone{} runs on 8 cores at $B_1$ were scored; \LateBone{} of them overran their budget
-by more than 10\% + 0.25\,s and were scored at the budget as pre-registered: \LateRL{} runs of the RL policy, whose
-last batch of rollouts can end after the deadline and which keeps no intermediate plan, so that such a run counts as a
-failure, \LateALNS{} of ALNS and \LateOther{} of the other competitors. If every late run is instead scored by the
-final plan it returned (descriptive, not pre-registered), ALNS's plans are \Sensrlgainlo--\Sensrlgainhi\% shorter
-than those of the RL policy. Jobs with more than 40\% throttled CPU periods were re-run and left out; the per-row host conditions are
-in the supplement.
+\paragraph{Execution.} Of the \RunsBone{} runs on 8 cores at $B_1$, \LateBone{} overran their budget by more than
+10\% + 0.25\,s and were scored at the budget as pre-registered: \LateRL{} of the RL policy (a run whose last batch of
+rollouts ends late keeps no plan and counts as a failure), \LateALNS{} of ALNS and \LateOther{} of the others. Scoring
+each late run by its final plan instead (descriptive), ALNS's plans are \Sensrlgainlo--\Sensrlgainhi\% shorter than
+the RL policy's. Jobs with more than 40\% throttled CPU periods were re-run and left out.

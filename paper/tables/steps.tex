@@ -2,19 +2,21 @@
 \centering
 \footnotesize
 \setlength{\tabcolsep}{2.5pt}
-\caption{How the methods spend the budget $B_1$ on 8 cores. Each runs until the budget ends and returns its best plan; the table gives its basic step and, as the median over the instances with 50, 200 and 500 tasks, the number of steps in one run with the time of one step on one worker in parentheses.}
+\caption{How the methods spend their budget: 8 cores for $B_1$ (first row), or 1 core for 2\,s (ALNS in C2, last row). Median steps per run, with the time of one step on one worker. CP-SAT full model and CTAS-D spend it all in one solve (runs proven optimal / runs with a plan).}
 \label{tab:steps}
 \begin{tabular}{@{}>{\raggedright\arraybackslash}p{2.1cm}>{\raggedright\arraybackslash}p{2.3cm}ccc@{}}
 \toprule
 Method & One step & 50 tasks & 200 tasks & 500 tasks \\
 \midrule
+\emph{Budget $B_1$} & {\scriptsize wall-clock, 8 cores} & 13--30\,s & 75\,s & 560\,s \\ \midrule
 ALNS (ours) & {\scriptsize one remove and re-insert iteration} & \begin{tabular}[t]{@{}c@{}}1.8\,M\\{\scriptsize (0.09\,ms)}\end{tabular} & \begin{tabular}[t]{@{}c@{}}5.0\,M\\{\scriptsize (0.12\,ms)}\end{tabular} & \begin{tabular}[t]{@{}c@{}}20.1\,M\\{\scriptsize (0.22\,ms)}\end{tabular} \\ \addlinespace[2pt]
-CP-LNS & {\scriptsize one CP-SAT solve of a freed window} & \begin{tabular}[t]{@{}c@{}}16\\{\scriptsize (1.5\,s)}\end{tabular} & \begin{tabular}[t]{@{}c@{}}47\\{\scriptsize (1.6\,s)}\end{tabular} & \begin{tabular}[t]{@{}c@{}}127\\{\scriptsize (4.4\,s)}\end{tabular} \\ \addlinespace[2pt]
-Parallel CP-LNS & {\scriptsize one CP-SAT solve of a freed window} & \begin{tabular}[t]{@{}c@{}}258\\{\scriptsize (459\,ms)}\end{tabular} & \begin{tabular}[t]{@{}c@{}}358\\{\scriptsize (1.7\,s)}\end{tabular} & \begin{tabular}[t]{@{}c@{}}1.3\,k\\{\scriptsize (3.5\,s)}\end{tabular} \\ \addlinespace[2pt]
-CP-SAT full model & {\scriptsize one solve of the whole model} & 1 solve & 1 solve & 1 solve \\ \addlinespace[2pt]
-CTAS-D (exact MILP) & {\scriptsize one solve of the whole MILP} & 1 solve & 1 solve & -- \\ \addlinespace[2pt]
+CP-LNS & {\scriptsize one CP-SAT solve of a freed window} & \begin{tabular}[t]{@{}c@{}}16\\{\scriptsize (1.5\,s)}\end{tabular} & \begin{tabular}[t]{@{}c@{}}47\\{\scriptsize (1.6\,s)}\end{tabular} & \begin{tabular}[t]{@{}c@{}}130\\{\scriptsize (4.9\,s)}\end{tabular} \\ \addlinespace[2pt]
+Parallel CP-LNS & {\scriptsize one CP-SAT solve of a freed window} & \begin{tabular}[t]{@{}c@{}}258\\{\scriptsize (459\,ms)}\end{tabular} & \begin{tabular}[t]{@{}c@{}}358\\{\scriptsize (1.7\,s)}\end{tabular} & \begin{tabular}[t]{@{}c@{}}1.8\,k\\{\scriptsize (2.7\,s)}\end{tabular} \\ \addlinespace[2pt]
+CP-SAT full model & {\scriptsize one solve of the whole model} & \begin{tabular}[t]{@{}c@{}}1 solve\\{\scriptsize (1/250)}\end{tabular} & \begin{tabular}[t]{@{}c@{}}1 solve\\{\scriptsize (0/50)}\end{tabular} & \begin{tabular}[t]{@{}c@{}}1 solve\\{\scriptsize (0/100)}\end{tabular} \\ \addlinespace[2pt]
+CTAS-D (exact MILP) & {\scriptsize one solve of the whole MILP} & \begin{tabular}[t]{@{}c@{}}1 solve\\{\scriptsize (72/250)}\end{tabular} & \begin{tabular}[t]{@{}c@{}}1 solve\\{\scriptsize (0/50)}\end{tabular} & -- \\ \addlinespace[2pt]
 Greedy restarts & {\scriptsize one greedy construction} & \begin{tabular}[t]{@{}c@{}}93\,k\\{\scriptsize (2\,ms)}\end{tabular} & \begin{tabular}[t]{@{}c@{}}32\,k\\{\scriptsize (19\,ms)}\end{tabular} & \begin{tabular}[t]{@{}c@{}}18\,k\\{\scriptsize (255\,ms)}\end{tabular} \\ \addlinespace[2pt]
 RL policy (published) & {\scriptsize one rollout of the policy} & \begin{tabular}[t]{@{}c@{}}187\\{\scriptsize (834\,ms)}\end{tabular} & \begin{tabular}[t]{@{}c@{}}56\\{\scriptsize (11\,s)}\end{tabular} & \begin{tabular}[t]{@{}c@{}}40\\{\scriptsize (112\,s)}\end{tabular} \\ \addlinespace[2pt]
+\midrule ALNS, 1 core & {\scriptsize the same iteration, for 2\,s} & \begin{tabular}[t]{@{}c@{}}23\,k\\{\scriptsize (0.09\,ms)}\end{tabular} & \begin{tabular}[t]{@{}c@{}}17\,k\\{\scriptsize (0.12\,ms)}\end{tabular} & \begin{tabular}[t]{@{}c@{}}8.5\,k\\{\scriptsize (0.24\,ms)}\end{tabular} \\
 \bottomrule
 \end{tabular}
 \end{table}

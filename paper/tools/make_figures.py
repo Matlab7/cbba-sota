@@ -64,28 +64,32 @@ def main() -> None:
             if g is not None:
                 xs.append(b[label])
                 ys.append(g)
+        # x: compute used, CPU-seconds = cores x wall-clock budget (1 core for ALNS's line)
         ax.plot(xs, ys, "-o", color=ALNS, ms=3, lw=1.2, label="ALNS, 1 core", zorder=5)
+        full = 8 * b["B1"]
         g = mean_gap(rows.get(("ALNS2", 8, "B1"), {}), bks_of)
         if g is not None:
-            ax.plot([b["B1"]], [g], "s", color=ALNS, ms=3.5, mfc="white", mew=1.0, zorder=6,
+            ax.plot([full], [g], "s", color=ALNS, ms=3.5, mfc="white", mew=1.0, zorder=6,
                     label="ALNS, 8 cores at $B_1$")
         for method, name_, colour, ls in LEVELS:
             g = mean_gap(rows.get((method, 8, "B1"), {}), bks_of)
-            if g is not None:
+            if g is not None:  # a competitor's level, drawn across so it can be read against ALNS's line
                 ax.axhline(g, color=colour, ls=ls, lw=1.0, label=f"{name_}, 8 cores at $B_1$")
-        ax.axvline(b["B1"], color="k", lw=0.5, ls=":", zorder=0)
+                ax.plot([full], [g], "D", color=colour, ms=2.6, zorder=4)
+        ax.axvline(full, color="k", lw=0.5, ls=":", zorder=0)
+        ax.set_xlim(0.3, full * 2.2)
         ax.set_xscale("log")
         ax.set_yscale("symlog", linthresh=1, linscale=0.5)
-        ax.set_ylim(0, 60)
-        ax.yaxis.set_major_locator(FixedLocator([0, 1, 2, 5, 10, 20, 40]))
+        ax.set_ylim(0, 90)
+        ax.yaxis.set_major_locator(FixedLocator([0, 1, 2, 5, 10, 20, 40, 80]))
         ax.yaxis.set_minor_locator(NullLocator())
-        ax.set_yticklabels(["0", "1", "2", "5", "10", "20", "40"])
+        ax.set_yticklabels(["0", "1", "2", "5", "10", "20", "40", "80"])
         ax.xaxis.set_minor_formatter(NullFormatter())
         family, a, s, t = name.rsplit("-", 3)
         ax.set_title(f"{family} {a}/{s}/{t} ($B_1$ = {b['B1']:.0f} s)")
         ax.grid(alpha=0.25, lw=0.4)
     for ax in axes[1]:
-        ax.set_xlabel("wall-clock budget (s)")
+        ax.set_xlabel("compute used (CPU-seconds)")
     for ax in axes[:, 0]:
         ax.set_ylabel("gap to best (%)")
     handles, names = axes.flat[0].get_legend_handles_labels()

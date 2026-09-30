@@ -8,19 +8,7 @@
 \toprule
 Robots & Robots / species / tasks & CP-LNS & Parallel CP-LNS & CP-SAT full & CTAS-D & Greedy restarts & RL policy \\
 \midrule
-\multicolumn{8}{l}{\emph{(a) C1: ALNS on 8 cores vs.\ each competitor on 8 cores, both at budget $B_1$}} \\
-\multirow{2}{*}{\parbox{2.1cm}{\raggedright\scriptsize Single-skill robots, binary needs}} & 25/5/50 & 0.917 {\scriptsize [0.91, 0.92]} & 0.930 {\scriptsize [0.92, 0.94]} & 0.921 {\scriptsize [0.92, 0.93]} & 0.227 {\scriptsize [0.19, 0.27]} (28\%) & 0.921 {\scriptsize [0.92, 0.93]} & 0.779 {\scriptsize [0.75, 0.80]} \\
- & 50/5/50 & 0.964 {\scriptsize [0.96, 0.97]} & 0.956 {\scriptsize [0.95, 0.96]} & 0.947 {\scriptsize [0.94, 0.95]} & 0.548 {\scriptsize [0.52, 0.57]} (98\%) & 0.925 {\scriptsize [0.92, 0.93]} & 0.776 {\scriptsize [0.77, 0.78]} \\
-\cmidrule(l){2-8}
-\parbox{2.1cm}{\raggedright\scriptsize Single-skill robots, additive needs} & 50/5/50 & 0.933 {\scriptsize [0.93, 0.94]} & 0.944 {\scriptsize [0.94, 0.95]} & 0.939 {\scriptsize [0.93, 0.94]} & 0.143 {\scriptsize [0.14, 0.15]} (0\%) & 0.946 {\scriptsize [0.94, 0.95]} & 0.786 {\scriptsize [0.78, 0.79]} \\
-\cmidrule(l){2-8}
-\multirow{5}{*}{\parbox{2.1cm}{\raggedright\scriptsize Multi-skill robots, additive needs}} & 25/5/50 & 0.887 {\scriptsize [0.88, 0.90]} & 0.893 {\scriptsize [0.89, 0.90]} & 0.887 {\scriptsize [0.88, 0.89]} & 0.158 {\scriptsize [0.15, 0.17]} (0\%) & 0.903 {\scriptsize [0.90, 0.91]} & 0.743 {\scriptsize [0.73, 0.75]} \\
- & 50/5/50 & 0.892 {\scriptsize [0.88, 0.90]} & 0.905 {\scriptsize [0.90, 0.91]} & 0.874 {\scriptsize [0.87, 0.88]} & 0.130 {\scriptsize [0.11, 0.15]} (18\%) & 0.883 {\scriptsize [0.88, 0.89]} & 0.704 {\scriptsize [0.69, 0.72]} \\
- & 50/5/200 & 0.897 {\scriptsize [0.89, 0.90]} & 0.896 {\scriptsize [0.89, 0.90]} & 0.880 {\scriptsize [0.87, 0.89]} & 0.279 {\scriptsize [0.26, 0.30]} (0\%) & 0.882 {\scriptsize [0.88, 0.89]} & 0.718 {\scriptsize [0.71, 0.72]} \\
- & 150/10/500 & 0.881 {\scriptsize [0.87, 0.89]} & 0.884 {\scriptsize [0.88, 0.89]} & 0.861 {\scriptsize [0.85, 0.87]} & -- & 0.876 {\scriptsize [0.87, 0.88]} & 0.689 {\scriptsize [0.68, 0.69]} \\
- & 150/5/500 & 0.889 {\scriptsize [0.88, 0.90]} & 0.894 {\scriptsize [0.88, 0.90]} & 0.871 {\scriptsize [0.86, 0.88]} & -- & 0.884 {\scriptsize [0.88, 0.89]} & 0.672 {\scriptsize [0.63, 0.71]} \\
-\midrule
-\multicolumn{8}{l}{\emph{(b) C2: ALNS on 1 core for 2\,s vs.\ each competitor on 8 cores at $B_1$}} \\
+\multicolumn{8}{l}{\emph{(a) C2, a fraction of the compute: ALNS on 1 core for 2\,s (1.9\% or less of a competitor's CPU time) vs.\ each competitor on 8 cores at $B_1$}} \\
 \multirow{2}{*}{\parbox{2.1cm}{\raggedright\scriptsize Single-skill robots, binary needs}} & 25/5/50 & 0.953 {\scriptsize [0.95, 0.96]} & 0.967 {\scriptsize [0.96, 0.97]} & 0.958 {\scriptsize [0.95, 0.96]} & 0.237 {\scriptsize [0.19, 0.28]} (28\%) & 0.958 {\scriptsize [0.95, 0.96]} & 0.810 {\scriptsize [0.78, 0.83]} \\
  & 50/5/50 & 0.987 {\scriptsize [0.98, 0.99]} & 0.979 {\scriptsize [0.97, 0.98]} & 0.970 {\scriptsize [0.96, 0.98]} & 0.561 {\scriptsize [0.53, 0.58]} (98\%) & 0.947 {\scriptsize [0.94, 0.95]} & 0.794 {\scriptsize [0.79, 0.80]} \\
 \cmidrule(l){2-8}
@@ -31,6 +19,18 @@ Robots & Robots / species / tasks & CP-LNS & Parallel CP-LNS & CP-SAT full & CTA
  & 50/5/200 & 0.955 {\scriptsize [0.95, 0.96]} & 0.954 {\scriptsize [0.95, 0.96]} & 0.937 {\scriptsize [0.93, 0.94]} & 0.296 {\scriptsize [0.28, 0.32]} (0\%) & 0.939 {\scriptsize [0.93, 0.95]} & 0.765 {\scriptsize [0.76, 0.77]} \\
  & 150/10/500 & 0.969 {\scriptsize [0.96, 0.97]} & 0.972 {\scriptsize [0.97, 0.98]} & 0.947 {\scriptsize [0.94, 0.95]} & -- & 0.963 {\scriptsize [0.96, 0.97]} & 0.758 {\scriptsize [0.75, 0.77]} \\
  & 150/5/500 & 0.968 {\scriptsize [0.96, 0.97]} & 0.974 {\scriptsize [0.97, 0.98]} & 0.949 {\scriptsize [0.94, 0.95]} & -- & 0.963 {\scriptsize [0.96, 0.97]} & 0.733 {\scriptsize [0.69, 0.77]} \\
+\midrule
+\multicolumn{8}{l}{\emph{(b) C1, equal compute: ALNS on 8 cores vs.\ each competitor on 8 cores, both at budget $B_1$}} \\
+\multirow{2}{*}{\parbox{2.1cm}{\raggedright\scriptsize Single-skill robots, binary needs}} & 25/5/50 & 0.917 {\scriptsize [0.91, 0.92]} & 0.930 {\scriptsize [0.92, 0.94]} & 0.921 {\scriptsize [0.92, 0.93]} & 0.227 {\scriptsize [0.19, 0.27]} (28\%) & 0.921 {\scriptsize [0.92, 0.93]} & 0.779 {\scriptsize [0.75, 0.80]} \\
+ & 50/5/50 & 0.964 {\scriptsize [0.96, 0.97]} & 0.956 {\scriptsize [0.95, 0.96]} & 0.947 {\scriptsize [0.94, 0.95]} & 0.548 {\scriptsize [0.52, 0.57]} (98\%) & 0.925 {\scriptsize [0.92, 0.93]} & 0.776 {\scriptsize [0.77, 0.78]} \\
+\cmidrule(l){2-8}
+\parbox{2.1cm}{\raggedright\scriptsize Single-skill robots, additive needs} & 50/5/50 & 0.933 {\scriptsize [0.93, 0.94]} & 0.944 {\scriptsize [0.94, 0.95]} & 0.939 {\scriptsize [0.93, 0.94]} & 0.143 {\scriptsize [0.14, 0.15]} (0\%) & 0.946 {\scriptsize [0.94, 0.95]} & 0.786 {\scriptsize [0.78, 0.79]} \\
+\cmidrule(l){2-8}
+\multirow{5}{*}{\parbox{2.1cm}{\raggedright\scriptsize Multi-skill robots, additive needs}} & 25/5/50 & 0.887 {\scriptsize [0.88, 0.90]} & 0.893 {\scriptsize [0.89, 0.90]} & 0.887 {\scriptsize [0.88, 0.89]} & 0.158 {\scriptsize [0.15, 0.17]} (0\%) & 0.903 {\scriptsize [0.90, 0.91]} & 0.743 {\scriptsize [0.73, 0.75]} \\
+ & 50/5/50 & 0.892 {\scriptsize [0.88, 0.90]} & 0.905 {\scriptsize [0.90, 0.91]} & 0.874 {\scriptsize [0.87, 0.88]} & 0.130 {\scriptsize [0.11, 0.15]} (18\%) & 0.883 {\scriptsize [0.88, 0.89]} & 0.704 {\scriptsize [0.69, 0.72]} \\
+ & 50/5/200 & 0.897 {\scriptsize [0.89, 0.90]} & 0.896 {\scriptsize [0.89, 0.90]} & 0.880 {\scriptsize [0.87, 0.89]} & 0.279 {\scriptsize [0.26, 0.30]} (0\%) & 0.882 {\scriptsize [0.88, 0.89]} & 0.718 {\scriptsize [0.71, 0.72]} \\
+ & 150/10/500 & 0.881 {\scriptsize [0.87, 0.89]} & 0.884 {\scriptsize [0.88, 0.89]} & 0.861 {\scriptsize [0.85, 0.87]} & -- & 0.876 {\scriptsize [0.87, 0.88]} & 0.689 {\scriptsize [0.68, 0.69]} \\
+ & 150/5/500 & 0.889 {\scriptsize [0.88, 0.90]} & 0.894 {\scriptsize [0.88, 0.90]} & 0.871 {\scriptsize [0.86, 0.88]} & -- & 0.884 {\scriptsize [0.88, 0.89]} & 0.672 {\scriptsize [0.63, 0.71]} \\
 \bottomrule
 \end{tabular}
 \end{table*}
