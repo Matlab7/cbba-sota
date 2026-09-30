@@ -37,7 +37,7 @@ instances and our use of the policy.
   their objective values, and on ten of them our port finds, in 60\,s, plans 4.1\% shorter than the shipped 600-s
   Gurobi runs. On the two 500-task settings it found no solution within the budget on the development instances and
   needed 55--87\,GB of memory, so it is counted as failing there and not run.
-\item \textbf{Greedy restarts}: 8 independent streams of our randomized greedy constructions
+\item \textbf{Greedy restarts}: 8 independent runs, in parallel, of our randomized greedy construction
   (Section~\ref{sec:search}); the best plan found within the budget counts.
 \end{itemize}
 The length of a repair step of the two CP-LNS variants and the arcs of the full model were chosen per setting on the
@@ -57,9 +57,9 @@ exactly; the CP-LNS variants make tens to thousands of solver calls of about a s
 of constructions; and the RL policy completes tens to a few hundred rollouts, each a simulation of the whole mission.
 
 \paragraph{Compute.} All runs used one host with two Intel Xeon Platinum 8480C processors in a container with a quota
-of 57.6 CPUs, running at most six lanes of 8 CPUs, one per physical core, with the jobs of all methods shuffled into
-the same lanes. Budgets start once the instance is loaded in a warm process (compiled kernels, loaded network weights)
-and include construction and model building. A lane starts a job only when at most 40\% of the container's CPU periods
+of 57.6 CPUs, running at most six jobs of 8 CPUs at a time, one CPU per physical core, with the jobs of all methods
+shuffled together. Budgets start once the instance is loaded in a warm process (compiled kernels, loaded network
+weights) and include construction and model building. A job starts only when at most 40\% of the container's CPU periods
 were throttled in the last second; a job that saw more throttling is re-run. A run that overruns its budget by more
 than 10\% + 0.25\,s is scored by the best plan it had found by the budget, or as a failure if it records none. We
 report the CPU time that each method actually used.
@@ -78,7 +78,7 @@ holds in at least six of the eight settings, and one core only for the settings 
 
 \paragraph{Pre-registration.} Hypotheses, competitors and their parameters, budgets, instances, execution rules,
 analysis and decision rule were written down and frozen before any ALNS or CP-SAT run on the test instances. The frozen
-document records the git object identifiers of the source code, and our harness refuses to run on the test instances
+document records the git object identifiers of the source code, and our experiment scripts refuse to run on the test instances
 unless the checked-out code is exactly that code. The test instances were run once. The known weaknesses of the
 protocol are listed in the pre-registration and in Section~\ref{sec:discussion}. All seeds are fixed: one run per
 instance, method and budget.

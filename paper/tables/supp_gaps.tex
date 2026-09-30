@@ -8,82 +8,82 @@ Setting & Method & 0.5 & 1 & 2 & 5 & 10 & $B_1$ & $2B_1$ & CPU \\
 Setting & Method & 0.5 & 1 & 2 & 5 & 10 & $B_1$ & $2B_1$ & CPU \\
 \midrule
 \endhead
-single-skill, binary: 25 robots, 50 tasks & ALNS-1 & 6.77 & 5.92 & 4.69 &  &  & 2.17 &  & 1.00 \\
- & ALNS-8 &  &  &  &  &  & 0.70 & 0.77 & 0.98 \\
- & CP-LNS-8 &  &  &  &  &  & 9.88 &  & 0.79 \\
- & Parallel CP-LNS-8 &  &  &  &  &  & 8.34 & 7.14 & 0.98 \\
- & CP-SAT full-8 &  &  &  &  &  & 9.34 & 8.22 & 0.73 \\
- & CTAS-D-8 &  &  &  &  &  & 505.69 &  & 0.94 \\
- & Greedy restarts-1 & 14.13 & 13.29 & 12.48 & 11.42 & 11.13 & 10.77 & 10.29 & 0.98 \\
- & Greedy restarts-8 & 11.69 & 11.07 & 10.47 & 9.86 & 9.51 & 9.35 & 8.82 & 0.98 \\
- & RL policy-8 &  &  &  &  &  & 39.56$^*$ &  & 0.97 \\
+single-skill, binary: 25 robots, 50 tasks & ALNS, 1\,core & 6.77 & 5.92 & 4.69 &  &  & 2.17 &  & 1.00 \\
+ & ALNS, 8\,cores &  &  &  &  &  & 0.70 & 0.77 & 0.98 \\
+ & CP-LNS, 8\,cores &  &  &  &  &  & 9.88 &  & 0.79 \\
+ & Parallel CP-LNS, 8\,cores &  &  &  &  &  & 8.34 & 7.14 & 0.98 \\
+ & CP-SAT full, 8\,cores &  &  &  &  &  & 9.34 & 8.22 & 0.73 \\
+ & CTAS-D, 8\,cores &  &  &  &  &  & 505.69 &  & 0.94 \\
+ & Greedy restarts, 1\,core & 14.13 & 13.29 & 12.48 & 11.42 & 11.13 & 10.77 & 10.29 & 0.98 \\
+ & Greedy restarts, 8\,cores & 11.69 & 11.07 & 10.47 & 9.86 & 9.51 & 9.35 & 8.82 & 0.98 \\
+ & RL policy, 8\,cores &  &  &  &  &  & 39.56$^*$ &  & 0.97 \\
 \midrule
-single-skill, binary: 50 robots, 50 tasks & ALNS-1 & 4.45 & 3.34 & 2.59 &  &  & 0.62 &  & 0.97 \\
- & ALNS-8 &  &  &  &  &  & 0.19 & 0.17 & 0.99 \\
- & CP-LNS-8 &  &  &  &  &  & 3.95 &  & 0.57 \\
- & Parallel CP-LNS-8 &  &  &  &  &  & 4.88 & 3.70 & 0.98 \\
- & CP-SAT full-8 &  &  &  &  &  & 5.84 & 3.89 & 0.81 \\
- & CTAS-D-8 &  &  &  &  &  & 104.59 &  & 0.96 \\
- & Greedy restarts-1 & 13.49 & 12.59 & 11.84 & 10.61 & 10.27 & 9.69 & 9.34 & 0.98 \\
- & Greedy restarts-8 & 11.19 & 10.32 & 9.87 & 9.07 & 8.70 & 8.32 & 7.89 & 0.98 \\
- & RL policy-8 &  &  &  &  &  & 29.31 &  & 0.96 \\
+single-skill, binary: 50 robots, 50 tasks & ALNS, 1\,core & 4.45 & 3.34 & 2.59 &  &  & 0.62 &  & 0.97 \\
+ & ALNS, 8\,cores &  &  &  &  &  & 0.19 & 0.17 & 0.99 \\
+ & CP-LNS, 8\,cores &  &  &  &  &  & 3.95 &  & 0.57 \\
+ & Parallel CP-LNS, 8\,cores &  &  &  &  &  & 4.88 & 3.70 & 0.98 \\
+ & CP-SAT full, 8\,cores &  &  &  &  &  & 5.84 & 3.89 & 0.81 \\
+ & CTAS-D, 8\,cores &  &  &  &  &  & 104.59 &  & 0.96 \\
+ & Greedy restarts, 1\,core & 13.49 & 12.59 & 11.84 & 10.61 & 10.27 & 9.69 & 9.34 & 0.98 \\
+ & Greedy restarts, 8\,cores & 11.19 & 10.32 & 9.87 & 9.07 & 8.70 & 8.32 & 7.89 & 0.98 \\
+ & RL policy, 8\,cores &  &  &  &  &  & 29.31 &  & 0.96 \\
 \midrule
-single-skill, additive: 50 robots, 50 tasks & ALNS-1 & 9.37 & 8.10 & 6.59 &  &  & 2.40 &  & 1.00 \\
- & ALNS-8 &  &  &  &  &  & 0.75 & 0.66 & 0.98 \\
- & CP-LNS-8 &  &  &  &  &  & 8.06 &  & 0.72 \\
- & Parallel CP-LNS-8 &  &  &  &  &  & 6.74 & 6.77 & 0.97 \\
- & CP-SAT full-8 &  &  &  &  &  & 7.33 & 6.86 & 0.72 \\
- & CTAS-D-8 &  &  &  &  &  & 609.34 &  & 0.94 \\
- & Greedy restarts-1 & 11.90 & 11.26 & 10.09 & 9.38 & 8.90 & 8.16 & 7.82 & 0.99 \\
- & Greedy restarts-8 & 9.78 & 9.28 & 8.54 & 7.88 & 7.36 & 6.49 & 6.11 & 0.98 \\
- & RL policy-8 &  &  &  &  &  & 28.32 &  & 0.95 \\
+single-skill, additive: 50 robots, 50 tasks & ALNS, 1\,core & 9.37 & 8.10 & 6.59 &  &  & 2.40 &  & 1.00 \\
+ & ALNS, 8\,cores &  &  &  &  &  & 0.75 & 0.66 & 0.98 \\
+ & CP-LNS, 8\,cores &  &  &  &  &  & 8.06 &  & 0.72 \\
+ & Parallel CP-LNS, 8\,cores &  &  &  &  &  & 6.74 & 6.77 & 0.97 \\
+ & CP-SAT full, 8\,cores &  &  &  &  &  & 7.33 & 6.86 & 0.72 \\
+ & CTAS-D, 8\,cores &  &  &  &  &  & 609.34 &  & 0.94 \\
+ & Greedy restarts, 1\,core & 11.90 & 11.26 & 10.09 & 9.38 & 8.90 & 8.16 & 7.82 & 0.99 \\
+ & Greedy restarts, 8\,cores & 9.78 & 9.28 & 8.54 & 7.88 & 7.36 & 6.49 & 6.11 & 0.98 \\
+ & RL policy, 8\,cores &  &  &  &  &  & 28.32 &  & 0.95 \\
 \midrule
-multi-skill, additive: 25 robots, 50 tasks & ALNS-1 & 7.72 & 6.26 & 5.03 &  &  & 2.46 &  & 0.96 \\
- & ALNS-8 &  &  &  &  &  & 0.87 & 0.45 & 0.98 \\
- & CP-LNS-8 &  &  &  &  &  & 13.80 &  & 0.74 \\
- & Parallel CP-LNS-8 &  &  &  &  &  & 13.01 & 11.76 & 0.99 \\
- & CP-SAT full-8 &  &  &  &  &  & 13.81 & 12.93 & 0.51 \\
- & CTAS-D-8 &  &  &  &  &  & 594.20 &  & 0.81 \\
- & Greedy restarts-1 & 17.62 & 16.76 & 16.18 & 14.90 & 14.27 & 13.79 & 13.26 & 0.97 \\
- & Greedy restarts-8 & 15.23 & 14.57 & 13.96 & 12.90 & 12.22 & 11.80 & 11.25 & 0.97 \\
- & RL policy-8 &  &  &  &  &  & 36.17 &  & 0.97 \\
+multi-skill, additive: 25 robots, 50 tasks & ALNS, 1\,core & 7.72 & 6.26 & 5.03 &  &  & 2.46 &  & 0.96 \\
+ & ALNS, 8\,cores &  &  &  &  &  & 0.87 & 0.45 & 0.98 \\
+ & CP-LNS, 8\,cores &  &  &  &  &  & 13.80 &  & 0.74 \\
+ & Parallel CP-LNS, 8\,cores &  &  &  &  &  & 13.01 & 11.76 & 0.99 \\
+ & CP-SAT full, 8\,cores &  &  &  &  &  & 13.81 & 12.93 & 0.51 \\
+ & CTAS-D, 8\,cores &  &  &  &  &  & 594.20 &  & 0.81 \\
+ & Greedy restarts, 1\,core & 17.62 & 16.76 & 16.18 & 14.90 & 14.27 & 13.79 & 13.26 & 0.97 \\
+ & Greedy restarts, 8\,cores & 15.23 & 14.57 & 13.96 & 12.90 & 12.22 & 11.80 & 11.25 & 0.97 \\
+ & RL policy, 8\,cores &  &  &  &  &  & 36.17 &  & 0.97 \\
 \midrule
-multi-skill, additive: 50 robots, 50 tasks & ALNS-1 & 7.78 & 6.48 & 5.18 &  &  & 2.15 &  & 1.00 \\
- & ALNS-8 &  &  &  &  &  & 0.38 & 0.55 & 0.98 \\
- & CP-LNS-8 &  &  &  &  &  & 12.67 &  & 0.63 \\
- & Parallel CP-LNS-8 &  &  &  &  &  & 11.05 & 10.50 & 0.98 \\
- & CP-SAT full-8 &  &  &  &  &  & 14.92 & 14.40 & 0.74 \\
- & CTAS-D-8 &  &  &  &  &  & 894.42 &  & 0.86 \\
- & Greedy restarts-1 & 20.19 & 19.21 & 18.33 & 17.12 & 16.55 & 15.56 & 14.92 & 0.98 \\
- & Greedy restarts-8 & 17.71 & 16.71 & 15.91 & 15.08 & 14.60 & 13.79 & 13.15 & 0.98 \\
- & RL policy-8 &  &  &  &  &  & 43.31 &  & 0.95 \\
+multi-skill, additive: 50 robots, 50 tasks & ALNS, 1\,core & 7.78 & 6.48 & 5.18 &  &  & 2.15 &  & 1.00 \\
+ & ALNS, 8\,cores &  &  &  &  &  & 0.38 & 0.55 & 0.98 \\
+ & CP-LNS, 8\,cores &  &  &  &  &  & 12.67 &  & 0.63 \\
+ & Parallel CP-LNS, 8\,cores &  &  &  &  &  & 11.05 & 10.50 & 0.98 \\
+ & CP-SAT full, 8\,cores &  &  &  &  &  & 14.92 & 14.40 & 0.74 \\
+ & CTAS-D, 8\,cores &  &  &  &  &  & 894.42 &  & 0.86 \\
+ & Greedy restarts, 1\,core & 20.19 & 19.21 & 18.33 & 17.12 & 16.55 & 15.56 & 14.92 & 0.98 \\
+ & Greedy restarts, 8\,cores & 17.71 & 16.71 & 15.91 & 15.08 & 14.60 & 13.79 & 13.15 & 0.98 \\
+ & RL policy, 8\,cores &  &  &  &  &  & 43.31 &  & 0.95 \\
 \midrule
-multi-skill, additive: 50 robots, 200 tasks & ALNS-1 & 8.82 & 7.92 & 7.33 &  &  & 2.07 &  & 0.97 \\
- & ALNS-8 &  &  &  &  &  & 0.82 & 0.19 & 0.98 \\
- & CP-LNS-8 &  &  &  &  &  & 12.47 &  & 0.67 \\
- & Parallel CP-LNS-8 &  &  &  &  &  & 12.57 & 11.70 & 0.98 \\
- & CP-SAT full-8 &  &  &  &  &  & 14.63 & 14.32 & 0.76 \\
- & CTAS-D-8 &  &  &  &  &  & 285.04 &  & 0.49 \\
- & Greedy restarts-1 & 15.32 & 15.20 & 15.17 & 15.06 & 14.97 & 14.62 &  & 0.98 \\
- & Greedy restarts-8 & 14.98 & 14.92 & 14.88 & 14.77 & 14.67 & 14.38 &  & 0.97 \\
- & RL policy-8 &  &  &  &  &  & 40.51 &  & 0.91 \\
+multi-skill, additive: 50 robots, 200 tasks & ALNS, 1\,core & 8.82 & 7.92 & 7.33 &  &  & 2.07 &  & 0.97 \\
+ & ALNS, 8\,cores &  &  &  &  &  & 0.82 & 0.19 & 0.98 \\
+ & CP-LNS, 8\,cores &  &  &  &  &  & 12.47 &  & 0.67 \\
+ & Parallel CP-LNS, 8\,cores &  &  &  &  &  & 12.57 & 11.70 & 0.98 \\
+ & CP-SAT full, 8\,cores &  &  &  &  &  & 14.63 & 14.32 & 0.76 \\
+ & CTAS-D, 8\,cores &  &  &  &  &  & 285.04 &  & 0.49 \\
+ & Greedy restarts, 1\,core & 15.32 & 15.20 & 15.17 & 15.06 & 14.97 & 14.62 &  & 0.98 \\
+ & Greedy restarts, 8\,cores & 14.98 & 14.92 & 14.88 & 14.77 & 14.67 & 14.38 &  & 0.97 \\
+ & RL policy, 8\,cores &  &  &  &  &  & 40.51 &  & 0.91 \\
 \midrule
-multi-skill, additive: 150 robots (10 species), 500 tasks & ALNS-1 & 11.45 & 10.76 & 10.09 & 9.12 & 8.44 & 1.66 &  & 0.99 \\
- & ALNS-8 &  &  &  &  &  & 0.03 &  & 1.00 \\
- & CP-LNS-8 &  &  &  &  &  & 13.66 &  & 0.69 \\
- & Parallel CP-LNS-8 &  &  &  &  &  & 13.27 &  & 1.01 \\
- & CP-SAT full-8 &  &  &  &  &  & 16.32 &  & 0.84 \\
- & Greedy restarts-1 & 17.80 & 17.72 & 17.45 & 17.25 & 16.81 & 15.16 &  & 1.00 \\
- & Greedy restarts-8 & 17.07 & 17.05 & 16.67 & 16.05 & 15.68 & 14.30 &  & 1.00 \\
- & RL policy-8 &  &  &  &  &  & 45.36 &  & 0.89 \\
+multi-skill, additive: 150 robots (10 species), 500 tasks & ALNS, 1\,core & 11.45 & 10.76 & 10.09 & 9.12 & 8.44 & 1.66 &  & 0.99 \\
+ & ALNS, 8\,cores &  &  &  &  &  & 0.03 &  & 1.00 \\
+ & CP-LNS, 8\,cores &  &  &  &  &  & 13.66 &  & 0.69 \\
+ & Parallel CP-LNS, 8\,cores &  &  &  &  &  & 13.27 &  & 1.01 \\
+ & CP-SAT full, 8\,cores &  &  &  &  &  & 16.32 &  & 0.84 \\
+ & Greedy restarts, 1\,core & 17.80 & 17.72 & 17.45 & 17.25 & 16.81 & 15.16 &  & 1.00 \\
+ & Greedy restarts, 8\,cores & 17.07 & 17.05 & 16.67 & 16.05 & 15.68 & 14.30 &  & 1.00 \\
+ & RL policy, 8\,cores &  &  &  &  &  & 45.36 &  & 0.89 \\
 \midrule
-multi-skill, additive: 150 robots (5 species), 500 tasks & ALNS-1 & 10.60 & 9.75 & 9.09 & 8.00 & 7.38 & 1.50 &  & 0.99 \\
- & ALNS-8 &  &  &  &  &  & 0.07$^*$ &  & 1.00 \\
- & CP-LNS-8 &  &  &  &  &  & 12.74 &  & 0.34 \\
- & Parallel CP-LNS-8 &  &  &  &  &  & 12.08 &  & 0.99 \\
- & CP-SAT full-8 &  &  &  &  &  & 15.10 &  & 0.90 \\
- & Greedy restarts-1 & 16.09 & 16.09 & 15.93 & 15.70 & 15.46 & 13.97 &  & 1.00 \\
- & Greedy restarts-8 & 15.55 & 15.53 & 15.27 & 14.92 & 14.62 & 13.28 &  & 1.00 \\
- & RL policy-8 &  &  &  &  &  & 63.65$^*$ &  & 0.93 \\
+multi-skill, additive: 150 robots (5 species), 500 tasks & ALNS, 1\,core & 10.60 & 9.75 & 9.09 & 8.00 & 7.38 & 1.50 &  & 0.99 \\
+ & ALNS, 8\,cores &  &  &  &  &  & 0.07$^*$ &  & 1.00 \\
+ & CP-LNS, 8\,cores &  &  &  &  &  & 12.74 &  & 0.34 \\
+ & Parallel CP-LNS, 8\,cores &  &  &  &  &  & 12.08 &  & 0.99 \\
+ & CP-SAT full, 8\,cores &  &  &  &  &  & 15.10 &  & 0.90 \\
+ & Greedy restarts, 1\,core & 16.09 & 16.09 & 15.93 & 15.70 & 15.46 & 13.97 &  & 1.00 \\
+ & Greedy restarts, 8\,cores & 15.55 & 15.53 & 15.27 & 14.92 & 14.62 & 13.28 &  & 1.00 \\
+ & RL policy, 8\,cores &  &  &  &  &  & 63.65$^*$ &  & 0.93 \\
 \bottomrule
 \end{longtable}

@@ -1,11 +1,11 @@
 \begin{table}[h]
 \centering
 \small
-\caption{Ablation on dev (1 worker): mean paired makespan ratio variant / final ALNS [bootstrap 95\% CI]; above 1 means the variant is worse. v1 is the configuration of an earlier phase (own random-order construction, no re-sort, older kernels); ``no portfolio'' constructs by own insertion; ``no re-sort'' never re-sorts the order by start times; ``delay-aware covers'' adds a second cover per slot (not kept: it halves the iteration rate). Blank: not run.}
+\caption{Ablation on the development instances (1 worker): mean paired makespan ratio variant / final ALNS [bootstrap 95\% CI]; above 1 means the variant is worse. Earlier version: the configuration before the last round of development (own random-order construction, no re-sort, older kernels); ``no portfolio'' constructs by own insertion; ``no re-sort'' never re-sorts the order by start times; ``delay-aware covers'' adds a second cover per slot (not kept: it halves the iteration rate). Blank: not run.}
 \label{tab:supp-ablation}
 \begin{adjustbox}{max width=\textwidth}\begin{tabular}{llcccc}
 \toprule
-Budget & Setting & v1 (Phase 1) & no portfolio & no re-sort & delay-aware covers \\
+Budget & Setting & earlier version & no portfolio & no re-sort & delay-aware covers \\
 \midrule
 $B_1$ & single-skill, binary: 25 robots, 50 tasks & 1.005 {\scriptsize [0.998, 1.013]} & 1.000 {\scriptsize [0.990, 1.010]} & 1.007 {\scriptsize [0.998, 1.016]} & 0.998 {\scriptsize [0.988, 1.009]} \\
  & single-skill, binary: 50 robots, 50 tasks & 1.007 {\scriptsize [1.001, 1.014]} & 0.999 {\scriptsize [0.995, 1.004]} & 1.004 {\scriptsize [0.999, 1.009]} & 0.995 {\scriptsize [0.988, 1.002]} \\

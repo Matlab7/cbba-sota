@@ -30,8 +30,13 @@ REDACT = [  # (pattern, replacement), applied in order to every text file
     (r"crdhsh@gmail\.com", "anonymous@example.org"),
     (r"github\.com/Matlab7/[\w.-]+", "<anonymous-repository>"),
     (r"Matlab7", "anonymous"),
+    # the project's and a sibling project's names would lead to the (public) repositories: neutral names instead
+    (r"cbba_sota", "mrta_alns"),
+    (r"cbba-sota", "mrta-alns"),
+    (r"CBJA", "REFSIM"),
+    (r"cbja", "refsim"),
 ]
-FORBIDDEN = re.compile(r"dhcho|jovyan|Matlab7|crdhsh", re.IGNORECASE)
+FORBIDDEN = re.compile(r"dhcho|jovyan|Matlab7|crdhsh|cbba_sota|cbba-sota|cbja", re.IGNORECASE)
 TEXT = {".py", ".md", ".txt", ".csv", ".json", ".jsonl", ".sh", ".toml", ".patch", ".tex", ".yaml", ".yml", ".cfg"}
 CODE = ["cbba_sota", "scripts", "tests", "pyproject.toml"]
 RESULTS = ["test", "val-c1", "ctas", "alns-v2", "phase1b", "trackD-week1"]
@@ -91,7 +96,7 @@ def main() -> None:
         for item in CODE:
             src = ROOT / item
             if src.is_dir():
-                copy_tree(src, stage / "code" / item)
+                copy_tree(src, stage / "code" / redact(item))
             else:
                 (stage / "code").mkdir(exist_ok=True)
                 (stage / "code" / item).write_text(redact(src.read_text()))
@@ -121,6 +126,13 @@ def main() -> None:
                     data = path.read_text(errors="ignore") if path.suffix in TEXT else ""
                 if FORBIDDEN.search(data) or FORBIDDEN.search(str(path.relative_to(stage))):
                     bad.append(str(path.relative_to(stage)))
+        try:  # the supplement is a PDF: check its text too
+            import pymupdf
+            pdf_text = " ".join(page.get_text() for page in pymupdf.open(stage / "supplement.pdf"))
+            if FORBIDDEN.search(pdf_text.replace("\n", "")):
+                bad.append("supplement.pdf")
+        except ImportError:
+            print("pymupdf not available: supplement.pdf text not checked")
         if bad:
             raise SystemExit(f"identifying strings left in: {bad[:10]}")
         args.out.unlink(missing_ok=True)

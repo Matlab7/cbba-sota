@@ -53,7 +53,7 @@ study (Figure~\ref{fig:overview}).
   are a global task order with one minimal covering coalition per task. This representation is deadlock-free by
   construction, its forward pass reproduces the benchmark's own simulator exactly, and an insertion move is
   evaluated exactly in time linear in the coalition size from longest-path tails.
-\item \textbf{A compute-matched evaluation protocol} (Section~\ref{sec:setup}). All methods run in the same lanes of
+\item \textbf{A compute-matched evaluation protocol} (Section~\ref{sec:setup}). All methods run on the same
   pinned physical cores at the benchmark's own budgets, with their CPU use recorded and host throttling monitored.
   Competitors are tuned on a separate split. The hypotheses, competitors, budgets and analysis were frozen, and the
   frozen code identified by its git trees, before the single run on the test split.
@@ -73,4 +73,4 @@ study (Figure~\ref{fig:overview}).
 We take no position against learning for multi-robot coordination. Our results say that on this benchmark, at equal
 compute, careful search is the stronger method, and needs only a small fraction of that compute to be so; learned
 planners should be evaluated against such search
-at matched budgets. The code and every result row are provided with the paper.
+at matched budgets. The code and all raw results are provided with the paper.

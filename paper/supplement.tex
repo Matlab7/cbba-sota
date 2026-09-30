@@ -31,22 +31,22 @@
 \maketitle
 
 \noindent This document accompanies the paper; section, table and equation numbers without the prefix S refer to the
-paper. The archive also contains the anonymised source code of the solver, the competitors and the harness, the
-pre-registration, every result row of the test campaign and the scripts that produce every table and figure.
+paper. The archive also contains the anonymised source code of the solver, the competitors and the experiment scripts,
+the pre-registration, all raw results of the test campaign and the scripts that produce every table and figure.
 
 \section{Contents of the archive and how to reproduce}
 \label{sec:s-archive}
 
 \begin{itemize}
-\item \texttt{cbba\_sota/}: the exact core (instances, plans, forward pass, simulator replay), ALNS (numba kernels and
+\item \texttt{code/mrta\_alns/}: the exact core (instances, plans, forward pass, simulator replay), ALNS (numba kernels and
   driver), the CP-SAT baselines, the CTAS-D port and the wrapper around the released RL policy.
-\item \texttt{scripts/}: instance generation and checks, the timed campaign harness (\texttt{anytime.py}), the best-known
+\item \texttt{code/scripts/}: instance generation and checks, the timed campaign (\texttt{anytime.py}), the best-known
   plans (\texttt{bks.py}) and the CTAS-D checks.
-\item \texttt{docs/prereg-phase1.md}: the pre-registration as frozen (Section~\ref{sec:s-prereg}).
-\item \texttt{runs/anytime\_test/}: one JSON row per run of the test campaign: instance fingerprint, method, cores,
+\item \texttt{prereg/prereg-phase1.md}: the pre-registration as frozen (Section~\ref{sec:s-prereg}).
+\item \texttt{rows/anytime\_test/}: one JSON record per run of the test campaign: instance fingerprint, method, cores,
   budget, the plan as routes, its simulator makespan, wall and CPU time, the anytime trace, the pinned CPUs, the host
   load and the container's throttling counters.
-\item \texttt{docs/results/}: the reports and CSV files of every campaign (test, val, dev), and \texttt{paper/tools/}:
+\item \texttt{results/}: the reports and CSV files of every campaign (test, validation, development), and \texttt{paper\_tools/}:
   the scripts that turn them into the tables and figures.
 \end{itemize}
 The benchmark itself (generator, simulator and released policy) is the public code of \citet{dai2025heterogeneous}; our
@@ -105,7 +105,7 @@ Other & re-sort by start time after acceptance & probability 0.1 \\
 \section{Competitors}
 \label{sec:s-competitors}
 
-All competitors run in the same pinned lanes as ALNS; their budgets start once the instance is loaded and include
+All competitors run on the same pinned cores as ALNS; their budgets start once the instance is loaded and include
 construction and model building. Table~\ref{tab:supp-params} lists the per-setting choices made on the development instances.
 
 \paragraph{CP-SAT full model.} One \texttt{AddCircuit} constraint per agent over its depot and its candidate tasks (tasks it
@@ -142,7 +142,7 @@ later batches fill 95\% of the remaining time at the slowest per-sample time see
 On our regenerated test instances the policy reproduces the published RL(g.) and RL(s.10) means within half a
 standard deviation on all 16 settings.
 
-\paragraph{Greedy restarts.} Eight independent streams (seeds 0--7) of our constructions: plain list scheduling, then
+\paragraph{Greedy restarts.} Eight independent runs in parallel (seeds 0--7) of our constructions: plain list scheduling, then
 alternately a noisy dispatch and a random-order best insertion; the best plan any stream finished by the budget.
 
 \input{tables/supp_params}
@@ -152,13 +152,13 @@ alternately a noisy dispatch and a random-order best insertion; the best plan an
 
 \begin{itemize}
 \item \textbf{Host.} Two Intel Xeon Platinum 8480C processors (112 physical cores) in a container with a quota of 57.6
-  CPUs and 330\,GB of memory. At most six lanes of 8 CPUs, one CPU per physical core, i.e.\ 48 CPUs, so the container
+  CPUs and 330\,GB of memory. At most six jobs of 8 CPUs at a time, one CPU per physical core, i.e.\ 48 CPUs, so the container
   stays under its quota; the only other load was a GPU keep-alive process of about 2 CPUs. RL runs on CPU.
-\item \textbf{Scheduling.} Jobs of all methods are shuffled into the same lanes; an 8-core job occupies a lane, 1-core
-  jobs of one budget are bundled 8 per lane. A lane starts a unit only when at most 40\% of the container's CPU periods
-  were throttled over the last second; a row whose job saw more than 40\% throttled periods is disturbed, re-run and
-  left out. On this host, 1-process jobs with at most 40\% throttled periods still received 87--100\% of their core.
-\item \textbf{Code.} Every timed row ran from a clean checkout of a fixed commit and records it; the harness refuses a
+\item \textbf{Scheduling.} Jobs of all methods are shuffled together into six slots of 8 CPUs; an 8-core job takes a
+  slot, 1-core jobs of one budget are bundled 8 per slot. A slot starts a job only when at most 40\% of the container's
+  CPU periods were throttled over the last second; a run that saw more than 40\% throttled periods is re-run and left
+  out. On this host, 1-process jobs with at most 40\% throttled periods still received 87--100\% of their core.
+\item \textbf{Code.} Every timed run used a clean checkout of a fixed commit and records it; the experiment scripts refuse a
   modified source tree, and on the test split it also refuses code whose trees differ from the frozen ones.
 \item \textbf{Late runs and failures.} Pre-registered: a run that overruns its budget by more than 10\% + 0.25\,s is
   scored by the best plan its trace reached by the budget, or as a failure if it keeps no trace; a failure (no plan,
@@ -172,8 +172,8 @@ alternately a noisy dispatch and a random-order best insertion; the best plan an
   within each family (equal compute: 46 tests; twice the budget: 17; one core at 2\,s: 46; called C1, C1 at $2B_1$
   and C2 in the pre-registration).
 \item \textbf{Deviations from the pre-registration.} None in the confirmatory analysis. After the run, the script
-  that collects the best known plans of the test split was found to read the validation rows; it was fixed and the
-  descriptive gaps were recomputed from the unchanged rows (recorded in the pre-registration). The late-run sensitivity above
+  that collects the best known plans of the test split was found to read the validation results; it was fixed and
+  the descriptive gaps were recomputed from the unchanged runs (recorded in the pre-registration). The late-run sensitivity above
   and every result on validation and development instances are additional and descriptive.
 \end{itemize}
 
@@ -182,7 +182,7 @@ alternately a noisy dispatch and a random-order best insertion; the best plan an
 
 \input{tables/c1c2}
 
-{\small\setlength{\tabcolsep}{3.4pt}\input{tables/supp_gaps}}
+{\footnotesize\setlength{\tabcolsep}{3.4pt}\input{tables/supp_gaps}}
 
 \section{Reference solutions on the validation instances}
 \label{sec:s-refs}
@@ -201,7 +201,7 @@ without ALNS matched it on any of the \RefValInstances{} instances. On the 20-ta
 
 \input{tables/supp_ablation}
 
-The ablation ran on the development instances, on which ALNS was tuned, with one worker. The earlier configuration (v1) is up to 12\% worse on the
+The ablation ran on the development instances, on which ALNS was tuned, with one worker. The earlier configuration is up to 12\% worse on the
 200- and 500-task settings at $B_1$; the construction portfolio matters most at short budgets on large instances; the
 start-time re-sort helps by 0.4--2.9\% on the settings where it was measured at $B_1$. Eight workers instead of one
 improve ALNS at $B_1$ on the test instances by \Workersgainlo--\Workersgainhi\%.
@@ -270,8 +270,8 @@ case.
 The pre-registration is \texttt{docs/prereg-phase1.md} in the archive, with host names removed for anonymity and
 with one dated correction of its disclosure on AI assistance, which changes no part of the protocol. It was
 frozen before any ALNS or CP-SAT variant and the CTAS-D port ran on the test split; it names the frozen code by the git
-object identifiers of its source trees (withheld here for anonymity; the archive's harness checks them), and the
-harness refuses to run the test split on any other code. Its disclosures are repeated in Section~\ref{M-sec:discussion}
+object identifiers of its source trees (withheld here for anonymity; the archive's experiment scripts check them),
+and the scripts refuse to run the test split on any other code. Its disclosures are repeated in Section~\ref{M-sec:discussion}
 of the paper.
 
 \section{Use of AI assistance}
@@ -281,7 +281,7 @@ of the paper.
 \item \textbf{Tool and version.} Claude Code (Anthropic), version 2.1, with Anthropic Claude models (including Claude
   Opus 5.5).
 \item \textbf{Roles.} The assistant wrote most of the code under the authors' direction, reviewed the experimental
-  design, the analysis plan and the pre-registration, ran the campaigns through the harness, searched and verified the
+  design, the analysis plan and the pre-registration, ran the campaigns with the experiment scripts, searched and verified the
   bibliography against publisher and index records, and polished the text. The authors set the research question,
   proposed the experimental design, froze the pre-registration and are responsible for the content.
 \end{itemize}

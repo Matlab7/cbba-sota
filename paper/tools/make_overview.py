@@ -521,7 +521,7 @@ def panel_c(x0, y0) -> None:
     rows = [("search", BLUE, "ALNS (ours)", "search on coalitions"), ("affiliate", PINK, "RL policy",
                                                                      "published, sampled"),
             ("settings", GREEN, "CP-SAT", "full model, 2 LNS"), ("sum", ORANGE, "MILP", "CTAS-D, exact"),
-            ("dice-5", "#6B7580", "Greedy restarts", "8 random streams")]
+            ("dice-5", "#6B7580", "Greedy restarts", "8 randomized runs")]
     ry = [y0 + 120 + k * 61 for k in range(5)]
     for (icon, col, name, desc), y in zip(rows, ry):
         add(f'<rect x="{mx}" y="{y - 21}" width="42" height="42" rx="10" fill="{col}" opacity="0.16"/>')

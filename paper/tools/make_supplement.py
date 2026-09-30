@@ -20,28 +20,29 @@ from make_tables import SETTINGS, label, read
 from cbba_sota.bench import configs
 
 DOCS = ROOT / "docs" / "results"
-NAMES = {"ALNS2": "ALNS", "ALNS1": "ALNS v1", "CPSAT": "CP-LNS", "PCPSAT": "Parallel CP-LNS",
+NAMES = {"ALNS2": "ALNS", "ALNS1": "ALNS, earlier version", "CPSAT": "CP-LNS", "PCPSAT": "Parallel CP-LNS",
          "CPFULL": "CP-SAT full", "CTAS": "CTAS-D", "CONSTRUCT": "Greedy restarts", "RL": "RL policy"}
 ORDER = ("ALNS2", "CPSAT", "PCPSAT", "CPFULL", "CTAS", "CONSTRUCT", "RL", "ALNS1")
 BUDGETS = ("0.5", "1", "2", "5", "10", "B1", "2B1")
 SMALL = ("SA-BT-25-5-20", "SA-AT-25-5-20", "MA-AT-25-5-20")
-ABLATIONS = (("v1", "v1 (Phase 1)"), ("no-init", "no portfolio"), ("no-resort", "no re-sort"),
+ABLATIONS = (("v1", "earlier version"), ("no-init", "no portfolio"), ("no-resort", "no re-sort"),
              ("alt", "delay-aware covers"))
 
 CAPTION_GAPS = (r"\caption{Mean gap to the best known plan (\%) on the SPLIT split per method, number of cores and "
                 r"budget ($^*$: some runs late, scored at the budget by their trace or as failures, as pre-registered). "
                 r"CPU: CPU seconds of all processes and threads / (budget $\times$ cores) at $B_1$.}")
-CAPTION_ABLATION = (r"\caption{Ablation on dev (1 worker): mean paired makespan ratio variant / final ALNS [bootstrap "
-                    r"95\% CI]; above 1 means the variant is worse. v1 is the configuration of an earlier phase (own "
+CAPTION_ABLATION = (r"\caption{Ablation on the development instances (1 worker): mean paired makespan ratio variant / "
+                    r"final ALNS [bootstrap 95\% CI]; above 1 means the variant is worse. Earlier version: the "
+                    r"configuration before the last round of development (own "
                     r"random-order construction, no re-sort, older kernels); ``no portfolio'' constructs by own "
                     r"insertion; ``no re-sort'' never re-sorts the order by start times; ``delay-aware covers'' adds a "
                     r"second cover per slot (not kept: it halves the iteration rate). Blank: not run.}")
-CAPTION_REFS = (r"\caption{Val split: how far the best plan of any run without an ALNS component (competitor runs of "
+CAPTION_REFS = (r"\caption{Validation instances: how far the best plan of any run without an ALNS component (competitor runs of "
                 r"the timed campaigns and the long CP-SAT references) is above the best known plan, mean over the "
                 r"instances; the 300-s references on 8 cores (parallel CP-LNS and CP-SAT full model, both "
                 r"started from greedy plans only), their mean gap to the best known plan; and the distance of "
                 r"CP-SAT's certified lower bound below the best known plan.}")
-CAPTION_SMALL = (r"\caption{Val split, three 20-task settings (descriptive; earlier campaign on another host): mean gap "
+CAPTION_SMALL = (r"\caption{Validation instances, three 20-task settings (descriptive; earlier campaign on another host): mean gap "
                  r"to the best known plan (\%) at $B_1$ on 8 cores, and the instances that CP-SAT proved optimal in "
                  r"60\,s on 8 cores.}")
 CAPTION_PARAMS = (r"\caption{Per-setting parameters of the competitors, chosen on the development instances: time limit "
@@ -80,7 +81,7 @@ def gaps_table(gaps: list[dict], split: str) -> str:
                 cells = [gap_cell(sel.get(b)) for b in present]
                 cpu = sel.get("B1", {}).get("cpu_share", "")
                 cpu = f"{float(cpu):.2f}" if cpu else ""
-                lines.append(f"{label(name) if first else ''} & {NAMES[method]}-{cores} & " + " & ".join(cells)
+                lines.append(f"{label(name) if first else ''} & {NAMES[method]}, {cores}\\,{'core' if str(cores) == '1' else 'cores'} & " + " & ".join(cells)
                              + f" & {cpu}" + r" \\")
                 first = False
         lines.append(r"\midrule")
