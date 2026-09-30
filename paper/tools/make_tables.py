@@ -350,6 +350,15 @@ def thousands(x: float) -> str:
     return f"{round(x, -2):,.0f}".replace(",", "{,}")
 
 
+def sci(x: float) -> str:
+    """A p-value for math mode: 0.62, or 5.4 \\times 10^{-10}."""
+    t = f"{x:.2g}"
+    if "e" not in t:
+        return t
+    m, e = t.split("e")
+    return f"{m} \\times 10^{{{int(e)}}}"
+
+
 def numbers(ratios: list[dict], gaps: list[dict], rows: list[dict]) -> str:
     """Macros for the text: ranges of ratios and gains per competitor and claim, where claims hold, CPU use, CTAS-D
     solved shares, the worker ablation, RL sample counts and ALNS iteration rates."""
@@ -394,7 +403,7 @@ def numbers(ratios: list[dict], gaps: list[dict], rows: list[dict]) -> str:
                                           for s, f in fails.items() if f) or "none")
         macro(f"{pre}tests", str(len(rs)))
         macro(f"{pre}sig", str(sum(float(r["p_holm"]) < ALPHA for r in rs)))
-        macro(f"{pre}maxp", f"{max(float(r['p_holm']) for r in rs):.2g}" if rs else "--")
+        macro(f"{pre}maxp", sci(max(float(r["p_holm"]) for r in rs)) if rs else "--")
         macro(f"{pre}won", str(sum(int(r["wins"]) for r in rs)))
         macro(f"{pre}pairs", str(sum(int(r["n"]) for r in rs)))
     for seconds, pre in ((2, "ShareTwo"), (1, "ShareOne"), (0.5, "ShareHalf")):

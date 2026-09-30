@@ -1,30 +1,42 @@
 \section{Results}
 \label{sec:results}
 
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/ratios}
+\caption{How much shorter ALNS's plans are than those of the strongest competitor in each setting (named; every other
+competitor is further behind) and than the RL policy's, every competitor on 8 cores at $B_1$: ALNS on 1 core for
+2\,s (hollow; at most \ShareTwohi\% of the competitor's CPU time) and on 8 cores at $B_1$ (filled). Mean of
+$1 - $ ALNS / competitor makespan over the 50 test instances. All differences shown are significant after Holm's
+correction except the one marked n.s. CTAS-D, which mostly fails, is not shown; ratios per competitor with confidence
+intervals are in the supplement.}
+\label{fig:ratios}
+\end{figure}
+
+
 \begin{figure*}[t]
 \centering
-\includegraphics[width=\textwidth]{figures/ratios}
-\caption{Paired makespan ratio ALNS / competitor, each competitor on 8 cores at $B_1$ (mean over the 50 test instances
-with bootstrap 95\% CI; below 1: ALNS better). Hollow: not significant after Holm's correction. CTAS-D failures count
-as makespan 200 and its ratios are off the scale (value shown); it is not run on the 500-task settings. The numbers are
-tabulated in the supplement.}
-\label{fig:ratios}
+\includegraphics[width=\textwidth]{figures/budget}
+\caption{Mean gap to the best known plan (\%) against the compute used (CPU-seconds = cores $\times$ wall-clock, log
+scale). Blue: ALNS on one core at 0.5, 1, 2\,s (hollow) and $B_1$, and on 8 cores at $B_1$ (filled, at $8 B_1$, dotted
+line). Horizontal lines: the competitors on 8 cores at $B_1$, the strongest one dark and named; the RL policy is off
+the scale (arrow, value shown) and CTAS-D is not shown. 50 test instances per setting.}
+\label{fig:budget}
 \end{figure*}
-
 
 \paragraph{C2: a fraction of the compute.} ALNS on one core for 2\,s, \ShareTwolo--\ShareTwohi\% of the CPU time
 of a competitor on 8 cores at $B_1$, is significantly better than every competitor at that full budget on \Ctwoheld{}
-of the \Ctwosettings{} settings (Figure~\ref{fig:ratios}a; \Ctwosig{} of \Ctwotests{} tests); the exception is the
+of the \Ctwosettings{} settings (Figure~\ref{fig:ratios}, hollow; \Ctwosig{} of \Ctwotests{} tests); the exception is the
 setting of \Ctwofaillist. It beats the learned policy on all \CtwoRLheld{} settings, by \Ctworlgainlo--\Ctworlgainhi\%.
 Descriptively, it does so already in 0.5\,s (on \CtwoHalfRLheld{} settings), and at 1\,s and 0.5\,s it beats every
-competitor on \CtwoOneheld{} and \CtwoHalfheld{} settings. Plotted against the compute used (supplement), the one-core ALNS curve falls below every competitor's level within a
+competitor on \CtwoOneheld{} and \CtwoHalfheld{} settings. In Figure~\ref{fig:budget}, the one-core ALNS curve falls below the strongest competitor's level within a
 few CPU-seconds, while the competitors spend \CpuBonelo{} to \CpuBonehi. Eight workers instead of one improve ALNS at $B_1$ by only
 \Workersgainlo--\Workersgainhi\%: its advantage is per-core efficiency, not parallelism. Table~\ref{tab:methods} lists ALNS from 0.5\,s on one core
 to 8 cores: its gap shrinks as its compute grows, and from 2\,s on both ends of its range lie below those of
 every competitor.
 
 \paragraph{C1: equal compute.} ALNS on 8 cores is better than every competitor at the same budget $B_1$ on
-\ConeBheld{} of the \ConeBsettings{} settings (Figure~\ref{fig:ratios}b): \ConeBsig{} of the \ConeBtests{} tests are
+\ConeBheld{} of the \ConeBsettings{} settings (Figure~\ref{fig:ratios}, filled): \ConeBsig{} of the \ConeBtests{} tests are
 significant after Holm's correction (largest adjusted $p = \ConeBmaxp$), and ALNS gives the shorter plan in
 \ConeBwon{} of the \ConeBpairs{} paired runs. Its plans are \ConeBclasslo--\ConeBclasshi\% shorter than those of the
 three CP-SAT-based methods and greedy restarts, and \ConeBrlgainlo--\ConeBrlgainhi\% shorter than those of the RL
