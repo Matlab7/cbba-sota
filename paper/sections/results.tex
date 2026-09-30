@@ -34,9 +34,9 @@ significant, plans \ConeBBclasslo--\ConeBBclasshi\% shorter).
 
 \input{tables/methods}
 
-\paragraph{Parallelism does not rescue CP-SAT.} CP-LNS uses only \Cpucpsatlo--\Cpucpsathi{} of its 8 cores
+\paragraph{Parallelism does not rescue CP-SAT.} CP-LNS uses only \Cpucpsatlo--\Cpucpsathi\% of its 8 cores
 (Table~\ref{tab:methods}), because building each subproblem is serial between the multi-threaded solver calls.
-Parallel CP-LNS keeps all cores busy (\Cpupcpsatlo--\Cpupcpsathi) and makes many more solver calls
+Parallel CP-LNS keeps all cores busy (\Cpupcpsatlo--\Cpupcpsathi\%) and makes many more solver calls
 (Table~\ref{tab:steps}), but it is not clearly better: the ratio ALNS / competitor is \ConeBpcpsatlo--\ConeBpcpsathi{}
 against the parallel version and \ConeBcpsatlo--\ConeBcpsathi{} against the single search. CP-SAT's own search on the
 full model does no better (\ConeBcpfulllo--\ConeBcpfullhi): on the larger instances it rarely improves on the greedy

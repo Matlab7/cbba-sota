@@ -39,8 +39,9 @@ CAPTION_RATIOS = (r"\caption{Paired makespan ratio ALNS / competitor (mean over 
                   r"ratios, $\alpha = 0.05$). CTAS-D failures count as makespan 200; the share of instances it solved "
                   r"within the budget follows its ratio in parentheses; it is not run on the 500-task settings.}")
 CAPTION_METHODS = (r"\caption{Mean gap to the best plan found by any run (\%) and CPU used (CPU seconds of all processes and "
-                   r"threads / ($B_1 \times 8$)) at budget $B_1$ on 8 cores; range over the eight settings. CTAS-D: share "
-                   r"of the instances solved within $B_1$, up to 200 tasks.}")
+                   r"threads, as a share of 8 cores for $B_1$); range over the eight settings. Every method runs on 8 cores "
+                   r"at $B_1$, except ALNS on 1 core for 2\,s. CTAS-D: share of the instances solved within $B_1$, up to "
+                   r"200 tasks.}")
 CAPTION_SETTINGS = (r"\caption{The eight benchmark settings with 50 or more tasks. $B_1$ is the time budget of every method: "
                     r"the computation time that the benchmark paper reports for its policy with ten sampled rollouts "
                     r"\cite{dai2025heterogeneous}. RL rollouts: how many rollouts the released policy completes within "
@@ -146,8 +147,10 @@ def methods(gaps: list[dict]) -> str:
     rows = [g for g in gaps if g["cores"] == "8" and g["budget"] == "B1"]
     lines = [r"\begin{table}[t]", r"\centering", r"\small",
              CAPTION_METHODS,
-             r"\label{tab:methods}", r"\begin{tabular}{lcc}", r"\toprule", r"Method & Gap to best (\%) & CPU used \\",
+             r"\label{tab:methods}", r"\begin{tabular}{lcc}", r"\toprule", r"Method & Gap to best (\%) & CPU used (\%) \\",
              r"\midrule"]
+    one = [g for g in gaps if g["method"] == "ALNS2" and g["cores"] == "1" and g["budget"] == "2"
+           and g["setting"] in SETTINGS]
     for k, name in METHODS:
         sel = [g for g in rows if g["method"] == k and g["setting"] in SETTINGS]
         if not sel:
@@ -159,7 +162,14 @@ def methods(gaps: list[dict]) -> str:
             gtxt = f"solves {min(ok):.0f}--{max(ok):.0f}\\%"
         else:
             gtxt = f"{min(gap):.1f}--{max(gap):.1f}"
-        lines.append(f"{name} & {gtxt} & {min(cpu):.2f}--{max(cpu):.2f}" + r" \\")
+        if k == "ALNS2":
+            name = "ALNS, 8 cores"
+        lines.append(f"{name} & {gtxt} & {100 * min(cpu):.0f}--{100 * max(cpu):.0f}" + r" \\")
+        if k == "ALNS2" and one:  # the same search on one core for 2 s, CPU as a share of 8 cores for B1
+            gap1 = [float(g["gap_pct"]) for g in one]
+            cpu1 = [100 * float(g["cpu_share"]) * 2 / (8 * b1_of(g["setting"])) for g in one]
+            lines.append(rf"ALNS, 1 core, 2\,s & {min(gap1):.1f}--{max(gap1):.1f} & {min(cpu1):.2f}--{max(cpu1):.1f} \\")
+            lines.append(r"\midrule")
     lines += [r"\bottomrule", r"\end{tabular}", r"\end{table}"]
     return "\n".join(lines) + "\n"
 
@@ -373,8 +383,8 @@ def numbers(ratios: list[dict], gaps: list[dict], rows: list[dict]) -> str:
     for k, _ in METHODS:
         m = k.lower().rstrip("2")  # macro names cannot hold digits (ALNS2 -> alns)
         cpu = [float(g["cpu_share"]) for g in b1 if g["method"] == k]
-        macro(f"Cpu{m}lo", f"{min(cpu):.2f}" if cpu else "--")
-        macro(f"Cpu{m}hi", f"{max(cpu):.2f}" if cpu else "--")
+        macro(f"Cpu{m}lo", f"{100 * min(cpu):.0f}" if cpu else "--")  # % of 8 cores for B1, as in Table 4
+        macro(f"Cpu{m}hi", f"{100 * max(cpu):.0f}" if cpu else "--")
         gap = [float(g["gap_pct"]) for g in b1 if g["method"] == k]
         macro(f"Gap{m}lo", f"{min(gap):.1f}" if gap else "--")
         macro(f"Gap{m}hi", f"{max(gap):.1f}" if gap else "--")
