@@ -156,9 +156,10 @@ def run_job(name: str, split: str, i: int, kind: str, width: int, seconds: float
 # --- collection ------------------------------------------------------------------------------------------------
 
 
-def rows_of(name: str, split: str = SPLIT) -> list[dict]:
+def rows_of(name: str, split: str | None = None) -> list[dict]:
     """Current-fingerprint rows of an instance set from runs/bks and the timed campaigns (``source`` names the
-    directory)."""
+    directory); ``split`` defaults to the current ``SPLIT`` (set by --split), read at call time."""
+    split = SPLIT if split is None else split
     out = []
     for root in (OUT, *ANYTIME):
         path = root / f"{name}.jsonl"
@@ -189,8 +190,9 @@ def best_known(rows: list[dict]) -> dict[int, dict]:
     return out
 
 
-def load_bks(split: str = SPLIT) -> dict[str, dict[int, float]]:
-    """setting -> instance -> BKS makespan, from runs/bks/<split>_bks.json."""
+def load_bks(split: str | None = None) -> dict[str, dict[int, float]]:
+    """setting -> instance -> BKS makespan, from runs/bks/<split>_bks.json (default: the current ``SPLIT``)."""
+    split = SPLIT if split is None else split
     data = json.loads((OUT / f"{split}_bks.json").read_text())
     return {name: {int(i): e["bks"] for i, e in by_i.items()} for name, by_i in data.items()}
 

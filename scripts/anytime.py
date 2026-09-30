@@ -603,7 +603,7 @@ def report(args) -> None:
                if r["method"] in ("ALNS2", "ALNS1", "RL", "PCPSAT") and r.get("cpu_s") and r["wall_s"] > 0]
         late_note = "late and left out" if LATE_RULE == "drop" else "late, scored at the budget by their trace or as 200"
         versions = sorted({r.get("git", "?") for r in used})
-        print(f"\n{name}  (val, n = {len(bks_all[name])} BKS; B1 = {labels['B1']:g} s)  mean gap to BKS, %"
+        print(f"\n{name}  ({SPLIT}, n = {len(bks_all[name])} BKS; B1 = {labels['B1']:g} s)  mean gap to BKS, %"
               f"  (* = some runs {late_note}); code {', '.join(versions)}")
         kept = "kept" if args.keep_disturbed else "left out"
         print(f"  rows used {len(used)}, disturbed {sum(map(disturbed, every))} ({kept}); throttled share of CPU periods "
@@ -641,12 +641,12 @@ def report(args) -> None:
         import csv
 
         args.csv_dir.mkdir(parents=True, exist_ok=True)
-        for fname, table in (("anytime_gaps_val.csv", gaps), ("anytime_ratios_val.csv", rats)):
+        for fname, table in ((f"anytime_gaps_{SPLIT}.csv", gaps), (f"anytime_ratios_{SPLIT}.csv", rats)):
             with (args.csv_dir / fname).open("w", newline="") as f:
                 w = csv.DictWriter(f, fieldnames=list(table[0]))
                 w.writeheader()
                 w.writerows(table)
-        print(f"\nwrote {args.csv_dir}/anytime_gaps_val.csv and anytime_ratios_val.csv")
+        print(f"\nwrote {args.csv_dir}/anytime_gaps_{SPLIT}.csv and anytime_ratios_{SPLIT}.csv")
     if args.png:
         plot(curves, args.png)
     if args.compare:

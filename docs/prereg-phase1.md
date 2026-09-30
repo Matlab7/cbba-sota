@@ -121,3 +121,10 @@ Budgets include construction and model building. Parameters are the dev choices 
 - 2026-09-29: removed an inaccurate disclosure bullet on AI assistance (the frozen text is in commit `2e53eab`). The
   authors proposed the experimental design; an AI coding assistant wrote code and reviewed the design. This correction
   changes no hypothesis, competitor, budget, instance, execution rule or analysis.
+- 2026-09-30, after the test run: `scripts/bks.py collect --split test` read the validation rows, because `rows_of`
+  bound its default split when the module was imported, before `--split` set it. The descriptive gap to the best
+  known plans (and the tables built on it: per-method gaps, CPU shares and CTAS-D's solved share, which the report
+  computes on the instances that have a best known plan) was therefore computed against validation plans on 10-20
+  instances. The fix passes the split at call time (`rows_of`, `load_bks`) and names the report's CSV files by split;
+  the test tables were regenerated from the unchanged campaign rows. The paired ratios, the C1 and C2 tests and every
+  row of the campaign are unaffected; the frozen trees above still identify the code that produced the rows.
