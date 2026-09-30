@@ -14,15 +14,17 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "scripts"))
 import contextlib
 import io
 
 from cbba_sota.bench import configs
 from cbba_sota.hetero import load_instance
 from cbba_sota.hetero.replay import make_env
+import anytime  # noqa: E402  (scripts/: the harness's definition of a disturbed row)
 
 CASES = [  # (id, setting, split, instance, title)
-    ("large", "MA-AT-150-5-500", "test", 5, "Largest win: 150 robots, 500 tasks"),
+    ("large", "MA-AT-150-5-500", "test", 5, "One of the largest wins: 150 robots, 500 tasks"),
     ("small", "MA-AT-25-5-50", "test", 0, "Easy to follow: 25 robots, 50 tasks"),
 ]
 METHODS = [  # (row key, name, colour, description)
@@ -41,7 +43,9 @@ def rows_of(setting: str, split: str, i: int) -> dict[str, dict]:
     out = {}
     for line in (runs / f"{setting}.jsonl").open():
         r = json.loads(line)
-        if r["instance"] == i and r["cores"] == 8 and r["budget"] == "B1" and not r.get("disturbed"):
+        # the rows the paper uses: this campaign's code, not disturbed (a disturbed row was re-run later)
+        if (r["instance"] == i and r["cores"] == 8 and r["budget"] == "B1" and not anytime.disturbed(r)
+                and r.get("split") == split):
             out[r["method"]] = r
     return out
 
