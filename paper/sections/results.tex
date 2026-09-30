@@ -11,22 +11,14 @@ tabulated in the supplement.}
 \label{fig:ratios}
 \end{figure*}
 
-\begin{figure*}[t]
-\centering
-\includegraphics[width=\textwidth]{figures/budget}
-\caption{Mean gap to the best known plan (\%) against the compute used (CPU-seconds, cores $\times$ wall-clock).
-Line: ALNS on one core at 0.5, 1, 2\,s and $B_1$; open square: ALNS on 8 cores at $B_1$; diamond and horizontal line:
-each competitor on 8 cores at $B_1$ (CTAS-D not shown). Test instances, 50 per setting.}
-\label{fig:budget}
-\end{figure*}
 
 \paragraph{C2: a fraction of the compute.} ALNS on one core for 2\,s, \ShareTwolo--\ShareTwohi\% of the CPU time
 of a competitor on 8 cores at $B_1$, is significantly better than every competitor at that full budget on \Ctwoheld{}
 of the \Ctwosettings{} settings (Figure~\ref{fig:ratios}a; \Ctwosig{} of \Ctwotests{} tests); the exception is the
 setting of \Ctwofaillist. It beats the learned policy on all \CtwoRLheld{} settings, by \Ctworlgainlo--\Ctworlgainhi\%.
 Descriptively, it does so already in 0.5\,s (on \CtwoHalfRLheld{} settings), and at 1\,s and 0.5\,s it beats every
-competitor on \CtwoOneheld{} and \CtwoHalfheld{} settings. In Figure~\ref{fig:budget}, the one-core line falls below every competitor's level within a few CPU-seconds,
-while the competitors spend \CpuBonelo{} to \CpuBonehi. Eight workers instead of one improve ALNS at $B_1$ by only
+competitor on \CtwoOneheld{} and \CtwoHalfheld{} settings. Plotted against the compute used (supplement), the one-core ALNS curve falls below every competitor's level within a
+few CPU-seconds, while the competitors spend \CpuBonelo{} to \CpuBonehi. Eight workers instead of one improve ALNS at $B_1$ by only
 \Workersgainlo--\Workersgainhi\%: its advantage is per-core efficiency, not parallelism. Table~\ref{tab:methods} lists ALNS from 0.5\,s on one core
 to 8 cores: its gap shrinks as its compute grows, and from 2\,s on both ends of its range lie below those of
 every competitor.
