@@ -38,10 +38,11 @@ CAPTION_RATIOS = (r"\caption{Paired makespan ratio ALNS / competitor (mean over 
                   r"1: ALNS better). $^\dagger$: not significant after Holm's correction (one-sided paired $t$-test on log "
                   r"ratios, $\alpha = 0.05$). CTAS-D failures count as makespan 200; the share of instances it solved "
                   r"within the budget follows its ratio in parentheses; it is not run on the 500-task settings.}")
-CAPTION_METHODS = (r"\caption{Mean gap to the best plan found by any run (\%) and CPU used (CPU seconds of all processes and "
-                   r"threads, as a share of 8 cores for $B_1$); range over the eight settings. Every method runs on 8 cores "
-                   r"at $B_1$, except ALNS on 1 core for 2\,s. CTAS-D: share of the instances solved within $B_1$, up to "
-                   r"200 tasks.}")
+CAPTION_METHODS = (r"\caption{ALNS with growing compute, and every competitor on 8 cores at $B_1$: CPU used (CPU seconds "
+                   r"of all processes and threads, as a share of 8 cores for $B_1$) and mean gap to the best plan found by "
+                   r"any run, range over the eight settings; last column: settings where ALNS is significantly better "
+                   r"than every competitor (Holm). $^*$: descriptive; --: not tested. CTAS-D: share of the instances solved within $B_1$, "
+                   r"up to 200 tasks.}")
 CAPTION_SETTINGS = (r"\caption{The eight benchmark settings with 50 or more tasks. $B_1$ is the time budget of every method: "
                     r"the computation time that the benchmark paper reports for its policy with ten sampled rollouts "
                     r"\cite{dai2025heterogeneous}. RL rollouts: how many rollouts the released policy completes within "
@@ -143,60 +144,50 @@ def c1c2(ratios: list[dict], gaps: list[dict]) -> str:
     return "\n".join(lines) + "\n"
 
 
-def methods(gaps: list[dict]) -> str:
+def pct(x: float) -> str:
+    """A CPU share in %, with as many digits as its size needs."""
+    t = f"{x:.2f}" if x < 1 else f"{x:.1f}" if x < 10 else f"{x:.0f}"
+    return t.rstrip("0").rstrip(".") if "." in t else t
+
+
+LADDER = (("1", "0.5", r"ALNS, 1 core, 0.5\,s$^*$", "C2 1 core 0.5 s vs 8 cores B1"),
+          ("1", "1", r"ALNS, 1 core, 1\,s$^*$", "C2 1 core 1 s vs 8 cores B1"),
+          ("1", "2", r"ALNS, 1 core, 2\,s", "C2 1 core 2 s vs 8 cores B1"),
+          ("1", "B1", r"ALNS, 1 core, $B_1$$^*$", None),
+          ("8", "B1", r"ALNS, 8 cores, $B_1$", "C1 8 cores B1"))
+
+
+def methods(gaps: list[dict], ratios: list[dict]) -> str:
+    """ALNS at growing compute (CPU share, gap, settings where it beats every competitor), then every competitor on 8
+    cores at B1 (CPU share, gap)."""
+    lines = [r"\begin{table}[t]", r"\centering", r"\small", r"\setlength{\tabcolsep}{4pt}", CAPTION_METHODS,
+             r"\label{tab:methods}", r"\begin{tabular}{lccc}", r"\toprule",
+             r"Method & CPU used (\%) & Gap to best (\%) & Beats all \\", r"\midrule"]
+    for cores, budget, name, tag in LADDER:
+        sel = [g for g in gaps if g["method"] == "ALNS2" and g["cores"] == cores and g["budget"] == budget
+               and g["setting"] in SETTINGS]
+        if not sel:
+            continue
+        cpu = [100 * float(g["cpu_share"]) * float(g["budget_s"]) * int(cores) / (8 * b1_of(g["setting"])) for g in sel]
+        gap = [float(g["gap_pct"]) for g in sel]
+        rs = [r for r in ratios if r["comparison"] == tag and r["setting"] in SETTINGS] if tag else []
+        won = lambda r: float(r["p_holm"]) < ALPHA and float(r["ratio"]) < 1  # noqa: E731
+        beats = (f"{sum(all(won(r) for r in rs if r['setting'] == n) for n in SETTINGS)} of 8" if rs else "--")
+        lines.append(f"{name} & {pct(min(cpu))}--{pct(max(cpu))} & {min(gap):.1f}--{max(gap):.1f} & {beats}" + r" \\")
+    lines.append(r"\midrule")
     rows = [g for g in gaps if g["cores"] == "8" and g["budget"] == "B1"]
-    lines = [r"\begin{table}[t]", r"\centering", r"\small",
-             CAPTION_METHODS,
-             r"\label{tab:methods}", r"\begin{tabular}{lcc}", r"\toprule", r"Method & Gap to best (\%) & CPU used (\%) \\",
-             r"\midrule"]
-    one = [g for g in gaps if g["method"] == "ALNS2" and g["cores"] == "1" and g["budget"] == "2"
-           and g["setting"] in SETTINGS]
-    for k, name in METHODS:
+    for k, name in METHODS[1:]:
         sel = [g for g in rows if g["method"] == k and g["setting"] in SETTINGS]
         if not sel:
             continue
         gap = [float(g["gap_pct"]) for g in sel]
-        cpu = [float(g["cpu_share"]) for g in sel]
+        cpu = [100 * float(g["cpu_share"]) for g in sel]
         if k == "CTAS":
             ok = [float(g["success"]) * 100 for g in sel]
             gtxt = f"solves {min(ok):.0f}--{max(ok):.0f}\\%"
         else:
             gtxt = f"{min(gap):.1f}--{max(gap):.1f}"
-        if k == "ALNS2":
-            name = "ALNS, 8 cores"
-        lines.append(f"{name} & {gtxt} & {100 * min(cpu):.0f}--{100 * max(cpu):.0f}" + r" \\")
-        if k == "ALNS2" and one:  # the same search on one core for 2 s, CPU as a share of 8 cores for B1
-            gap1 = [float(g["gap_pct"]) for g in one]
-            cpu1 = [100 * float(g["cpu_share"]) * 2 / (8 * b1_of(g["setting"])) for g in one]
-            lines.append(rf"ALNS, 1 core, 2\,s & {min(gap1):.1f}--{max(gap1):.1f} & {min(cpu1):.2f}--{max(cpu1):.1f} \\")
-            lines.append(r"\midrule")
-    lines += [r"\bottomrule", r"\end{tabular}", r"\end{table}"]
-    return "\n".join(lines) + "\n"
-
-
-PROGRESS = (("C2 1 core 0.5 s vs 8 cores B1", r"1 core, 0.5\,s$^*$", 0.5),
-            ("C2 1 core 1 s vs 8 cores B1", r"1 core, 1\,s$^*$", 1.0),
-            ("C2 1 core 2 s vs 8 cores B1", r"1 core, 2\,s", 2.0),
-            ("C1 8 cores B1", r"8 cores, $B_1$", None))
-CAPTION_PROGRESS = (r"\caption{Settings (of 8; CTAS-D of 6) where ALNS with growing compute is significantly better than "
-                    r"each competitor on 8 cores at $B_1$ (Holm per row); CPU: share of a competitor's CPU time. "
-                    r"$^*$: descriptive.}")
-
-
-def progress_table(ratios: list[dict]) -> str:
-    """Settings won against each competitor as ALNS's compute grows (C2 at 0.5, 1, 2 s on 1 core; C1 on 8 cores)."""
-    short = {"CPSAT": "CP-LNS", "PCPSAT": "P.\\ CP-LNS", "CPFULL": "CP-SAT", "CTAS": "CTAS-D", "CONSTRUCT": "Greedy",
-             "RL": "RL"}
-    lines = [r"\begin{table}[t]", r"\centering", r"\footnotesize", r"\setlength{\tabcolsep}{2.6pt}", CAPTION_PROGRESS,
-             r"\label{tab:progress}", r"\begin{tabular}{@{}lr" + "c" * (len(COMPETITORS) + 1) + "@{}}", r"\toprule",
-             r"ALNS & CPU (\%) & " + " & ".join(short[k] for k, _ in COMPETITORS) + r" & all \\", r"\midrule"]
-    for tag, name, seconds in PROGRESS:
-        rs = [r for r in ratios if r["comparison"] == tag and r["setting"] in SETTINGS]
-        won = lambda r: float(r["p_holm"]) < ALPHA and float(r["ratio"]) < 1  # noqa: E731
-        cells = [str(sum(won(r) for r in rs if key(r["other"]) == k)) for k, _ in COMPETITORS]
-        every = sum(all(won(r) for r in rs if r["setting"] == n) for n in SETTINGS if any(r["setting"] == n for r in rs))
-        cpu = "100" if seconds is None else rf"$\le$\,{share_pct(seconds)[1]:.1f}"
-        lines.append(f"{name} & {cpu} & " + " & ".join(cells) + rf" & \textbf{{{every}}} \\")
+        lines.append(f"{name} & {pct(min(cpu))}--{pct(max(cpu))} & {gtxt} &" + r" \\")
     lines += [r"\bottomrule", r"\end{tabular}", r"\end{table}"]
     return "\n".join(lines) + "\n"
 
@@ -521,8 +512,7 @@ def main() -> None:
     rows = load_rows(args.runs)
     args.out.mkdir(parents=True, exist_ok=True)
     (args.out / "c1c2.tex").write_text(c1c2(ratios, gaps))
-    (args.out / "methods.tex").write_text(methods(gaps))
-    (args.out / "progress.tex").write_text(progress_table(ratios))
+    (args.out / "methods.tex").write_text(methods(gaps, ratios))
     (args.out / "settings.tex").write_text(settings_table(rl_samples(rows)))
     timing = json.loads(args.timing.read_text()) if args.timing.exists() else {}
     (args.out / "steps.tex").write_text(steps_table(rows, timing))

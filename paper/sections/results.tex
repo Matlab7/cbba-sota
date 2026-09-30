@@ -19,10 +19,9 @@ of the \Ctwosettings{} settings (Table~\ref{tab:ratios}a; \Ctwosig{} of \Ctwotes
 Descriptively, it does so already in 0.5\,s (on \CtwoHalfRLheld{} settings), and at 1\,s and 0.5\,s it beats every
 competitor on \CtwoOneheld{} and \CtwoHalfheld{} settings. In Figure~\ref{fig:budget}, the one-core line falls below every competitor's level within a few CPU-seconds,
 while the competitors spend \CpuBonelo{} to \CpuBonehi. Eight workers instead of one improve ALNS at $B_1$ by only
-\Workersgainlo--\Workersgainhi\%: its advantage is per-core efficiency, not parallelism. Table~\ref{tab:progress} sums this up: as ALNS gets
-more compute, it beats each competitor on more settings, and against the learned policy it needs only 0.5\,s.
-
-\input{tables/progress}
+\Workersgainlo--\Workersgainhi\%: its advantage is per-core efficiency, not parallelism. Table~\ref{tab:methods} lists ALNS from 0.5\,s on one core
+to 8 cores: its gap shrinks as its compute grows, and from 2\,s on both ends of its range lie below those of
+every competitor.
 
 \paragraph{C1: equal compute.} ALNS on 8 cores is better than every competitor at the same budget $B_1$ on
 \ConeBheld{} of the \ConeBsettings{} settings (Table~\ref{tab:ratios}b): \ConeBsig{} of the \ConeBtests{} tests are

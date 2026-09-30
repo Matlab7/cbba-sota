@@ -1,21 +1,25 @@
 \begin{table}[t]
 \centering
 \small
-\caption{Mean gap to the best plan found by any run (\%) and CPU used (CPU seconds of all processes and threads, as a share of 8 cores for $B_1$); range over the eight settings. Every method runs on 8 cores at $B_1$, except ALNS on 1 core for 2\,s. CTAS-D: share of the instances solved within $B_1$, up to 200 tasks.}
+\setlength{\tabcolsep}{4pt}
+\caption{ALNS with growing compute, and every competitor on 8 cores at $B_1$: CPU used (CPU seconds of all processes and threads, as a share of 8 cores for $B_1$) and mean gap to the best plan found by any run, range over the eight settings; last column: settings where ALNS is significantly better than every competitor (Holm). $^*$: descriptive; --: not tested. CTAS-D: share of the instances solved within $B_1$, up to 200 tasks.}
 \label{tab:methods}
-\begin{tabular}{lcc}
+\begin{tabular}{lccc}
 \toprule
-Method & Gap to best (\%) & CPU used (\%) \\
+Method & CPU used (\%) & Gap to best (\%) & Beats all \\
 \midrule
-ALNS, 8 cores & 0.0--0.9 & 98--100 \\
-ALNS, 1 core, 2\,s & 2.6--10.1 & 0.04--1.7 \\
+ALNS, 1 core, 0.5\,s$^*$ & 0.01--0.47 & 4.4--11.5 & 6 of 8 \\
+ALNS, 1 core, 1\,s$^*$ & 0.02--0.91 & 3.3--10.8 & 6 of 8 \\
+ALNS, 1 core, 2\,s & 0.04--1.7 & 2.6--10.1 & 7 of 8 \\
+ALNS, 1 core, $B_1$$^*$ & 12--13 & 0.6--2.5 & -- \\
+ALNS, 8 cores, $B_1$ & 98--100 & 0.0--0.9 & 8 of 8 \\
 \midrule
-CP-LNS & 3.9--13.8 & 34--79 \\
-Parallel CP-LNS & 4.9--13.3 & 97--101 \\
-CP-SAT full model & 5.8--16.3 & 51--90 \\
-CTAS-D (exact MILP) & solves 0--98\% & 49--96 \\
-Greedy restarts & 6.5--14.4 & 97--100 \\
-RL policy (published) & 28.3--63.6 & 89--97 \\
+CP-LNS & 34--79 & 3.9--13.8 & \\
+Parallel CP-LNS & 97--101 & 4.9--13.3 & \\
+CP-SAT full model & 51--90 & 5.8--16.3 & \\
+CTAS-D (exact MILP) & 49--96 & solves 0--98\% & \\
+Greedy restarts & 97--100 & 6.5--14.4 & \\
+RL policy (published) & 89--97 & 28.3--63.6 & \\
 \bottomrule
 \end{tabular}
 \end{table}
