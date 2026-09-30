@@ -123,7 +123,8 @@ def c1c2(ratios: list[dict], gaps: list[dict]) -> str:
     ncol = len(COMPETITORS) + 2
     lines = [r"\begin{table*}[t]", r"\centering", r"\small", r"\setlength{\tabcolsep}{3.5pt}",
              CAPTION_RATIOS,
-             r"\label{tab:ratios}", r"\begin{tabular}{ll" + "c" * len(COMPETITORS) + "}", r"\toprule",
+             r"\label{tab:ratios}", r"\resizebox{\textwidth}{!}{%",  # the supplement's text is narrower
+             r"\begin{tabular}{ll" + "c" * len(COMPETITORS) + "}", r"\toprule",
              r"Robots & Robots / species / tasks & " + " & ".join(name for _, name in COMPETITORS) + r" \\",
              r"\midrule"]
     for p, (tag, title) in enumerate(PANELS):
@@ -140,7 +141,7 @@ def c1c2(ratios: list[dict], gaps: list[dict]) -> str:
                 lines.append(f"{first} & {size(name)} & " + " & ".join(cells) + r" \\")
             lines.append(r"\cmidrule(l){2-" + str(ncol) + "}")
         lines[-1] = r"\midrule" if p < len(PANELS) - 1 else r"\bottomrule"
-    lines += [r"\end{tabular}", r"\end{table*}"]
+    lines += [r"\end{tabular}}", r"\end{table*}"]
     return "\n".join(lines) + "\n"
 
 

@@ -4,6 +4,7 @@
 \setlength{\tabcolsep}{3.5pt}
 \caption{Paired makespan ratio ALNS / competitor (mean over the instances with bootstrap 95\% CI; below 1: ALNS better). $^\dagger$: not significant after Holm's correction (one-sided paired $t$-test on log ratios, $\alpha = 0.05$). CTAS-D failures count as makespan 200; the share of instances it solved within the budget follows its ratio in parentheses; it is not run on the 500-task settings.}
 \label{tab:ratios}
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{llcccccc}
 \toprule
 Robots & Robots / species / tasks & CP-LNS & Parallel CP-LNS & CP-SAT full & CTAS-D & Greedy restarts & RL policy \\
@@ -32,5 +33,5 @@ Robots & Robots / species / tasks & CP-LNS & Parallel CP-LNS & CP-SAT full & CTA
  & 150/10/500 & 0.881 {\scriptsize [0.87, 0.89]} & 0.884 {\scriptsize [0.88, 0.89]} & 0.861 {\scriptsize [0.85, 0.87]} & -- & 0.876 {\scriptsize [0.87, 0.88]} & 0.689 {\scriptsize [0.68, 0.69]} \\
  & 150/5/500 & 0.889 {\scriptsize [0.88, 0.90]} & 0.894 {\scriptsize [0.88, 0.90]} & 0.871 {\scriptsize [0.86, 0.88]} & -- & 0.884 {\scriptsize [0.88, 0.89]} & 0.672 {\scriptsize [0.63, 0.71]} \\
 \bottomrule
-\end{tabular}
+\end{tabular}}
 \end{table*}
