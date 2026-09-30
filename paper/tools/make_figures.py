@@ -4,6 +4,8 @@ Usage: make_figures.py [--split test|val] [--out paper/figures]
 budget.pdf: per H1 setting, the mean gap to the best known plan (%) of ALNS on 1 core at 0.5, 1, 2 s and B1 and on
 8 cores at B1, against each competitor on 8 cores at B1 (horizontal lines), over every instance of the
 split (grid test / c1); runs are scored at their budget as in the reports (scripts/anytime.py at_budget).
+ratios.pdf (test): the paired makespan ratios ALNS / competitor with bootstrap 95% CIs of C2 (1 core, 2 s) and C1
+(8 cores, B1), from docs/results/test/anytime_ratios_test.csv; hollow markers are not significant after Holm.
 """
 from __future__ import annotations
 
@@ -27,6 +29,61 @@ LEVELS = (("CPSAT", "CP-LNS", "#D55E00", "-"), ("PCPSAT", "Parallel CP-LNS", "#E
           ("CPFULL", "CP-SAT full model", "#009E73", "-."), ("CONSTRUCT", "Greedy restarts", "#999999", ":"),
           ("RL", "RL policy", "#CC79A7", (0, (5, 1, 1, 1, 1, 1))))
 ALNS = "#0072B2"
+CTAS_COLOUR = "#56B4E9"
+RATIO_PANELS = (("C2 1 core 2 s vs 8 cores B1", "(a) C2: ALNS on 1 core for 2 s"),
+                ("C1 8 cores B1", "(b) C1: ALNS on 8 cores at $B_1$"))
+
+
+def ratios_figure(plt, csv_path: Path, out: Path) -> None:
+    """Dot plot of the paired ratios (one row per setting, one marker per competitor, CI as whiskers)."""
+    import csv
+
+    rows = list(csv.DictReader(csv_path.open()))
+    xmin, xmax = 0.6, 1.06
+    ys = np.arange(len(SETTINGS))[::-1].astype(float)
+    offsets = np.linspace(-0.3, 0.3, len(LEVELS))
+    fig, axes = plt.subplots(1, 2, figsize=(7.0, 2.85), sharey=True)
+    for ax, (tag, title) in zip(axes, RATIO_PANELS):
+        by = {(r["setting"], r["other"].split("-")[0]): r for r in rows if r["comparison"] == tag}
+        ax.axvspan(1.0, xmax, color="#EFEFEF", zorder=0, lw=0)
+        ax.axvline(1.0, color="k", lw=0.7, zorder=1)
+        for (method, name, colour, _), off in zip(LEVELS, offsets):
+            for y, setting in zip(ys, SETTINGS):
+                r = by.get((setting, method))
+                if r is None:
+                    continue
+                ratio, lo, hi = float(r["ratio"]), float(r["lo"]), float(r["hi"])
+                sig = float(r["p_holm"]) < 0.05 and ratio < 1
+                ax.errorbar(ratio, y + off, xerr=[[ratio - lo], [hi - ratio]], fmt="o", ms=3.0, color=colour,
+                            mfc=colour if sig else "white", mew=0.9, elinewidth=0.8, capsize=0, zorder=3)
+        for y, setting in zip(ys, SETTINGS):  # CTAS-D: off the scale, value written next to the arrow
+            r = by.get((setting, "CTAS"))
+            if r is not None:
+                ax.plot(xmin + 0.004, y, marker="<", color=CTAS_COLOUR, ms=4, zorder=3, clip_on=False)
+                ax.text(xmin + 0.013, y, f"{float(r['ratio']):.2f}", fontsize=5.5, va="center", color="#2A7FB0")
+        for b in (5.5, 4.5):  # between the families SA-BT | SA-AT | MA-AT
+            ax.axhline(b, color="#BBBBBB", lw=0.5)
+        ax.set_xlim(xmin, xmax)
+        ax.set_ylim(-0.6, len(SETTINGS) - 0.4)
+        ax.set_title(title)
+        ax.set_xlabel("makespan ratio ALNS / competitor")
+        ax.text(0.985, 0.5, "competitor better", rotation=90, fontsize=5.5, color="#777777", va="center", ha="right",
+                transform=ax.transAxes)
+        ax.grid(axis="x", alpha=0.25, lw=0.4)
+    labels = []
+    for name in SETTINGS:
+        family, a, sp, t = name.rsplit("-", 3)
+        labels.append(f"{family} {a}/{sp}/{t}")
+    axes[0].set_yticks(ys)
+    axes[0].set_yticklabels(labels)
+    handles = [plt.Line2D([], [], marker="o", ls="", color=c, ms=3.5, label=n) for _, n, c, _ in LEVELS]
+    handles.append(plt.Line2D([], [], marker="<", ls="", color=CTAS_COLOUR, ms=4, label="CTAS-D (off scale)"))
+    handles.append(plt.Line2D([], [], marker="o", ls="", color="k", mfc="white", ms=3.5,
+                              label="not significant (Holm)"))
+    fig.legend(handles=handles, loc="lower center", ncol=4, frameon=False, bbox_to_anchor=(0.5, -0.01))
+    fig.tight_layout(rect=(0, 0.13, 1, 1), w_pad=1.0)
+    fig.savefig(out / "ratios.pdf")
+    print(f"wrote {out / 'ratios.pdf'}")
 
 
 def mean_gap(by_i: dict[int, dict], bks_of: dict[int, float]) -> float | None:
@@ -98,6 +155,9 @@ def main() -> None:
     args.out.mkdir(parents=True, exist_ok=True)
     fig.savefig(args.out / "budget.pdf")
     print(f"wrote {args.out / 'budget.pdf'} ({args.split})")
+    ratios_csv = ROOT / "docs" / "results" / "test" / "anytime_ratios_test.csv"
+    if args.split == "test" and ratios_csv.exists():
+        ratios_figure(plt, ratios_csv, args.out)
 
 
 if __name__ == "__main__":

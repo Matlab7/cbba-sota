@@ -168,12 +168,16 @@ alternately a noisy dispatch and a random-order best insertion; the best plan an
 \item \textbf{Statistics.} Per instance the ratio of makespans at the same budget and cores; the mean ratio with a
   paired bootstrap 95\% CI (10,000 resamples, seed 0); one-sided paired $t$-tests of the mean log ratio below 0; Holm
   within each family (C1 at $B_1$: 46 tests; C1 at $2B_1$: 17; C2 at 2\,s: 46).
-\item \textbf{Deviations from the pre-registration.} None in the confirmatory analysis. The late-run sensitivity above
+\item \textbf{Deviations from the pre-registration.} None in the confirmatory analysis. After the run, the script
+  that collects the best known plans of the test split was found to read the validation rows; it was fixed and the
+  descriptive gaps were recomputed from the unchanged rows (recorded in the pre-registration). The late-run sensitivity above
   and every result on validation and development instances are additional and descriptive.
 \end{itemize}
 
 \section{Full results on the test instances}
 \label{sec:s-full}
+
+\input{tables/c1c2}
 
 {\small\setlength{\tabcolsep}{4pt}\input{tables/supp_gaps}}
 

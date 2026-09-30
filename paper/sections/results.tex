@@ -1,7 +1,15 @@
 \section{Results}
 \label{sec:results}
 
-\input{tables/c1c2}
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/ratios}
+\caption{Paired makespan ratio ALNS / competitor, each competitor on 8 cores at $B_1$ (mean over the 50 test instances
+with bootstrap 95\% CI; below 1: ALNS better). Hollow: not significant after Holm's correction. CTAS-D failures count
+as makespan 200 and its ratios are off the scale (value shown); it is not run on the 500-task settings. The numbers are
+tabulated in the supplement.}
+\label{fig:ratios}
+\end{figure*}
 
 \begin{figure*}[t]
 \centering
@@ -14,7 +22,7 @@ each competitor on 8 cores at $B_1$ (CTAS-D not shown). Test instances, 50 per s
 
 \paragraph{C2: a fraction of the compute.} ALNS on one core for 2\,s, \ShareTwolo--\ShareTwohi\% of the CPU time
 of a competitor on 8 cores at $B_1$, is significantly better than every competitor at that full budget on \Ctwoheld{}
-of the \Ctwosettings{} settings (Table~\ref{tab:ratios}a; \Ctwosig{} of \Ctwotests{} tests); the exception is
+of the \Ctwosettings{} settings (Figure~\ref{fig:ratios}a; \Ctwosig{} of \Ctwotests{} tests); the exception is
 \Ctwofaillist. It beats the learned policy on all \CtwoRLheld{} settings, by \Ctworlgainlo--\Ctworlgainhi\%.
 Descriptively, it does so already in 0.5\,s (on \CtwoHalfRLheld{} settings), and at 1\,s and 0.5\,s it beats every
 competitor on \CtwoOneheld{} and \CtwoHalfheld{} settings. In Figure~\ref{fig:budget}, the one-core line falls below every competitor's level within a few CPU-seconds,
@@ -24,7 +32,7 @@ to 8 cores: its gap shrinks as its compute grows, and from 2\,s on both ends of 
 every competitor.
 
 \paragraph{C1: equal compute.} ALNS on 8 cores is better than every competitor at the same budget $B_1$ on
-\ConeBheld{} of the \ConeBsettings{} settings (Table~\ref{tab:ratios}b): \ConeBsig{} of the \ConeBtests{} tests are
+\ConeBheld{} of the \ConeBsettings{} settings (Figure~\ref{fig:ratios}b): \ConeBsig{} of the \ConeBtests{} tests are
 significant after Holm's correction (largest adjusted $p = \ConeBmaxp$), and ALNS gives the shorter plan in
 \ConeBwon{} of the \ConeBpairs{} paired runs. Its plans are \ConeBclasslo--\ConeBclasshi\% shorter than those of the
 three CP-SAT-based methods and greedy restarts, and \ConeBrlgainlo--\ConeBrlgainhi\% shorter than those of the RL
@@ -47,7 +55,7 @@ calls do not help either: with 200 tasks, calls of 0.5\,s or less spent their ti
 subproblem and never improved the plan in our tuning runs.
 
 \paragraph{The exact MILP.} CTAS-D finds a plan within $B_1$ for \CtasSolved{} of the \CtasRuns{} test instances with
-up to 200 tasks (Table~\ref{tab:ratios}b). This matches the published picture, where Gurobi solved few instances of most
+up to 200 tasks (Table~\ref{tab:methods}). This matches the published picture, where Gurobi solved few instances of most
 50-task settings within an hour \cite{dai2025heterogeneous}: the MILP is a strong method on 20 tasks, where our port
 beats the shipped Gurobi solutions, but not a competitor at this scale.
 
