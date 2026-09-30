@@ -189,6 +189,9 @@ def main() -> None:
            "supp_params.tex": competitor_table()}
     args.out.mkdir(parents=True, exist_ok=True)
     for name, text in out.items():
+        if "\\begin{tabular}" in text:  # setting names in words can make a table wider than the text: shrink to fit
+            text = (text.replace("\\begin{tabular}", "\\begin{adjustbox}{max width=\\textwidth}\\begin{tabular}")
+                    .replace("\\end{tabular}", "\\end{tabular}\\end{adjustbox}"))
         (args.out / name).write_text(text)
     print(f"wrote {', '.join(out)} to {args.out} from {args.results}")
 

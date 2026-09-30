@@ -43,7 +43,10 @@ CAPTION_METHODS = (r"\caption{ALNS with growing compute, and every competitor on
                    r"any run, range over the eight settings; last column: settings where ALNS is significantly better "
                    r"than every competitor (Holm). $^*$: descriptive; --: not tested. CTAS-D: share of the instances solved within $B_1$, "
                    r"up to 200 tasks.}")
-CAPTION_SETTINGS = (r"\caption{The eight benchmark settings with 50 or more tasks. $B_1$ is the time budget of every method: "
+CAPTION_SETTINGS = (r"\caption{The eight benchmark settings with 50 or more tasks. Single-skill robots have one skill each, "
+                    r"multi-skill robots several; a task needs each of its skills once (binary) or up to twice "
+                    r"(additive). Species: robot types. "
+                    r"$B_1$ is the time budget of every method: "
                     r"the computation time that the benchmark paper reports for its policy with ten sampled rollouts "
                     r"\cite{dai2025heterogeneous}. RL rollouts: how many rollouts the released policy completes within "
                     r"$B_1$ on our 8 cores (range over the instances). The exact MILP (CTAS-D) is not run on the two "
@@ -72,9 +75,13 @@ def read(path: Path) -> list[dict]:
 
 
 def size(name: str) -> str:
-    """Robots / species / tasks of a setting, e.g. ``25/5/50``."""
-    _, a, s, t = name.rsplit("-", 3)
-    return f"{a}/{s}/{t}"
+    """Robots and tasks of a setting in words, e.g. ``25 robots, 50 tasks``; the species only where they tell two
+    settings apart (the two 500-task settings; all others have 5)."""
+    _, a, sp, t = name.rsplit("-", 3)
+    return f"{a} robots ({sp} species), {t} tasks" if t == "500" else f"{a} robots, {t} tasks"
+
+
+SKILLS = {"SA-BT": ("single-skill", "binary"), "SA-AT": ("single-skill", "additive"), "MA-AT": ("multi-skill", "additive")}
 
 
 def family(name: str) -> str:
@@ -82,9 +89,17 @@ def family(name: str) -> str:
 
 
 def label(name: str) -> str:
-    """Readable name of a setting for running text, e.g. ``multi-skill additive 25/5/50``."""
-    a, b = FAMILY_TEXT[family(name)]
-    return f"{a.rstrip(',').lower().replace(' robots', '')} {b.replace(' needs', '')} {size(name)}"
+    """Short name of a setting for table cells, e.g. ``multi-skill, additive: 25 robots, 50 tasks``."""
+    skill, needs = SKILLS[family(name)]
+    return f"{skill}, {needs}: {size(name)}"
+
+
+def text_label(name: str) -> str:
+    """Name of a setting for running text, e.g. ``50 single-skill robots with additive needs and 50 tasks``."""
+    skill, needs = SKILLS[family(name)]
+    _, a, sp, t = name.rsplit("-", 3)
+    species = f" of {sp} species" if t == "500" else ""
+    return f"{a} {skill} robots{species} with {needs} needs and {t} tasks"
 
 
 def family_rows(names) -> list[tuple[str, list[str]]]:
@@ -125,7 +140,7 @@ def c1c2(ratios: list[dict], gaps: list[dict]) -> str:
              CAPTION_RATIOS,
              r"\label{tab:ratios}", r"\resizebox{\textwidth}{!}{%",  # the supplement's text is narrower
              r"\begin{tabular}{ll" + "c" * len(COMPETITORS) + "}", r"\toprule",
-             r"Robots & Robots / species / tasks & " + " & ".join(name for _, name in COMPETITORS) + r" \\",
+             r"Setting & Robots, tasks & " + " & ".join(name for _, name in COMPETITORS) + r" \\",
              r"\midrule"]
     for p, (tag, title) in enumerate(PANELS):
         lines.append(title.replace("{7}", f"{{{ncol}}}").replace("{share}", f"{share_pct(2)[1]:.1f}"))
@@ -225,15 +240,16 @@ def rl_samples(rows: list[dict]) -> dict[str, tuple[int, int]]:
 def settings_table(samples: dict[str, tuple[int, int]]) -> str:
     lines = [r"\begin{table}[t]", r"\centering", r"\small",
              CAPTION_SETTINGS,
-             r"\label{tab:settings}", r"\begin{tabular}{lcrr}", r"\toprule",
-             r"Robots & Robots / species / tasks & $B_1$ (s) & RL rollouts \\", r"\midrule"]
+             r"\label{tab:settings}", r"\setlength{\tabcolsep}{4pt}", r"\begin{tabular}{lrrrrr}", r"\toprule",
+             r"Setting & Robots & Species & Tasks & $B_1$ (s) & RL rollouts \\", r"\midrule"]
     for fam, names in family_rows(SETTINGS):
         for i, name in enumerate(names):
             b1 = configs.get(name).paper["RL(s.10)"].time_s
             lo, hi = samples.get(name, (None, None))
             n = f"{lo}--{hi}" if lo is not None else "--"
             first = family_cell(fam, len(names)) if i == 0 else ""
-            lines.append(f"{first} & {size(name)} & {b1:.1f} & {n}" + r" \\")
+            _, a, sp, t = name.rsplit("-", 3)
+            lines.append(f"{first} & {a} & {sp} & {t} & {b1:.1f} & {n}" + r" \\")
         lines.append(r"\midrule")
     lines[-1] = r"\bottomrule"
     lines += [r"\end{tabular}", r"\end{table}"]
@@ -373,8 +389,8 @@ def numbers(ratios: list[dict], gaps: list[dict], rows: list[dict]) -> str:
         macro(f"{pre}held", str(len(held)))
         macro(f"{pre}verdict", "is met" if len(held) >= 6 else "is not met")
         macro(f"{pre}settings", str(len(present)))
-        macro(f"{pre}heldlist", "; ".join(label(s) for s in held) or "none")
-        macro(f"{pre}faillist", "; ".join(f"{label(s)} (against " + ", ".join(names[key(r['other'])] for r in f) + ")"
+        macro(f"{pre}heldlist", "; ".join(text_label(s) for s in held) or "none")
+        macro(f"{pre}faillist", "; ".join(f"{text_label(s)} (against " + ", ".join(names[key(r['other'])] for r in f) + ")"
                                           for s, f in fails.items() if f) or "none")
         macro(f"{pre}tests", str(len(rs)))
         macro(f"{pre}sig", str(sum(float(r["p_holm"]) < ALPHA for r in rs)))

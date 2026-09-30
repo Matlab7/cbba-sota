@@ -3,13 +3,13 @@
 \small
 \caption{Val split, three 20-task settings (descriptive; earlier campaign on another host): mean gap to the best known plan (\%) at $B_1$ on 8 cores, and the instances that CP-SAT proved optimal in 60\,s on 8 cores.}
 \label{tab:supp-small}
-\begin{tabular}{lrrrrr}
+\begin{adjustbox}{max width=\textwidth}\begin{tabular}{lrrrrr}
 \toprule
 Setting & ALNS & CP-LNS & Greedy restarts & RL policy & proven optimal \\
 \midrule
-single-skill binary 25/5/20 & 0.00 & 0.00 & 0.74 & 17.82 & 10/10 \\
-single-skill additive 25/5/20 & 0.97 & 3.72 & 3.49 & 23.62 & 0/10 \\
-multi-skill additive 25/5/20 & 0.16 & 4.18 & 3.53 & 29.64 & 1/10 \\
+single-skill, binary: 25 robots, 20 tasks & 0.00 & 0.00 & 0.74 & 17.82 & 10/10 \\
+single-skill, additive: 25 robots, 20 tasks & 0.97 & 3.72 & 3.49 & 23.62 & 0/10 \\
+multi-skill, additive: 25 robots, 20 tasks & 0.16 & 4.18 & 3.53 & 29.64 & 1/10 \\
 \bottomrule
-\end{tabular}
+\end{tabular}\end{adjustbox}
 \end{table}

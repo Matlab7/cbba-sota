@@ -29,6 +29,14 @@ LEVELS = (("CPSAT", "CP-LNS", "#D55E00", "-"), ("PCPSAT", "Parallel CP-LNS", "#E
           ("CPFULL", "CP-SAT full model", "#009E73", "-."), ("CONSTRUCT", "Greedy restarts", "#999999", ":"),
           ("RL", "RL policy", "#CC79A7", (0, (5, 1, 1, 1, 1, 1))))
 ALNS = "#0072B2"
+FAMILY_NAME = {"SA-BT": "Single-skill robots, binary needs", "SA-AT": "Single-skill robots, additive needs",
+               "MA-AT": "Multi-skill robots, additive needs"}
+
+
+def size(name: str) -> str:
+    """Robots and tasks in words; the species only for the two 500-task settings (all others have 5)."""
+    _, a, sp, t = name.rsplit("-", 3)
+    return f"{a} robots ({sp} species), {t} tasks" if t == "500" else f"{a} robots, {t} tasks"
 CTAS_COLOUR = "#56B4E9"
 RATIO_PANELS = (("C2 1 core 2 s vs 8 cores B1", "(a) C2: ALNS on 1 core for 2 s"),
                 ("C1 8 cores B1", "(b) C1: ALNS on 8 cores at $B_1$"))
@@ -40,9 +48,17 @@ def ratios_figure(plt, csv_path: Path, out: Path) -> None:
 
     rows = list(csv.DictReader(csv_path.open()))
     xmin, xmax = 0.6, 1.06
-    ys = np.arange(len(SETTINGS))[::-1].astype(float)
+    ys, heads, y = [], [], 0.0  # top to bottom; each family gets a heading slot above its rows
+    for k, name in enumerate(SETTINGS):
+        fam = name.rsplit("-", 3)[0]
+        if k == 0 or fam != SETTINGS[k - 1].rsplit("-", 3)[0]:
+            heads.append((y, FAMILY_NAME[fam]))
+            y -= 0.75
+        ys.append(y)
+        y -= 1.0
+    ys = np.array(ys)
     offsets = np.linspace(-0.3, 0.3, len(LEVELS))
-    fig, axes = plt.subplots(1, 2, figsize=(7.0, 2.85), sharey=True)
+    fig, axes = plt.subplots(1, 2, figsize=(7.0, 3.0), sharey=True)
     for ax, (tag, title) in zip(axes, RATIO_PANELS):
         by = {(r["setting"], r["other"].split("-")[0]): r for r in rows if r["comparison"] == tag}
         ax.axvspan(1.0, xmax, color="#EFEFEF", zorder=0, lw=0)
@@ -61,21 +77,18 @@ def ratios_figure(plt, csv_path: Path, out: Path) -> None:
             if r is not None:
                 ax.plot(xmin + 0.004, y, marker="<", color=CTAS_COLOUR, ms=4, zorder=3, clip_on=False)
                 ax.text(xmin + 0.013, y, f"{float(r['ratio']):.2f}", fontsize=5.5, va="center", color="#2A7FB0")
-        for b in (5.5, 4.5):  # between the families SA-BT | SA-AT | MA-AT
-            ax.axhline(b, color="#BBBBBB", lw=0.5)
+        for hy, text in heads:
+            ax.text(xmin + 0.004, hy - 0.05, text, fontsize=6, fontstyle="italic", color="#444444", va="center")
+            ax.axhline(hy + 0.45, color="#BBBBBB", lw=0.5)
         ax.set_xlim(xmin, xmax)
-        ax.set_ylim(-0.6, len(SETTINGS) - 0.4)
+        ax.set_ylim(ys[-1] - 0.6, 0.5)
         ax.set_title(title)
         ax.set_xlabel("makespan ratio ALNS / competitor")
         ax.text(0.985, 0.5, "competitor better", rotation=90, fontsize=5.5, color="#777777", va="center", ha="right",
                 transform=ax.transAxes)
         ax.grid(axis="x", alpha=0.25, lw=0.4)
-    labels = []
-    for name in SETTINGS:
-        family, a, sp, t = name.rsplit("-", 3)
-        labels.append(f"{family} {a}/{sp}/{t}")
     axes[0].set_yticks(ys)
-    axes[0].set_yticklabels(labels)
+    axes[0].set_yticklabels([size(n) for n in SETTINGS])
     handles = [plt.Line2D([], [], marker="o", ls="", color=c, ms=3.5, label=n) for _, n, c, _ in LEVELS]
     handles.append(plt.Line2D([], [], marker="<", ls="", color=CTAS_COLOUR, ms=4, label="CTAS-D (off scale)"))
     handles.append(plt.Line2D([], [], marker="o", ls="", color="k", mfc="white", ms=3.5,
@@ -142,8 +155,7 @@ def main() -> None:
         ax.yaxis.set_minor_locator(NullLocator())
         ax.set_yticklabels(["0", "1", "2", "5", "10", "20", "40", "80"])
         ax.xaxis.set_minor_formatter(NullFormatter())
-        family, a, s, t = name.rsplit("-", 3)
-        ax.set_title(f"{family} {a}/{s}/{t} ($B_1$ = {b['B1']:.0f} s)")
+        ax.set_title(f"{FAMILY_NAME[name.rsplit('-', 3)[0]].replace(' robots', '')}\n{size(name)}", fontsize=6.3)
         ax.grid(alpha=0.25, lw=0.4)
     for ax in axes[1]:
         ax.set_xlabel("compute used (CPU-seconds)")

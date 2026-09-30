@@ -28,6 +28,7 @@ latest member, and that delay propagates along the routes of all members.
 durations uniformly in $[0, 5)$ and uses $v = 0.2$. It has three families. In SA-BT the agents are single-skilled (one
 trait per species) and requirements are binary; SA-AT has additive requirements of up to two units per trait, so a
 task can need two agents of one species; in MA-AT each species has a distinct random binary trait vector, so agents can have several skills.
-A setting is named by the family and the numbers of agents, species and tasks, e.g.\ MA-AT 150/5/500. We generate
+We name a setting by its family and its numbers of robots and tasks, e.g.\ multi-skill robots with additive needs,
+150 robots and 500 tasks; all settings have 5 species except one with 10. We generate
 instances with the benchmark's own generator from fixed seeds, for three disjoint splits (Section~\ref{sec:setup}),
 and use its simulator to score every plan.

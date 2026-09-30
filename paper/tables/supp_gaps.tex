@@ -8,7 +8,7 @@ Setting & Method & 0.5 & 1 & 2 & 5 & 10 & $B_1$ & $2B_1$ & CPU \\
 Setting & Method & 0.5 & 1 & 2 & 5 & 10 & $B_1$ & $2B_1$ & CPU \\
 \midrule
 \endhead
-single-skill binary 25/5/50 & ALNS-1 & 6.77 & 5.92 & 4.69 &  &  & 2.17 &  & 1.00 \\
+single-skill, binary: 25 robots, 50 tasks & ALNS-1 & 6.77 & 5.92 & 4.69 &  &  & 2.17 &  & 1.00 \\
  & ALNS-8 &  &  &  &  &  & 0.70 & 0.77 & 0.98 \\
  & CP-LNS-8 &  &  &  &  &  & 9.88 &  & 0.79 \\
  & Parallel CP-LNS-8 &  &  &  &  &  & 8.34 & 7.14 & 0.98 \\
@@ -18,7 +18,7 @@ single-skill binary 25/5/50 & ALNS-1 & 6.77 & 5.92 & 4.69 &  &  & 2.17 &  & 1.00
  & Greedy restarts-8 & 11.69 & 11.07 & 10.47 & 9.86 & 9.51 & 9.35 & 8.82 & 0.98 \\
  & RL policy-8 &  &  &  &  &  & 39.56$^*$ &  & 0.97 \\
 \midrule
-single-skill binary 50/5/50 & ALNS-1 & 4.45 & 3.34 & 2.59 &  &  & 0.62 &  & 0.97 \\
+single-skill, binary: 50 robots, 50 tasks & ALNS-1 & 4.45 & 3.34 & 2.59 &  &  & 0.62 &  & 0.97 \\
  & ALNS-8 &  &  &  &  &  & 0.19 & 0.17 & 0.99 \\
  & CP-LNS-8 &  &  &  &  &  & 3.95 &  & 0.57 \\
  & Parallel CP-LNS-8 &  &  &  &  &  & 4.88 & 3.70 & 0.98 \\
@@ -28,7 +28,7 @@ single-skill binary 50/5/50 & ALNS-1 & 4.45 & 3.34 & 2.59 &  &  & 0.62 &  & 0.97
  & Greedy restarts-8 & 11.19 & 10.32 & 9.87 & 9.07 & 8.70 & 8.32 & 7.89 & 0.98 \\
  & RL policy-8 &  &  &  &  &  & 29.31 &  & 0.96 \\
 \midrule
-single-skill additive 50/5/50 & ALNS-1 & 9.37 & 8.10 & 6.59 &  &  & 2.40 &  & 1.00 \\
+single-skill, additive: 50 robots, 50 tasks & ALNS-1 & 9.37 & 8.10 & 6.59 &  &  & 2.40 &  & 1.00 \\
  & ALNS-8 &  &  &  &  &  & 0.75 & 0.66 & 0.98 \\
  & CP-LNS-8 &  &  &  &  &  & 8.06 &  & 0.72 \\
  & Parallel CP-LNS-8 &  &  &  &  &  & 6.74 & 6.77 & 0.97 \\
@@ -38,7 +38,7 @@ single-skill additive 50/5/50 & ALNS-1 & 9.37 & 8.10 & 6.59 &  &  & 2.40 &  & 1.
  & Greedy restarts-8 & 9.78 & 9.28 & 8.54 & 7.88 & 7.36 & 6.49 & 6.11 & 0.98 \\
  & RL policy-8 &  &  &  &  &  & 28.32 &  & 0.95 \\
 \midrule
-multi-skill additive 25/5/50 & ALNS-1 & 7.72 & 6.26 & 5.03 &  &  & 2.46 &  & 0.96 \\
+multi-skill, additive: 25 robots, 50 tasks & ALNS-1 & 7.72 & 6.26 & 5.03 &  &  & 2.46 &  & 0.96 \\
  & ALNS-8 &  &  &  &  &  & 0.87 & 0.45 & 0.98 \\
  & CP-LNS-8 &  &  &  &  &  & 13.80 &  & 0.74 \\
  & Parallel CP-LNS-8 &  &  &  &  &  & 13.01 & 11.76 & 0.99 \\
@@ -48,7 +48,7 @@ multi-skill additive 25/5/50 & ALNS-1 & 7.72 & 6.26 & 5.03 &  &  & 2.46 &  & 0.9
  & Greedy restarts-8 & 15.23 & 14.57 & 13.96 & 12.90 & 12.22 & 11.80 & 11.25 & 0.97 \\
  & RL policy-8 &  &  &  &  &  & 36.17 &  & 0.97 \\
 \midrule
-multi-skill additive 50/5/50 & ALNS-1 & 7.78 & 6.48 & 5.18 &  &  & 2.15 &  & 1.00 \\
+multi-skill, additive: 50 robots, 50 tasks & ALNS-1 & 7.78 & 6.48 & 5.18 &  &  & 2.15 &  & 1.00 \\
  & ALNS-8 &  &  &  &  &  & 0.38 & 0.55 & 0.98 \\
  & CP-LNS-8 &  &  &  &  &  & 12.67 &  & 0.63 \\
  & Parallel CP-LNS-8 &  &  &  &  &  & 11.05 & 10.50 & 0.98 \\
@@ -58,7 +58,7 @@ multi-skill additive 50/5/50 & ALNS-1 & 7.78 & 6.48 & 5.18 &  &  & 2.15 &  & 1.0
  & Greedy restarts-8 & 17.71 & 16.71 & 15.91 & 15.08 & 14.60 & 13.79 & 13.15 & 0.98 \\
  & RL policy-8 &  &  &  &  &  & 43.31 &  & 0.95 \\
 \midrule
-multi-skill additive 50/5/200 & ALNS-1 & 8.82 & 7.92 & 7.33 &  &  & 2.07 &  & 0.97 \\
+multi-skill, additive: 50 robots, 200 tasks & ALNS-1 & 8.82 & 7.92 & 7.33 &  &  & 2.07 &  & 0.97 \\
  & ALNS-8 &  &  &  &  &  & 0.82 & 0.19 & 0.98 \\
  & CP-LNS-8 &  &  &  &  &  & 12.47 &  & 0.67 \\
  & Parallel CP-LNS-8 &  &  &  &  &  & 12.57 & 11.70 & 0.98 \\
@@ -68,7 +68,7 @@ multi-skill additive 50/5/200 & ALNS-1 & 8.82 & 7.92 & 7.33 &  &  & 2.07 &  & 0.
  & Greedy restarts-8 & 14.98 & 14.92 & 14.88 & 14.77 & 14.67 & 14.38 &  & 0.97 \\
  & RL policy-8 &  &  &  &  &  & 40.51 &  & 0.91 \\
 \midrule
-multi-skill additive 150/10/500 & ALNS-1 & 11.45 & 10.76 & 10.09 & 9.12 & 8.44 & 1.66 &  & 0.99 \\
+multi-skill, additive: 150 robots (10 species), 500 tasks & ALNS-1 & 11.45 & 10.76 & 10.09 & 9.12 & 8.44 & 1.66 &  & 0.99 \\
  & ALNS-8 &  &  &  &  &  & 0.03 &  & 1.00 \\
  & CP-LNS-8 &  &  &  &  &  & 13.66 &  & 0.69 \\
  & Parallel CP-LNS-8 &  &  &  &  &  & 13.27 &  & 1.01 \\
@@ -77,7 +77,7 @@ multi-skill additive 150/10/500 & ALNS-1 & 11.45 & 10.76 & 10.09 & 9.12 & 8.44 &
  & Greedy restarts-8 & 17.07 & 17.05 & 16.67 & 16.05 & 15.68 & 14.30 &  & 1.00 \\
  & RL policy-8 &  &  &  &  &  & 45.36 &  & 0.89 \\
 \midrule
-multi-skill additive 150/5/500 & ALNS-1 & 10.60 & 9.75 & 9.09 & 8.00 & 7.38 & 1.50 &  & 0.99 \\
+multi-skill, additive: 150 robots (5 species), 500 tasks & ALNS-1 & 10.60 & 9.75 & 9.09 & 8.00 & 7.38 & 1.50 &  & 0.99 \\
  & ALNS-8 &  &  &  &  &  & 0.07$^*$ &  & 1.00 \\
  & CP-LNS-8 &  &  &  &  &  & 12.74 &  & 0.34 \\
  & Parallel CP-LNS-8 &  &  &  &  &  & 12.08 &  & 0.99 \\

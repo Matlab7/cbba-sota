@@ -3,27 +3,27 @@
 \small
 \caption{Ablation on dev (1 worker): mean paired makespan ratio variant / final ALNS [bootstrap 95\% CI]; above 1 means the variant is worse. v1 is the configuration of an earlier phase (own random-order construction, no re-sort, older kernels); ``no portfolio'' constructs by own insertion; ``no re-sort'' never re-sorts the order by start times; ``delay-aware covers'' adds a second cover per slot (not kept: it halves the iteration rate). Blank: not run.}
 \label{tab:supp-ablation}
-\begin{tabular}{llcccc}
+\begin{adjustbox}{max width=\textwidth}\begin{tabular}{llcccc}
 \toprule
 Budget & Setting & v1 (Phase 1) & no portfolio & no re-sort & delay-aware covers \\
 \midrule
-$B_1$ & single-skill binary 25/5/50 & 1.005 {\scriptsize [0.998, 1.013]} & 1.000 {\scriptsize [0.990, 1.010]} & 1.007 {\scriptsize [0.998, 1.016]} & 0.998 {\scriptsize [0.988, 1.009]} \\
- & single-skill binary 50/5/50 & 1.007 {\scriptsize [1.001, 1.014]} & 0.999 {\scriptsize [0.995, 1.004]} & 1.004 {\scriptsize [0.999, 1.009]} & 0.995 {\scriptsize [0.988, 1.002]} \\
- & single-skill additive 50/5/50 & 1.027 {\scriptsize [1.017, 1.036]} & 1.007 {\scriptsize [0.997, 1.018]} & 1.016 {\scriptsize [1.008, 1.023]} & 0.993 {\scriptsize [0.986, 1.000]} \\
- & multi-skill additive 25/5/50 & 1.006 {\scriptsize [0.998, 1.016]} & 0.996 {\scriptsize [0.987, 1.004]} & 1.009 {\scriptsize [1.001, 1.018]} & 1.002 {\scriptsize [0.995, 1.008]} \\
- & multi-skill additive 50/5/50 & 1.008 {\scriptsize [0.999, 1.018]} & 0.999 {\scriptsize [0.992, 1.006]} & 1.010 {\scriptsize [1.002, 1.019]} & 0.997 {\scriptsize [0.989, 1.004]} \\
- & multi-skill additive 50/5/200 & 1.106 {\scriptsize [1.090, 1.123]} & 1.034 {\scriptsize [1.022, 1.047]} & 1.029 {\scriptsize [1.022, 1.036]} & 1.006 {\scriptsize [1.002, 1.010]} \\
- & multi-skill additive 150/10/500 & 1.107 {\scriptsize [1.094, 1.121]} &  &  & 1.002 {\scriptsize [0.994, 1.009]} \\
- & multi-skill additive 150/5/500 & 1.121 {\scriptsize [1.092, 1.148]} &  &  & 1.002 {\scriptsize [0.998, 1.006]} \\
+$B_1$ & single-skill, binary: 25 robots, 50 tasks & 1.005 {\scriptsize [0.998, 1.013]} & 1.000 {\scriptsize [0.990, 1.010]} & 1.007 {\scriptsize [0.998, 1.016]} & 0.998 {\scriptsize [0.988, 1.009]} \\
+ & single-skill, binary: 50 robots, 50 tasks & 1.007 {\scriptsize [1.001, 1.014]} & 0.999 {\scriptsize [0.995, 1.004]} & 1.004 {\scriptsize [0.999, 1.009]} & 0.995 {\scriptsize [0.988, 1.002]} \\
+ & single-skill, additive: 50 robots, 50 tasks & 1.027 {\scriptsize [1.017, 1.036]} & 1.007 {\scriptsize [0.997, 1.018]} & 1.016 {\scriptsize [1.008, 1.023]} & 0.993 {\scriptsize [0.986, 1.000]} \\
+ & multi-skill, additive: 25 robots, 50 tasks & 1.006 {\scriptsize [0.998, 1.016]} & 0.996 {\scriptsize [0.987, 1.004]} & 1.009 {\scriptsize [1.001, 1.018]} & 1.002 {\scriptsize [0.995, 1.008]} \\
+ & multi-skill, additive: 50 robots, 50 tasks & 1.008 {\scriptsize [0.999, 1.018]} & 0.999 {\scriptsize [0.992, 1.006]} & 1.010 {\scriptsize [1.002, 1.019]} & 0.997 {\scriptsize [0.989, 1.004]} \\
+ & multi-skill, additive: 50 robots, 200 tasks & 1.106 {\scriptsize [1.090, 1.123]} & 1.034 {\scriptsize [1.022, 1.047]} & 1.029 {\scriptsize [1.022, 1.036]} & 1.006 {\scriptsize [1.002, 1.010]} \\
+ & multi-skill, additive: 150 robots (10 species), 500 tasks & 1.107 {\scriptsize [1.094, 1.121]} &  &  & 1.002 {\scriptsize [0.994, 1.009]} \\
+ & multi-skill, additive: 150 robots (5 species), 500 tasks & 1.121 {\scriptsize [1.092, 1.148]} &  &  & 1.002 {\scriptsize [0.998, 1.006]} \\
 \midrule
-2\,s & single-skill binary 25/5/50 & 1.020 {\scriptsize [1.011, 1.028]} & 1.001 {\scriptsize [0.992, 1.010]} & 1.014 {\scriptsize [1.007, 1.021]} & 1.006 {\scriptsize [1.002, 1.010]} \\
- & single-skill binary 50/5/50 & 1.012 {\scriptsize [1.005, 1.019]} & 0.996 {\scriptsize [0.991, 1.002]} & 1.009 {\scriptsize [1.003, 1.015]} & 0.999 {\scriptsize [0.995, 1.003]} \\
- & single-skill additive 50/5/50 & 1.059 {\scriptsize [1.048, 1.070]} & 1.023 {\scriptsize [1.014, 1.032]} & 1.013 {\scriptsize [1.007, 1.020]} & 0.995 {\scriptsize [0.989, 1.000]} \\
- & multi-skill additive 25/5/50 & 1.018 {\scriptsize [1.008, 1.029]} & 1.006 {\scriptsize [0.996, 1.015]} & 1.019 {\scriptsize [1.008, 1.031]} & 1.011 {\scriptsize [1.005, 1.017]} \\
- & multi-skill additive 50/5/50 & 1.025 {\scriptsize [1.017, 1.033]} & 1.011 {\scriptsize [1.001, 1.020]} & 1.011 {\scriptsize [1.004, 1.020]} & 1.007 {\scriptsize [1.002, 1.013]} \\
- & multi-skill additive 50/5/200 & 1.166 {\scriptsize [1.148, 1.185]} & 1.088 {\scriptsize [1.073, 1.104]} & 1.019 {\scriptsize [1.012, 1.025]} & 1.003 {\scriptsize [1.000, 1.006]} \\
- & multi-skill additive 150/10/500 & 1.133 {\scriptsize [1.120, 1.149]} & 1.062 {\scriptsize [1.049, 1.077]} & 1.022 {\scriptsize [1.016, 1.029]} & 0.995 {\scriptsize [0.992, 0.998]} \\
- & multi-skill additive 150/5/500 & 1.149 {\scriptsize [1.123, 1.173]} & 1.078 {\scriptsize [1.057, 1.099]} & 1.022 {\scriptsize [1.017, 1.027]} & 1.003 {\scriptsize [1.000, 1.007]} \\
+2\,s & single-skill, binary: 25 robots, 50 tasks & 1.020 {\scriptsize [1.011, 1.028]} & 1.001 {\scriptsize [0.992, 1.010]} & 1.014 {\scriptsize [1.007, 1.021]} & 1.006 {\scriptsize [1.002, 1.010]} \\
+ & single-skill, binary: 50 robots, 50 tasks & 1.012 {\scriptsize [1.005, 1.019]} & 0.996 {\scriptsize [0.991, 1.002]} & 1.009 {\scriptsize [1.003, 1.015]} & 0.999 {\scriptsize [0.995, 1.003]} \\
+ & single-skill, additive: 50 robots, 50 tasks & 1.059 {\scriptsize [1.048, 1.070]} & 1.023 {\scriptsize [1.014, 1.032]} & 1.013 {\scriptsize [1.007, 1.020]} & 0.995 {\scriptsize [0.989, 1.000]} \\
+ & multi-skill, additive: 25 robots, 50 tasks & 1.018 {\scriptsize [1.008, 1.029]} & 1.006 {\scriptsize [0.996, 1.015]} & 1.019 {\scriptsize [1.008, 1.031]} & 1.011 {\scriptsize [1.005, 1.017]} \\
+ & multi-skill, additive: 50 robots, 50 tasks & 1.025 {\scriptsize [1.017, 1.033]} & 1.011 {\scriptsize [1.001, 1.020]} & 1.011 {\scriptsize [1.004, 1.020]} & 1.007 {\scriptsize [1.002, 1.013]} \\
+ & multi-skill, additive: 50 robots, 200 tasks & 1.166 {\scriptsize [1.148, 1.185]} & 1.088 {\scriptsize [1.073, 1.104]} & 1.019 {\scriptsize [1.012, 1.025]} & 1.003 {\scriptsize [1.000, 1.006]} \\
+ & multi-skill, additive: 150 robots (10 species), 500 tasks & 1.133 {\scriptsize [1.120, 1.149]} & 1.062 {\scriptsize [1.049, 1.077]} & 1.022 {\scriptsize [1.016, 1.029]} & 0.995 {\scriptsize [0.992, 0.998]} \\
+ & multi-skill, additive: 150 robots (5 species), 500 tasks & 1.149 {\scriptsize [1.123, 1.173]} & 1.078 {\scriptsize [1.057, 1.099]} & 1.022 {\scriptsize [1.017, 1.027]} & 1.003 {\scriptsize [1.000, 1.007]} \\
 \bottomrule
-\end{tabular}
+\end{tabular}\end{adjustbox}
 \end{table}

@@ -7,6 +7,7 @@
 \usepackage{booktabs}
 \usepackage{longtable}
 \usepackage{multirow}
+\usepackage{adjustbox}
 \usepackage{amsmath}
 \usepackage{graphicx}
 \usepackage{xspace}
@@ -180,7 +181,7 @@ alternately a noisy dispatch and a random-order best insertion; the best plan an
 
 \input{tables/c1c2}
 
-{\small\setlength{\tabcolsep}{4pt}\input{tables/supp_gaps}}
+{\small\setlength{\tabcolsep}{3.4pt}\input{tables/supp_gaps}}
 
 \section{Reference solutions on the validation instances}
 \label{sec:s-refs}
@@ -210,15 +211,15 @@ improve ALNS at $B_1$ on the test instances by \Workersgainlo--\Workersgainhi\%.
 \input{tables/supp_small}
 
 As pre-registered, the 20-task settings are descriptive: CP-SAT proves all validation instances of the single-skill
-binary setting 25/5/20 optimal, and there every method except the RL policy reaches the optimum or comes close; on the
+binary setting (25 robots, 20 tasks) optimal, and there every method except the RL policy reaches the optimum or comes close; on the
 two settings with additive requirements ALNS stays closest to the best known plans.
 
 \section{Dynamic scenarios (exploratory, negative result)}
 \label{sec:s-dynamic}
 
 All results in this section are exploratory: they come from the development instances only (instances 0--19 of the
-single-skill binary and additive 50/5/50 settings and of the multi-skill 25/5/50 and 50/5/50 settings, with multi-skill
-50/5/200 as a secondary setting), and none of them is part of the confirmatory study.
+single-skill binary and additive settings with 50 robots and 50 tasks and of the multi-skill settings with 25 and 50
+robots and 50 tasks, with the multi-skill setting with 50 robots and 200 tasks as a secondary setting), and none of them is part of the confirmatory study.
 
 \paragraph{Simulator.} We extended the benchmark's simulator with a small set of declared changes, each covered by a
 regression test: tasks stay hidden until their release time; a coalition starts as soon as the robots present cover the

@@ -3,18 +3,18 @@
 \small
 \caption{Val split: how far the best plan of any run without an ALNS component (competitor runs of the timed campaigns and the long CP-SAT references) is above the best known plan, mean over the instances; the 300-s references on 8 cores (parallel CP-LNS and CP-SAT full model, both started from greedy plans only), their mean gap to the best known plan; and the distance of CP-SAT's certified lower bound below the best known plan.}
 \label{tab:supp-refs}
-\begin{tabular}{lrrrrr}
+\begin{adjustbox}{max width=\textwidth}\begin{tabular}{lrrrrr}
 \toprule
 Setting & $n$ & best w/o ALNS & Parallel CP-LNS 300\,s & CP-SAT full 300\,s & bound below \\
 \midrule
-single-skill binary 25/5/50 & 10 & +7.6\% & +8.1\% & +6.1\% & 46\% \\
-single-skill binary 50/5/50 & 10 & +2.8\% & +3.7\% & +5.0\% & 12\% \\
-single-skill additive 50/5/50 & 10 & +6.7\% & +7.2\% & +7.0\% & 45\% \\
-multi-skill additive 25/5/50 & 10 & +9.4\% & +13.3\% & +12.0\% & 58\% \\
-multi-skill additive 50/5/50 & 10 & +8.1\% & +9.7\% & +13.9\% & 30\% \\
-multi-skill additive 50/5/200 & 10 & +11.3\% & -- & -- & -- \\
-multi-skill additive 150/10/500 & 5 & +12.0\% & -- & -- & -- \\
-multi-skill additive 150/5/500 & 5 & +11.5\% & -- & -- & -- \\
+single-skill, binary: 25 robots, 50 tasks & 10 & +7.6\% & +8.1\% & +6.1\% & 46\% \\
+single-skill, binary: 50 robots, 50 tasks & 10 & +2.8\% & +3.7\% & +5.0\% & 12\% \\
+single-skill, additive: 50 robots, 50 tasks & 10 & +6.7\% & +7.2\% & +7.0\% & 45\% \\
+multi-skill, additive: 25 robots, 50 tasks & 10 & +9.4\% & +13.3\% & +12.0\% & 58\% \\
+multi-skill, additive: 50 robots, 50 tasks & 10 & +8.1\% & +9.7\% & +13.9\% & 30\% \\
+multi-skill, additive: 50 robots, 200 tasks & 10 & +11.3\% & -- & -- & -- \\
+multi-skill, additive: 150 robots (10 species), 500 tasks & 5 & +12.0\% & -- & -- & -- \\
+multi-skill, additive: 150 robots (5 species), 500 tasks & 5 & +11.5\% & -- & -- & -- \\
 \bottomrule
-\end{tabular}
+\end{tabular}\end{adjustbox}
 \end{table}

@@ -1,22 +1,23 @@
 \begin{table}[t]
 \centering
 \small
-\caption{The eight benchmark settings with 50 or more tasks. $B_1$ is the time budget of every method: the computation time that the benchmark paper reports for its policy with ten sampled rollouts \cite{dai2025heterogeneous}. RL rollouts: how many rollouts the released policy completes within $B_1$ on our 8 cores (range over the instances). The exact MILP (CTAS-D) is not run on the two 500-task settings (Section~\ref{sec:setup}).}
+\caption{The eight benchmark settings with 50 or more tasks. Single-skill robots have one skill each, multi-skill robots several; a task needs each of its skills once (binary) or up to twice (additive). Species: robot types. $B_1$ is the time budget of every method: the computation time that the benchmark paper reports for its policy with ten sampled rollouts \cite{dai2025heterogeneous}. RL rollouts: how many rollouts the released policy completes within $B_1$ on our 8 cores (range over the instances). The exact MILP (CTAS-D) is not run on the two 500-task settings (Section~\ref{sec:setup}).}
 \label{tab:settings}
-\begin{tabular}{lcrr}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lrrrrr}
 \toprule
-Robots & Robots / species / tasks & $B_1$ (s) & RL rollouts \\
+Setting & Robots & Species & Tasks & $B_1$ (s) & RL rollouts \\
 \midrule
-\multirow{2}{*}{\parbox{2.1cm}{\raggedright\scriptsize Single-skill robots, binary needs}} & 25/5/50 & 13.4 & 154--245 \\
- & 50/5/50 & 19.1 & 151--208 \\
+\multirow{2}{*}{\parbox{2.1cm}{\raggedright\scriptsize Single-skill robots, binary needs}} & 25 & 5 & 50 & 13.4 & 154--245 \\
+ & 50 & 5 & 50 & 19.1 & 151--208 \\
 \midrule
-\parbox{2.1cm}{\raggedright\scriptsize Single-skill robots, additive needs} & 50/5/50 & 29.8 & 133--192 \\
+\parbox{2.1cm}{\raggedright\scriptsize Single-skill robots, additive needs} & 50 & 5 & 50 & 29.8 & 133--192 \\
 \midrule
-\multirow{5}{*}{\parbox{2.1cm}{\raggedright\scriptsize Multi-skill robots, additive needs}} & 25/5/50 & 16.3 & 135--281 \\
- & 50/5/50 & 23.4 & 137--247 \\
- & 50/5/200 & 75.2 & 48--80 \\
- & 150/10/500 & 560.2 & 32--51 \\
- & 150/5/500 & 560.5 & 32--49 \\
+\multirow{5}{*}{\parbox{2.1cm}{\raggedright\scriptsize Multi-skill robots, additive needs}} & 25 & 5 & 50 & 16.3 & 135--281 \\
+ & 50 & 5 & 50 & 23.4 & 137--247 \\
+ & 50 & 5 & 200 & 75.2 & 48--80 \\
+ & 150 & 10 & 500 & 560.2 & 32--51 \\
+ & 150 & 5 & 500 & 560.5 & 32--49 \\
 \bottomrule
 \end{tabular}
 \end{table}

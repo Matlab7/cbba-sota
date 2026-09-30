@@ -3,18 +3,18 @@
 \small
 \caption{Per-setting parameters of the competitors, chosen on the development instances: time limit of one CP-SAT call in CP-LNS and in parallel CP-LNS (s), and the number of nearest candidate tasks per arc of CP-SAT full model (all: every arc).}
 \label{tab:supp-params}
-\begin{tabular}{lrrrr}
+\begin{adjustbox}{max width=\textwidth}\begin{tabular}{lrrrr}
 \toprule
 Setting & $B_1$ (s) & CP-LNS call (s) & Parallel CP-LNS call (s) & CP-SAT full arcs \\
 \midrule
-single-skill binary 25/5/50 & 13.45 & 2 & 0.5 & all \\
-single-skill binary 50/5/50 & 19.14 & 2 & 5 & 10 \\
-single-skill additive 50/5/50 & 29.80 & 2 & 0.5 & all \\
-multi-skill additive 25/5/50 & 16.34 & 2 & 0.5 & all \\
-multi-skill additive 50/5/50 & 23.43 & 2 & 0.5 & 10 \\
-multi-skill additive 50/5/200 & 75.20 & 2 & 2 & 20 \\
-multi-skill additive 150/10/500 & 560.20 & 10 & 5 & 10 \\
-multi-skill additive 150/5/500 & 560.50 & 2 & 2 & 5 \\
+single-skill, binary: 25 robots, 50 tasks & 13.45 & 2 & 0.5 & all \\
+single-skill, binary: 50 robots, 50 tasks & 19.14 & 2 & 5 & 10 \\
+single-skill, additive: 50 robots, 50 tasks & 29.80 & 2 & 0.5 & all \\
+multi-skill, additive: 25 robots, 50 tasks & 16.34 & 2 & 0.5 & all \\
+multi-skill, additive: 50 robots, 50 tasks & 23.43 & 2 & 0.5 & 10 \\
+multi-skill, additive: 50 robots, 200 tasks & 75.20 & 2 & 2 & 20 \\
+multi-skill, additive: 150 robots (10 species), 500 tasks & 560.20 & 10 & 5 & 10 \\
+multi-skill, additive: 150 robots (5 species), 500 tasks & 560.50 & 2 & 2 & 5 \\
 \bottomrule
-\end{tabular}
+\end{tabular}\end{adjustbox}
 \end{table}
