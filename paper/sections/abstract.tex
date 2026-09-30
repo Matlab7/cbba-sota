@@ -12,6 +12,6 @@ All methods run on the same pinned cores at the benchmark's own time budgets, an
 pre-registration frozen before it. ALNS is significantly better than every competitor on \ConeBheld{} of the 8
 settings: its plans are \mbox{\ConeBclasslo--\ConeBclasshi\%} shorter than those of the CP-SAT-based methods and
 greedy restarts, and \mbox{\ConeBrlgainlo--\ConeBrlgainhi\%} shorter than those of the learned policy, which runs at its
-published time budget on the same CPUs. Making CP-SAT fully parallel does not close the gap, and the exact MILP rarely finds a plan within
-the budget. On one core and in 2\,s, ALNS is already significantly better than every eight-core competitor on
+published time budget on the same CPUs. Making CP-SAT fully parallel does not close the gap, and the exact MILP finds a plan within the budget
+for only \CtasSolved{} of the \CtasRuns{} instances with up to 200 tasks. On one core and in 2\,s, ALNS is already significantly better than every eight-core competitor on
 \Ctwoheld{} of the 8 settings.

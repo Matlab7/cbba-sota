@@ -63,7 +63,8 @@ question on HeteroMRTA with a pre-registered, compute-matched study (Figure~\ref
 \item \textbf{Findings} (Section~\ref{sec:results}). ALNS is significantly better than every competitor on
   \ConeBheld{} of the 8 settings with 50 to 500 tasks, with plans \ConeBclasslo--\ConeBclasshi\% shorter than
   those of the classical baselines and \ConeBrlgainlo--\ConeBrlgainhi\% shorter than those of the learned policy.
-  Parallelising CP-SAT does not close the gap, the exact MILP rarely produces a plan within the budget, and ALNS on a
+  Parallelising CP-SAT does not close the gap, the exact MILP produces a plan within the budget for only
+  \CtasSolved{} of \CtasRuns{} instances, and ALNS on a
   single core for 2\,s is already significantly better than every eight-core competitor at the full budget on
   \Ctwoheld{} of the 8 settings.
 \end{itemize}

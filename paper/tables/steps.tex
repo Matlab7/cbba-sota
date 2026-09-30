@@ -8,13 +8,13 @@
 \toprule
 Method & One step & 50 tasks & 200 tasks & 500 tasks \\
 \midrule
-ALNS (ours) & {\scriptsize one remove and re-insert iteration} & \begin{tabular}[t]{@{}c@{}}1.6\,M\\{\scriptsize (0.10\,ms)}\end{tabular} & \begin{tabular}[t]{@{}c@{}}4.2\,M\\{\scriptsize (0.14\,ms)}\end{tabular} & \begin{tabular}[t]{@{}c@{}}17.9\,M\\{\scriptsize (0.25\,ms)}\end{tabular} \\ \addlinespace[2pt]
-CP-LNS & {\scriptsize one CP-SAT solve of a freed window} & \begin{tabular}[t]{@{}c@{}}15\\{\scriptsize (1.6\,s)}\end{tabular} & \begin{tabular}[t]{@{}c@{}}45\\{\scriptsize (1.7\,s)}\end{tabular} & \begin{tabular}[t]{@{}c@{}}176\\{\scriptsize (4.7\,s)}\end{tabular} \\ \addlinespace[2pt]
-Parallel CP-LNS & {\scriptsize one CP-SAT solve of a freed window} & \begin{tabular}[t]{@{}c@{}}246\\{\scriptsize (467\,ms)}\end{tabular} & \begin{tabular}[t]{@{}c@{}}349\\{\scriptsize (1.7\,s)}\end{tabular} & \begin{tabular}[t]{@{}c@{}}1.9\,k\\{\scriptsize (2.7\,s)}\end{tabular} \\ \addlinespace[2pt]
+ALNS (ours) & {\scriptsize one remove and re-insert iteration} & \begin{tabular}[t]{@{}c@{}}1.8\,M\\{\scriptsize (0.09\,ms)}\end{tabular} & \begin{tabular}[t]{@{}c@{}}5.0\,M\\{\scriptsize (0.12\,ms)}\end{tabular} & \begin{tabular}[t]{@{}c@{}}20.1\,M\\{\scriptsize (0.22\,ms)}\end{tabular} \\ \addlinespace[2pt]
+CP-LNS & {\scriptsize one CP-SAT solve of a freed window} & \begin{tabular}[t]{@{}c@{}}16\\{\scriptsize (1.5\,s)}\end{tabular} & \begin{tabular}[t]{@{}c@{}}47\\{\scriptsize (1.6\,s)}\end{tabular} & \begin{tabular}[t]{@{}c@{}}127\\{\scriptsize (4.4\,s)}\end{tabular} \\ \addlinespace[2pt]
+Parallel CP-LNS & {\scriptsize one CP-SAT solve of a freed window} & \begin{tabular}[t]{@{}c@{}}258\\{\scriptsize (459\,ms)}\end{tabular} & \begin{tabular}[t]{@{}c@{}}358\\{\scriptsize (1.7\,s)}\end{tabular} & \begin{tabular}[t]{@{}c@{}}1.3\,k\\{\scriptsize (3.5\,s)}\end{tabular} \\ \addlinespace[2pt]
 CP-SAT full model & {\scriptsize one solve of the whole model} & 1 solve & 1 solve & 1 solve \\ \addlinespace[2pt]
 CTAS-D (exact MILP) & {\scriptsize one solve of the whole MILP} & 1 solve & 1 solve & -- \\ \addlinespace[2pt]
 Greedy restarts & {\scriptsize one greedy construction} & \begin{tabular}[t]{@{}c@{}}93\,k\\{\scriptsize (2\,ms)}\end{tabular} & \begin{tabular}[t]{@{}c@{}}32\,k\\{\scriptsize (19\,ms)}\end{tabular} & \begin{tabular}[t]{@{}c@{}}18\,k\\{\scriptsize (255\,ms)}\end{tabular} \\ \addlinespace[2pt]
-RL policy (published) & {\scriptsize one rollout of the policy} & \begin{tabular}[t]{@{}c@{}}162\\{\scriptsize (971\,ms)}\end{tabular} & \begin{tabular}[t]{@{}c@{}}48\\{\scriptsize (13\,s)}\end{tabular} & \begin{tabular}[t]{@{}c@{}}32\\{\scriptsize (140\,s)}\end{tabular} \\ \addlinespace[2pt]
+RL policy (published) & {\scriptsize one rollout of the policy} & \begin{tabular}[t]{@{}c@{}}187\\{\scriptsize (834\,ms)}\end{tabular} & \begin{tabular}[t]{@{}c@{}}56\\{\scriptsize (11\,s)}\end{tabular} & \begin{tabular}[t]{@{}c@{}}40\\{\scriptsize (112\,s)}\end{tabular} \\ \addlinespace[2pt]
 \bottomrule
 \end{tabular}
 \end{table}

@@ -1,0 +1,36 @@
+
+SA-BT-25-5-50: on 50 instances, best ALNS-derived plan 26.564 vs best plan without ALNS 28.270: ALNS-derived -6.04% (min -9.69%, max -2.54%); without ALNS better on 0
+
+SA-BT-25-5-50: 50 BKS, mean 26.564; found by ALNS2-8@2B1 28, ALNS2-8@B1 21, ALNS2-1@B1 1
+
+SA-BT-50-5-50: on 50 instances, best ALNS-derived plan 16.670 vs best plan without ALNS 17.073: ALNS-derived -2.30% (min -6.89%, max +0.00%); without ALNS better on 0
+
+SA-BT-50-5-50: 50 BKS, mean 16.670; found by ALNS2-8@2B1 30, ALNS2-8@B1 11, ALNS2-1@B1 7, CPFULL-8@2B1 2
+
+SA-AT-50-5-50: on 50 instances, best ALNS-derived plan 28.334 vs best plan without ALNS 29.894: ALNS-derived -5.23% (min -9.62%, max -1.34%); without ALNS better on 0
+
+SA-AT-50-5-50: 50 BKS, mean 28.334; found by ALNS2-8@2B1 25, ALNS2-8@B1 21, ALNS2-1@B1 4
+
+MA-AT-25-5-50: on 50 instances, best ALNS-derived plan 31.405 vs best plan without ALNS 34.547: ALNS-derived -9.45% (min -16.46%, max -4.19%); without ALNS better on 0
+
+MA-AT-25-5-50: 50 BKS, mean 31.405; found by ALNS2-8@2B1 33, ALNS2-8@B1 13, ALNS2-1@B1 4
+
+MA-AT-50-5-50: on 50 instances, best ALNS-derived plan 17.572 vs best plan without ALNS 19.168: ALNS-derived -8.36% (min -13.08%, max +0.00%); without ALNS better on 0
+
+MA-AT-50-5-50: 50 BKS, mean 17.572; found by ALNS2-8@B1 24, ALNS2-8@2B1 21, ALNS2-1@B1 3, PCPSAT-8@2B1 1, ALNS2-1@1 1
+
+MA-AT-50-5-200: on 50 instances, best ALNS-derived plan 55.332 vs best plan without ALNS 61.579: ALNS-derived -10.19% (min -14.29%, max -5.64%); without ALNS better on 0
+
+MA-AT-50-5-200: 50 BKS, mean 55.332; found by ALNS2-8@2B1 32, ALNS2-8@B1 17, ALNS2-1@B1 1
+
+MA-AT-150-10-500: on 50 instances, best ALNS-derived plan 37.749 vs best plan without ALNS 42.383: ALNS-derived -11.12% (min -17.07%, max -5.41%); without ALNS better on 0
+
+MA-AT-150-10-500: 50 BKS, mean 37.749; found by ALNS2-8@B1 46, ALNS2-1@B1 4
+
+MA-AT-150-5-500: on 50 instances, best ALNS-derived plan 43.883 vs best plan without ALNS 48.597: ALNS-derived -10.32% (min -16.80%, max -4.57%); without ALNS better on 0
+
+MA-AT-150-5-500: 50 BKS, mean 43.883; found by ALNS2-8@B1 46, ALNS2-1@B1 4
+
+wrote /home/jovyan/dev/cbba-sota/runs/bks/test_bks.json: 400 instances
+wrote docs/results/test/bks_test.csv
+wrote docs/results/test/bks_test_runs.csv
